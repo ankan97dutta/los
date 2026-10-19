@@ -1,9 +1,10 @@
 # Tasks: Harden Foundation Persistence & Acceptance
 
 **Input**: Design documents from `/specs/002-harden-foundation/`  
-**Prerequisites**: plan.md, spec.md (clarified), research.md, data-model.md, contracts/  
-**Tests**: Included — spec SC-H02–H04 and FR-H11/H12 require automated persistence tests + recorded verification  
-**Rule**: Never mark `[X]` without verification (command output or checklist row)
+**Prerequisites**: plan.md (Runtime Composition), spec.md (clarified), research.md, data-model.md, contracts/  
+**Tests**: Included per SC-H02–H04, C1 (`DB_SCHEMA_TOO_NEW`), FR-H11/H12  
+**Analyze remediation**: I1 composition, C1 schema-too-new, U1 transactional wiring  
+**Rule**: Never mark `[X]` without verification
 
 ## Format: `[ID] [P?] [Story?] Description`
 
@@ -11,247 +12,201 @@
 
 ## Phase 1: Setup (Shared Infrastructure)
 
-**Purpose**: Honesty baseline and tooling before SQLite work
+**Purpose**: Honesty baseline and dependencies
 
 - [ ] T001 Create `specs/002-harden-foundation/checklists/pre-remediation-inventory.md` documenting current persistence paths (`apps/desktop/src/lib/runtime.ts`, `packages/persistence/src/file_store.ts`, Tauri app-data gap)
 - [ ] T002 [P] Correct overclaimed rows in `specs/001-foundation-workspace/checklists/implementation-evidence.md` and link to 002 verification evidence
 - [ ] T003 [P] Reconcile `specs/001-foundation-workspace/tasks.md`: uncheck or annotate unfinished SQLite/Tauri items (e.g. T013–T016, T020)
 - [ ] T004 Fix domain/persistence TypeScript lint (`rootDir` vs tests) in `packages/domain/tsconfig.json` and `packages/persistence/tsconfig.json` so `pnpm lint` succeeds
-- [ ] T005 Add `better-sqlite3` (+ types) to `packages/persistence/package.json` and `tauri-plugin-sql` to `apps/desktop/src-tauri/Cargo.toml` / Tauri config per plan.md
+- [ ] T005 Add `better-sqlite3` (+ types) to `packages/persistence/package.json` and `@tauri-apps/plugin-sql` / `tauri-plugin-sql` to `apps/desktop/package.json` + `apps/desktop/src-tauri/Cargo.toml` per plan Runtime Composition
 
 ---
 
 ## Phase 2: Foundational (Blocking Prerequisites)
 
-**Purpose**: SQLite open/migrate/repos/transactions shared by all stories
+**Purpose**: `DbSession` port, dual adapters, migrations, repos (I1)
 
-**⚠️ CRITICAL**: No user story phase starts until this checkpoint passes
+**⚠️ CRITICAL**: No user story phase until this checkpoint passes
 
-- [ ] T006 Implement corrupt-safe open + app-data path helper in `packages/persistence/src/db.ts` (create DB only if file absent; `DB_OPEN_FAILED` preserves bytes; errors per `data-model.md`)
-- [ ] T007 Implement versioned migration runner in `packages/persistence/src/migrate.ts` applying `packages/persistence/migrations/*.sql` with `schema_migrations` version + `applied_at` in a transaction per migration
-- [ ] T008 Align `packages/persistence/migrations/001_init.sql` with 001 entities + seed exactly four Applications (`Application 1`–`Application 4`, slotIndex 1..4) and default WorkspaceSettings (`fortnightStartWeekday=mon`)
-- [ ] T009 Implement `withTransaction` in `packages/persistence/src/db.ts` for multi-entity writes
-- [ ] T010 [P] Write failing-then-passing Vitest migrate+seed (exactly four applications) in `packages/persistence/tests/migrations.test.ts`
-- [ ] T011 [P] Write failing-then-passing Vitest corrupt open (checksum/size unchanged) in `packages/persistence/tests/corrupt_open.test.ts`
-- [ ] T012 Implement SQLite-backed repositories in `packages/persistence/src/sqlite_repos.ts` matching `@los/domain` ports (replace MemoryStore as durable path)
-- [ ] T013 [P] Implement legacy auto-import when DB absent + valid snapshot (`version` + exactly 4 applications) in `packages/persistence/src/legacy_import.ts` with Vitest in `packages/persistence/tests/legacy_import.test.ts` (never import over existing DB; leave sources intact on failure)
-- [ ] T014 Export Node SQLite API from `packages/persistence/src/node.ts` / `index.ts` without breaking browser-safe barrel for preview
+- [ ] T006 Define `DbSession` / migrate / `withTransaction` ports in `packages/persistence/src/ports.ts` (driver-agnostic)
+- [ ] T007 Implement corrupt-safe open + path helper using Node driver in `packages/persistence/src/node_sqlite.ts` (create DB only if file absent; `DB_OPEN_FAILED` preserves bytes per `data-model.md`)
+- [ ] T008 Implement versioned migration runner over `DbSession` in `packages/persistence/src/migrate.ts` applying `packages/persistence/migrations/*.sql` with `schema_migrations` (`version`, `applied_at`) in a transaction per migration
+- [ ] T009 Align `packages/persistence/migrations/001_init.sql` with 001 entities + seed exactly four Applications (`Application 1`–`Application 4`, slotIndex 1..4) and default WorkspaceSettings (`fortnightStartWeekday=mon`)
+- [ ] T010 Implement `withTransaction` on Node `DbSession` in `packages/persistence/src/node_sqlite.ts`
+- [ ] T011 [P] Write failing-then-passing Vitest migrate+seed (exactly four applications) in `packages/persistence/tests/migrations.test.ts`
+- [ ] T012 [P] Write failing-then-passing Vitest corrupt open (checksum/size unchanged) in `packages/persistence/tests/corrupt_open.test.ts`
+- [ ] T013 Implement driver-agnostic repos in `packages/persistence/src/sqlite_repos.ts` over `DbSession` (durable path); keep `MemoryStore` only for Vite preview (T018)
+- [ ] T014 [P] Implement legacy auto-import when DB absent + valid snapshot (`version` + exactly 4 applications) in `packages/persistence/src/legacy_import.ts` + Vitest in `packages/persistence/tests/legacy_import.test.ts`
+- [ ] T015 [P] Write Vitest for `DB_SCHEMA_TOO_NEW`: refuse restore/open when backup schema version exceeds app max **before** replacing live file in `packages/persistence/tests/schema_too_new.test.ts` (analyze C1)
+- [ ] T016 Export Node SQLite + ports from `packages/persistence/src/node.ts` / `index.ts` without breaking browser-safe barrel for preview
 
-**Checkpoint**: Persistence Vitest covers migrate, corrupt-open, legacy import; repos CRUD on SQLite file
+**Checkpoint**: Node Vitest covers migrate, corrupt-open, legacy import, schema-too-new; repos use `DbSession`
 
 ---
 
 ## Phase 3: User Story 1 - Durable local database on desktop (Priority: P1) 🎯 MVP
 
-**Goal**: Tauri app-data SQLite across relaunch; recoverable corrupt open; legacy import notice  
-**Independent Test**: SC-H01 (3× offline quit/relaunch) + SC-H04 corrupt file preserved
+**Goal**: Tauri app-data SQLite via plugin-sql adapter + shared repos; corrupt-safe; legacy notice  
+**Independent Test**: SC-H01 (3×) + SC-H04
 
 ### Tests for User Story 1
 
-- [ ] T015 [P] [US1] Add Vitest asserting bootstrap creates DB only when absent in `packages/persistence/tests/bootstrap_absent.test.ts`
+- [ ] T017 [P] [US1] Add Vitest asserting bootstrap creates DB only when absent in `packages/persistence/tests/bootstrap_absent.test.ts`
 
 ### Implementation for User Story 1
 
-- [ ] T016 [US1] Wire Tauri app-data path `los/los.sqlite`, `db.bootstrap` (migrate + optional legacy import) in `apps/desktop/src-tauri/src/` per `contracts/desktop-bridge.md`
-- [ ] T017 [US1] Expose Tauri invoke handlers for 001 workspace commands/queries over SQLite in `apps/desktop/src-tauri/` and clients in `apps/desktop/src/lib/api.ts`
-- [ ] T018 [US1] Split runtimes in `apps/desktop/src/lib/runtime.ts`: Tauri → invoke/SQLite; Vite-only → labeled non-durable preview (not valid for SC-H01)
-- [ ] T019 [US1] Show legacy import success/failure notice in `apps/desktop/src/App.tsx` or status banner from `db.bootstrap` result
-- [ ] T020 [US1] Blocking recoverable UI for `DB_OPEN_FAILED` preserving path instructions in `apps/desktop/src/features/status/` (or dedicated error view)
-- [ ] T021 [US1] Document real SQLite path + no-silent-reseed behavior in `apps/desktop/README.md`
-- [ ] T022 [US1] Record SC-H01 relaunch trials (3×) and SC-H04 corrupt-open result in `specs/002-harden-foundation/checklists/verification-evidence.md`
+- [ ] T018 [US1] Implement `DbSession` via `@tauri-apps/plugin-sql` in `apps/desktop/src/lib/tauriSqlAdapter.ts` (same migrate/repos as Node)
+- [ ] T019 [US1] Wire Tauri app-data path `los/los.sqlite` + `db.bootstrap` (migrate + legacy import) in `apps/desktop/src-tauri/src/` per `contracts/desktop-bridge.md`
+- [ ] T020 [US1] Split runtimes in `apps/desktop/src/lib/runtime.ts`: Tauri → `tauriSqlAdapter` + app-services; Vite-only → labeled non-durable `MemoryStore` (not SC-H01)
+- [ ] T021 [US1] Thin invoke clients for bootstrap/status/OS helpers in `apps/desktop/src/lib/api.ts`; workspace CRUD via in-process app-services on live `DbSession` per plan composition
+- [ ] T022 [US1] Show legacy import success/failure notice from `db.bootstrap` in `apps/desktop/src/App.tsx` or status banner
+- [ ] T023 [US1] Blocking recoverable UI for `DB_OPEN_FAILED` with path instructions in `apps/desktop/src/features/status/` (or dedicated error view)
+- [ ] T024 [US1] Document real SQLite path + Runtime Composition + no-silent-reseed in `apps/desktop/README.md`
+- [ ] T025 [US1] Record SC-H01 relaunch trials (3×) and SC-H04 corrupt-open in `specs/002-harden-foundation/checklists/verification-evidence.md`
 
-**Checkpoint**: Tauri-dev persists inbox across relaunch; corrupt DB does not reseed
+**Checkpoint**: Tauri-dev persists across relaunch; preview clearly non-durable
 
 ---
 
 ## Phase 4: User Story 2 - Consistent multi-entity saves (Priority: P1)
 
-**Goal**: `daily.upsert` atomic with next-action materialization  
-**Independent Test**: SC-H03 injected mid-save failure → rollback
+**Goal**: `daily.upsert` atomic on `DbSession.withTransaction`  
+**Independent Test**: SC-H03
 
 ### Tests for User Story 2
 
-- [ ] T023 [P] [US2] Write failing-then-passing transaction test (fail after action insert, before review commit → no orphans) in `packages/persistence/tests/daily_transaction.test.ts`
+- [ ] T026 [P] [US2] Write failing-then-passing transaction test (fail after action insert, before review commit → rollback) in `packages/persistence/tests/daily_transaction.test.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T024 [US2] Wrap `dailyUpsert` action + review/line writes in `withTransaction` in `packages/app-services/src/workspace.ts` (or `daily.ts`)
-- [ ] T025 [US2] Confirm Tauri daily invoke path uses transactional service in `apps/desktop/src-tauri/` / `apps/desktop/src/lib/api.ts`
+- [ ] T027 [US2] Wrap `dailyUpsert` action + review/line writes in `withTransaction` in `packages/app-services/src/workspace.ts` (or `daily.ts`) using injected `DbSession`
+- [ ] T028 [US2] Wire Tauri runtime so daily autosave uses the same transactional `dailyUpsert` on `tauriSqlAdapter` `DbSession` in `apps/desktop/src/lib/runtime.ts` / `apps/desktop/src/features/reviews/DailyReviewPage.tsx` (replaces prior “confirm-only” task)
 
-**Checkpoint**: SC-H03 automated test green
+**Checkpoint**: SC-H03 green on Node; Tauri path uses same service
 
 ---
 
 ## Phase 5: User Story 3 - Backup and restore of the real database (Priority: P1)
 
-**Goal**: Dual restore (quit-and-replace + in-app) against live SQLite  
-**Independent Test**: SC-H02 automated restore smoke
+**Goal**: Dual restore; schema-too-new safe  
+**Independent Test**: SC-H02 + C1
 
 ### Tests for User Story 3
 
-- [ ] T026 [P] [US3] Rewrite `packages/persistence/tests/backup_restore.test.ts` for SQLite: seed inbox → copy → mutate → restore → assert item returns
+- [ ] T029 [P] [US3] Rewrite `packages/persistence/tests/backup_restore.test.ts` for SQLite: seed inbox → copy → mutate → restore → assert item returns
 
 ### Implementation for User Story 3
 
-- [ ] T027 [US3] Implement backup helpers in `packages/persistence/src/backup.ts` (copy live `los.sqlite`)
-- [ ] T028 [US3] Implement `db.exportBackup` and `db.restoreBackup` (close → replace → reopen/migrate) in `apps/desktop/src-tauri/` per `contracts/desktop-bridge.md`
-- [ ] T029 [US3] Settings export + in-app restore UI reloading workspace in `apps/desktop/src/features/settings/SettingsPage.tsx`
-- [ ] T030 [US3] Document quit-and-replace and in-app restore paths in `apps/desktop/README.md` and Settings copy (**FR-H06**)
+- [ ] T030 [US3] Implement backup helpers in `packages/persistence/src/backup.ts` (copy live `los.sqlite`)
+- [ ] T031 [US3] Implement `db.exportBackup` / `db.restoreBackup` with pre-replace `DB_SCHEMA_TOO_NEW` check in `apps/desktop/src-tauri/` per `contracts/desktop-bridge.md`
+- [ ] T032 [US3] Settings export + in-app restore UI reloading workspace in `apps/desktop/src/features/settings/SettingsPage.tsx`
+- [ ] T033 [US3] Document quit-and-replace and in-app restore in `apps/desktop/README.md` and Settings copy (**FR-H06**)
+- [ ] T034 [US3] Record SC-H02 and schema-too-new restore refusal in `specs/002-harden-foundation/checklists/verification-evidence.md`
 
-**Checkpoint**: SC-H02 green; Settings restore works without manual quit
+**Checkpoint**: Restore smoke green; newer-schema backup does not clobber live DB
 
 ---
 
 ## Phase 6: User Story 4 - Fortnight history keeps completed selections (Priority: P2)
 
-**Goal**: Selected actions remain visible when `status=done`  
-**Independent Test**: SC-H06 select → complete → still listed
+**Goal**: Selected actions visible when `status=done`  
+**Independent Test**: SC-H06
 
 ### Tests for User Story 4
 
-- [ ] T031 [P] [US4] Add test that fortnight `selectedActionIds` resolve including `done` actions in `packages/app-services/tests/fortnight_selections.test.ts` (or persistence test)
+- [ ] T035 [P] [US4] Add test that fortnight `selectedActionIds` resolve including `done` in `packages/app-services/tests/fortnight_selections.test.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T032 [US4] Load selection list by ID including completed (show status) in `apps/desktop/src/features/reviews/FortnightPlanPage.tsx` (do not filter open-only for selections)
-- [ ] T033 [US4] Record SC-H06 result in `specs/002-harden-foundation/checklists/verification-evidence.md`
+- [ ] T036 [US4] Load selection list by ID including completed (show status) in `apps/desktop/src/features/reviews/FortnightPlanPage.tsx`
+- [ ] T037 [US4] Record SC-H06 in `specs/002-harden-foundation/checklists/verification-evidence.md`
 
-**Checkpoint**: Completed selected work remains on fortnight plan UI
+**Checkpoint**: Completed selected work remains on plan UI
 
 ---
 
 ## Phase 7: User Story 5 - Settings-driven global shortcut (Priority: P2)
 
-**Goal**: OS registration uses settings; immediate re-register on save; failures surfaced  
-**Independent Test**: SC-H07 denied shortcut → in-app capture + status error
+**Goal**: Settings-driven register; immediate re-register on save  
+**Independent Test**: SC-H07
 
-### Implementation for User Story 5
+- [ ] T038 [US5] Register shortcut from WorkspaceSettings in `apps/desktop/src-tauri/src/shortcuts.rs`
+- [ ] T039 [US5] Implement `shortcuts.reregister`; call immediately after explicit Settings save in `apps/desktop/src/features/settings/SettingsPage.tsx` + `apps/desktop/src-tauri/`
+- [ ] T040 [US5] Extend `workspace.status` with `globalShortcutRegistered` / `globalShortcutError` in `apps/desktop/src/features/status/LocalStatus.tsx`
+- [ ] T041 [US5] Record SC-H07 in `specs/002-harden-foundation/checklists/verification-evidence.md`
 
-- [ ] T034 [US5] Register shortcut from WorkspaceSettings (not hard-coded-only) in `apps/desktop/src-tauri/src/shortcuts.rs`
-- [ ] T035 [US5] Implement `shortcuts.reregister` invoke; call immediately after explicit Settings save of accelerator/enabled in `apps/desktop/src/features/settings/SettingsPage.tsx` + `apps/desktop/src-tauri/`
-- [ ] T036 [US5] Extend `workspace.status` with `globalShortcutRegistered` / `globalShortcutError` and show in `apps/desktop/src/features/status/LocalStatus.tsx`
-- [ ] T037 [US5] Record SC-H07 shortcut smoke (success or denial) in `specs/002-harden-foundation/checklists/verification-evidence.md`
-
-**Checkpoint**: Settings save re-registers; capture works when registration fails
+**Checkpoint**: Save re-registers; capture works when registration fails
 
 ---
 
 ## Phase 8: User Story 6 - Verification honesty and quality gates (Priority: P2)
 
-**Goal**: Lint green; evidence honest; offline/tray/keyboard recorded  
+**Goal**: Lint + honest evidence  
 **Independent Test**: SC-H05, SC-H08, SC-H09
 
-- [ ] T038 [US6] Execute offline core smoke (capture/triage/actions/reviews) and record in `specs/002-harden-foundation/checklists/verification-evidence.md`
-- [ ] T039 [US6] Execute tray open + quick capture smoke (or skip with OS reason) in verification-evidence.md
-- [ ] T040 [US6] Execute keyboard path smoke (capture → triage → actions) in verification-evidence.md (**FR-022**)
-- [ ] T041 [P] [US6] Confirm no Jira/Confluence/LLM deps in workspace `package.json` files; record SC-H09
-- [ ] T042 [US6] Final honesty pass: only `[X]` verified 002 tasks; confirm 001 reconcile from T002–T003 still accurate (**FR-H12**)
+- [ ] T042 [US6] Execute offline core smoke and record in `specs/002-harden-foundation/checklists/verification-evidence.md`
+- [ ] T043 [US6] Execute tray open + quick capture smoke (or skip with OS reason) in verification-evidence.md
+- [ ] T044 [US6] Execute keyboard path smoke in verification-evidence.md (**FR-022**)
+- [ ] T045 [P] [US6] Confirm no Jira/Confluence/LLM deps; record SC-H09
+- [ ] T046 [US6] Final honesty pass: only `[X]` verified 002 tasks; confirm 001 reconcile (**FR-H12**)
 
-**Checkpoint**: verification-evidence.md has pass/fail/skip rows for required paths; `pnpm lint` recorded
+**Checkpoint**: Evidence rows complete; lint recorded
 
 ---
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
-- [ ] T043 [P] Align `specs/002-harden-foundation/quickstart.md` commands with actual package scripts
-- [ ] T044 Run `pnpm test && pnpm lint && pnpm --filter @los/desktop build` and `cargo check` in `apps/desktop/src-tauri`; paste summaries into `specs/002-harden-foundation/checklists/verification-evidence.md`
-- [ ] T045 [P] Update root `README.md` persistence section to SQLite app-data (not localStorage as durable desktop store)
+- [ ] T047 [P] Align `specs/002-harden-foundation/quickstart.md` with actual scripts + Runtime Composition note
+- [ ] T048 Run `pnpm test && pnpm lint && pnpm --filter @los/desktop build` and `cargo check`; paste into verification-evidence.md
+- [ ] T049 [P] Update root `README.md` persistence to SQLite app-data + preview vs Tauri distinction
 
 ---
 
 ## Dependencies & Execution Order
 
-### Phase Dependencies
-
-- **Phase 1 (Setup)** → **Phase 2 (Foundational)** → blocks all stories
-- **US1 (Phase 3)** after Phase 2 — MVP
-- **US2–US3 (Phases 4–5)** after Phase 2; preferably after US1 bridge (T016–T017) for Tauri paths
-- **US4–US5** after US1 Tauri bridge
-- **US6** after behaviors exist (evidence template can start at T022)
-- **Polish** after desired stories
-
-### User Story Dependencies
-
-| Story | Depends on |
-|-------|------------|
-| US1 | Phase 2 |
-| US2 | Phase 2 (`withTransaction` + repos); Tauri daily path after T017 |
-| US3 | Phase 2 + US1 bootstrap path |
-| US4 | US1 data + fortnight UI |
-| US5 | US1 settings/status bridge |
-| US6 | Prior story behaviors for smokes |
+```text
+Phase 1 → Phase 2 (DbSession + Node adapter + repos) → US1 (Tauri adapter + bootstrap)
+US2 after T010/T013 + T027; T028 after US1 adapter (T018–T020)
+US3 after US1 bootstrap; T015/T031 for schema-too-new
+US4–US5 after US1 data bridge
+US6 after smokes possible
+Polish last
+```
 
 ### Parallel Opportunities
 
-- T002/T003/T004 after T001
-- T010/T011/T013 after T006–T008
-- T023 parallel with US1 UI once T009/T012 done
-- T031 parallel with US5
-- T041/T043/T045 in polish window
-
----
-
-## Parallel Example: User Story 1
-
-```bash
-# After Phase 2:
-Task: "T015 bootstrap_absent.test.ts"
-Task: "T016 db.bootstrap in src-tauri"
-# Then sequential bridge:
-Task: "T017 invoke handlers + api.ts"
-Task: "T018 runtime split"
-```
-
----
-
-## Parallel Example: Foundational tests
-
-```bash
-Task: "T010 migrations.test.ts"
-Task: "T011 corrupt_open.test.ts"
-Task: "T013 legacy_import.ts + tests"
-```
+- T002–T004; T011/T012/T014/T015 after T008–T009
+- T017 with US1 impl start; T026 with US1 UI; T035 with US5
 
 ---
 
 ## Implementation Strategy
 
-### MVP First (US1 only)
+### MVP
 
-1. Phase 1–2  
-2. Phase 3 US1 (Tauri SQLite + corrupt-safe + legacy notice)  
-3. **STOP** — validate SC-H01 / SC-H04  
+Phases 1–3 through T025 (durable Tauri SQLite + composition + corrupt-safe + legacy notice).
 
-### Incremental Delivery
+### Incremental
 
-1. US2 transactional daily  
-2. US3 backup/restore  
-3. US4 fortnight completed selections  
-4. US5 shortcuts  
-5. US6 + polish evidence  
+US2 → US3 (incl. schema-too-new) → US4 → US5 → US6 → polish.
 
 ### Finding cross-index
 
 | Finding / criterion | Tasks |
 |---------------------|-------|
-| Audit P0 SQLite/migrations | T005–T012, T016 |
-| Audit P0 silent wipe | T006, T011, T020 |
-| Audit P0 app-data | T016–T018, T021 |
-| Audit P1 T013–T016/T020 | T003, T016–T017 |
-| Audit P1 daily atomicity | T009, T023–T025 |
-| Audit P1 fortnight | T031–T033 |
-| Audit P1 shortcut | T034–T037 |
-| Audit P1 lint | T004, T044 |
-| Audit P1 evidence/tasks | T001–T003, T022, T038–T042 |
-| FR-H05 dual restore | T026–T030 |
-| FR-H14 auto-import notice | T013, T019 |
-| Const. VII–IX | T007–T011, T042 |
+| Analyze I1 composition | T006–T007, T013, T018–T021 |
+| Analyze C1 schema-too-new | T015, T031, T034 |
+| Analyze U1 daily wiring | T027–T028 |
+| Audit P0 SQLite/migrations | T005, T008–T011, T019 |
+| Audit P0 silent wipe | T007, T012, T023 |
+| FR-H05 dual restore | T029–T033 |
+| FR-H14 import notice | T014, T022 |
+| FR-H09 shortcut | T038–T041 |
 
 ---
 
 ## Notes
 
-- [P] = different files, no incomplete dependency
-- [USn] required on story-phase tasks only
-- Spec tests (SC-H02–H04) → Vitest tasks included above
-- Vite preview must not be used to claim SC-H01
+- [P] = parallelizable; [USn] on story phases only
+- Vite preview must not claim SC-H01
+- Shared app-services + dual `DbSession` adapters — no domain SQL, no Rust domain rewrite
