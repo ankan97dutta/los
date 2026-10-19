@@ -3,7 +3,7 @@
 **Input**: Design documents from `/specs/002-harden-foundation/`  
 **Prerequisites**: plan.md (Runtime Composition), spec.md (clarified), research.md, data-model.md, contracts/  
 **Tests**: Included per SC-H02–H04, C1 (`DB_SCHEMA_TOO_NEW`), FR-H11/H12  
-**Analyze remediation**: I1 composition, C1 schema-too-new, U1 transactional wiring  
+**Analyze remediation**: I1 composition, C1 schema-too-new, U1 transactional wiring, L1 Tauri `withTransaction`, A1 single-writer docs/fail-safe  
 **Rule**: Never mark `[X]` without verification
 
 ## Format: `[ID] [P?] [Story?] Description`
@@ -29,7 +29,7 @@
 **⚠️ CRITICAL**: No user story phase until this checkpoint passes
 
 - [ ] T006 Define `DbSession` / migrate / `withTransaction` ports in `packages/persistence/src/ports.ts` (driver-agnostic)
-- [ ] T007 Implement corrupt-safe open + path helper using Node driver in `packages/persistence/src/node_sqlite.ts` (create DB only if file absent; `DB_OPEN_FAILED` preserves bytes per `data-model.md`)
+- [ ] T007 Implement corrupt-safe / fail-safe open + path helper using Node driver in `packages/persistence/src/node_sqlite.ts` (create DB only if file absent; locked/busy/invalid → `DB_OPEN_FAILED` preserves bytes per `data-model.md` and plan A1; no delete/reseed)
 - [ ] T008 Implement versioned migration runner over `DbSession` in `packages/persistence/src/migrate.ts` applying `packages/persistence/migrations/*.sql` with `schema_migrations` (`version`, `applied_at`) in a transaction per migration
 - [ ] T009 Align `packages/persistence/migrations/001_init.sql` with 001 entities + seed exactly four Applications (`Application 1`–`Application 4`, slotIndex 1..4) and default WorkspaceSettings (`fortnightStartWeekday=mon`)
 - [ ] T010 Implement `withTransaction` on Node `DbSession` in `packages/persistence/src/node_sqlite.ts`
@@ -55,13 +55,13 @@
 
 ### Implementation for User Story 1
 
-- [ ] T018 [US1] Implement `DbSession` via `@tauri-apps/plugin-sql` in `apps/desktop/src/lib/tauriSqlAdapter.ts` (same migrate/repos as Node)
-- [ ] T019 [US1] Wire Tauri app-data path `los/los.sqlite` + `db.bootstrap` (migrate + legacy import) in `apps/desktop/src-tauri/src/` per `contracts/desktop-bridge.md`
+- [ ] T018 [US1] Implement full `DbSession` via `@tauri-apps/plugin-sql` in `apps/desktop/src/lib/tauriSqlAdapter.ts` including **`withTransaction`** (BEGIN/COMMIT/ROLLBACK parity with Node T010; analyze L1) plus exec/query used by shared migrate/repos
+- [ ] T019 [US1] Wire Tauri app-data path `los/los.sqlite` + `db.bootstrap` (migrate + legacy import) in `apps/desktop/src-tauri/src/` per `contracts/desktop-bridge.md`; fail-safe open on lock/corrupt → `DB_OPEN_FAILED`, preserve file (analyze A1)
 - [ ] T020 [US1] Split runtimes in `apps/desktop/src/lib/runtime.ts`: Tauri → `tauriSqlAdapter` + app-services; Vite-only → labeled non-durable `MemoryStore` (not SC-H01)
 - [ ] T021 [US1] Thin invoke clients for bootstrap/status/OS helpers in `apps/desktop/src/lib/api.ts`; workspace CRUD via in-process app-services on live `DbSession` per plan composition
 - [ ] T022 [US1] Show legacy import success/failure notice from `db.bootstrap` in `apps/desktop/src/App.tsx` or status banner
 - [ ] T023 [US1] Blocking recoverable UI for `DB_OPEN_FAILED` with path instructions in `apps/desktop/src/features/status/` (or dedicated error view)
-- [ ] T024 [US1] Document real SQLite path + Runtime Composition + no-silent-reseed in `apps/desktop/README.md`
+- [ ] T024 [US1] Document real SQLite path + Runtime Composition + no-silent-reseed + single-writer assumption in `apps/desktop/README.md`
 - [ ] T025 [US1] Record SC-H01 relaunch trials (3×) and SC-H04 corrupt-open in `specs/002-harden-foundation/checklists/verification-evidence.md`
 
 **Checkpoint**: Tauri-dev persists across relaunch; preview clearly non-durable
@@ -80,7 +80,7 @@
 ### Implementation for User Story 2
 
 - [ ] T027 [US2] Wrap `dailyUpsert` action + review/line writes in `withTransaction` in `packages/app-services/src/workspace.ts` (or `daily.ts`) using injected `DbSession`
-- [ ] T028 [US2] Wire Tauri runtime so daily autosave uses the same transactional `dailyUpsert` on `tauriSqlAdapter` `DbSession` in `apps/desktop/src/lib/runtime.ts` / `apps/desktop/src/features/reviews/DailyReviewPage.tsx` (replaces prior “confirm-only” task)
+- [ ] T028 [US2] Wire Tauri runtime so daily autosave uses the same transactional `dailyUpsert` on `tauriSqlAdapter` `DbSession` (requires T018 `withTransaction`) in `apps/desktop/src/lib/runtime.ts` / `apps/desktop/src/features/reviews/DailyReviewPage.tsx` (replaces prior “confirm-only” task; analyze L1)
 
 **Checkpoint**: SC-H03 green on Node; Tauri path uses same service
 
@@ -158,7 +158,7 @@
 
 - [ ] T047 [P] Align `specs/002-harden-foundation/quickstart.md` with actual scripts + Runtime Composition note
 - [ ] T048 Run `pnpm test && pnpm lint && pnpm --filter @los/desktop build` and `cargo check`; paste into verification-evidence.md
-- [ ] T049 [P] Update root `README.md` persistence to SQLite app-data + preview vs Tauri distinction
+- [ ] T049 [P] Update root `README.md` persistence to SQLite app-data + preview vs Tauri distinction + **single-writer** assumption and fail-safe open (do not run two writers; lock/corrupt → file unchanged) per plan A1 / research R12
 
 ---
 
@@ -197,6 +197,8 @@ US2 → US3 (incl. schema-too-new) → US4 → US5 → US6 → polish.
 | Analyze I1 composition | T006–T007, T013, T018–T021 |
 | Analyze C1 schema-too-new | T015, T031, T034 |
 | Analyze U1 daily wiring | T027–T028 |
+| Analyze L1 Tauri `withTransaction` | T010, T018, T027–T028 |
+| Analyze A1 single-writer / fail-safe | T007, T019, T024, T049 |
 | Audit P0 SQLite/migrations | T005, T008–T011, T019 |
 | Audit P0 silent wipe | T007, T012, T023 |
 | FR-H05 dual restore | T029–T033 |
@@ -210,3 +212,4 @@ US2 → US3 (incl. schema-too-new) → US4 → US5 → US6 → polish.
 - [P] = parallelizable; [USn] on story phases only
 - Vite preview must not claim SC-H01
 - Shared app-services + dual `DbSession` adapters — no domain SQL, no Rust domain rewrite
+- Both adapters MUST implement `withTransaction` (L1); README documents single-writer (A1)
