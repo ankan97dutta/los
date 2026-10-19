@@ -2,13 +2,13 @@
 
 **Feature**: `specs/004-lead-command-ux` | **Git branch**: `feature/005-lead-command-ux`  
 **Date**: 2026-10-19  
-**Status**: Phase 0 complete (implementation still gated on constitution amendment approval)
+**Status**: Phase 0 complete (refreshed for modern minimalism polish)
 
 ## R1. UI framework
 
 **Decision**: Stay on **React 19 + CSS custom properties** in `apps/desktop`. Do **not** add MUI, Tailwind, or shadcn in this feature.
 
-**Rationale**: Repo has zero MUI/Tailwind usage; adding a framework expands scope and couples VI (modular architecture) to a heavy dependency without proven need. Existing `styles.css` already uses CSS variables—evolve that into `tokens.css` + small primitives.
+**Rationale**: Repo has zero MUI/Tailwind usage; adding a framework expands scope and couples VI (modular architecture) to a heavy dependency without proven need. Existing styles already use CSS variables—evolve `tokens.css` + small primitives.
 
 **Alternatives considered**: MUI (rejected—new stack); Tailwind (rejected—new toolchain); shadcn (rejected—implies Tailwind); extract `@los/ui` package (deferred—single consumer today).
 
@@ -66,11 +66,34 @@ Legacy route ids (`daily`, `capacity`, `fortnight`, `actions`, `applications`, `
 
 ## R7. Constitution
 
-**Decision**: Feature **implementation complete** gated on approval/apply of  
-`.specify/proposals/2026-10-19-constitution-ux-amendment.md` (expand Principle X + Desktop UX gate → v1.1.0), or a written exception. Theme/typography remain feature-level (not constitutional).
+**Decision**: Feature **implementation complete** gated on Desktop UX verification evidence under constitution **v1.1.0** (Principle X + Desktop UX gate already applied in `.specify/memory/constitution.md`). Theme/typography remain feature-level (not constitutional).
 
-**Rationale**: Proposed gate expands honesty requirements this feature delivers; applying mid-feature without approval is forbidden by prior session constraint.
+**Rationale**: Honesty, keyboard, and progressive-disclosure requirements this feature delivers are now constitutional; “done” still needs evidence, not just code.
+
+## R8. Modern minimalism (plan refresh)
+
+**Decision**: Treat “modern + minimalistic” as **presentation and flow density**, not a new IA:
+
+| Principle | Concrete choice |
+|-----------|-----------------|
+| Calm chrome | Slim sidebar (~200px), quiet brand (LOS + one short local-first line), LocalStatus as footer text—not a status dashboard |
+| Flat surfaces | Prefer hairline dividers / spacing over stacked bordered cards; list rows use subtle separators; reserve elevated panels for interactive clusters (forms, palette, confirm dialogs) |
+| Background | Soft single-plane or very low-contrast atmosphere; **tone down** large accent radial washes so content, not glow, leads |
+| Hierarchy | One `h1` + one short lede per primary surface; essential decisions and blocking banners first; advanced detail collapsed |
+| Color | Keep graphite dark / polished light; accent for focus/active only; **no** purple-indigo theme, cream+terracotta kit, glow rings, or multi-layer shadows |
+| Motion | Exactly 2–3 intentional moments: palette open/close, theme cross-fade (or instant if flash risk), optional route content fade ≤150–200ms—no decorative animation noise |
+| Flows | Capture → Inbox → Planning remains the shortest keyboard path; empty states name one next action; Settings groups prefs without card grids |
+| Honesty floor | Minimalism MUST NOT remove StatusCue/Banner/SaveIndicator text; conflict/error/closed cues stay visible (FR-U04/U06/U08) |
+
+**Rationale**: Spec already asked for calm, precise, readable UI; current `base.css` still leans card-bordered and accent-washed. User refresh asks to finish the visual/UX story toward modern minimal without reopening domain scope.
+
+**Alternatives considered**:
+
+- Full redesign as a new feature `006` (deferred—same branch/IA; polish fits 004 Track A)
+- Dense “mission control” dashboard with stat strips (rejected—fights minimalism and user frontend rules)
+- New component library (rejected—R1)
+- Removing Planning summary density (rejected—capacity decisions need load/remain/unknown; use progressive disclosure, not deletion)
 
 ## Resolved clarifications
 
-All Technical Context items are decided (no remaining `NEEDS CLARIFICATION`). Spec clarify session 2026-10-19 (framework, theme, nav IA, 003 split) is binding.
+All Technical Context items are decided (no remaining `NEEDS CLARIFICATION`). Spec clarify session 2026-10-19 (framework, theme, nav IA, 003 split) remains binding. Modern minimalism is an additive visual/flow decision (R8), not a constitution or domain change.

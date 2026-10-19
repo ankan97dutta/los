@@ -1,21 +1,21 @@
 # Tasks: Lead Command Center UX & Design System
 
 **Input**: Design documents from `/specs/004-lead-command-ux/`  
-**Prerequisites**: plan.md, spec.md (clarify 2026-10-19 applied), research.md, data-model.md, contracts/ui-shell.md, quickstart.md  
+**Prerequisites**: plan.md (modern minimalism refresh), spec.md (clarify 2026-10-19), research.md (R8), data-model.md, contracts/ui-shell.md, quickstart.md  
 **Git branch**: `feature/005-lead-command-ux` | **Feature dir**: `specs/004-lead-command-ux`  
-**Governance**: Constitution v1.1.0 applied. Feature **complete** requires Desktop UX verification evidence (T001 / T058).  
+**Governance**: Constitution v1.1.0 applied. Feature **complete** requires Desktop UX verification evidence (incl. modern-minimal polish smoke).  
 **Rule**: Never mark `[X]` without a verification-evidence row  
-**Baseline**: Do not change 001–003 domain rules, SQLite contracts, soft-gate/freeze/carry-forward; do not fake missing 003 fields (FR-U12)
+**Baseline**: Do not change 001–003 domain rules, SQLite contracts, soft-gate/freeze/carry-forward; do not fake missing 003 fields (FR-U12). Minimalism MUST NOT hide Banner/StatusCue/SaveIndicator text (R8 honesty floor).
 
-**Tests**: Scripted UI verification + domain regression (`pnpm test`); SC-U04 = manual contrast spot-check. No TDD suite required.
+**Tests**: Scripted UI verification + domain regression (`pnpm test`); SC-U04 = manual contrast spot-check (re-run after token polish). No TDD suite required.
 
-**Remediation (post-clarify)**: Actions under Inbox; Team/Reviews section sub-nav; constitution gate for complete-only; closed read-only presentation; contrast method locked.
+**Status**: Phases 1–9 (T001–T058) complete — shell/IA/primitives/palette landed. **Remaining work**: Phases 10–17 (T059+) modern minimalism polish per plan refresh / R8.
 
 ## Format: `[ID] [P?] [Story?] Description`
 
 ---
 
-## Phase 1: Setup (Shared Infrastructure)
+## Phase 1: Setup (Shared Infrastructure) — DONE
 
 **Purpose**: Evidence stub, folders, tokens entry, window sizing
 
@@ -28,7 +28,7 @@
 
 ---
 
-## Phase 2: Foundational (Blocking Prerequisites)
+## Phase 2: Foundational (Blocking Prerequisites) — DONE
 
 **Purpose**: Theme helper + shared primitives  
 
@@ -49,7 +49,7 @@
 
 ---
 
-## Phase 3: User Story 1 — Coherent shell and navigation (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 — Coherent shell and navigation (Priority: P1) 🎯 MVP — DONE
 
 **Goal**: Six primary destinations + Inbox→Actions secondary + Team/Reviews section sub-nav  
 **Independent Test**: Tab through primary nav and section sub-navs; Actions via Inbox; no seventh primary Actions item; LocalStatus visible
@@ -70,7 +70,7 @@
 
 ---
 
-## Phase 4: User Story 2 — Design tokens and reusable components (Priority: P1)
+## Phase 4: User Story 2 — Design tokens and reusable components (Priority: P1) — DONE
 
 **Goal**: Shared tokens/primitives on Inbox, Planning, ≥1 Reviews; theme toggle; Select used once  
 **Independent Test**: Theme toggle; shared Banner/Empty; SC-U04 manual contrast notes
@@ -88,7 +88,7 @@
 
 ---
 
-## Phase 5: User Story 3 — Information-clear capacity planning surface (Priority: P1)
+## Phase 5: User Story 3 — Information-clear capacity planning surface (Priority: P1) — DONE
 
 **Goal**: Planning hierarchy; unknown/conflicted honesty; closed read-only presentation; no fake 003 editors  
 **Independent Test**: SC-U02/U03; closed period non-focusable frozen fields; API totals when present
@@ -107,7 +107,7 @@
 
 ---
 
-## Phase 6: User Story 5 — Honest persistence and system states (Priority: P1)
+## Phase 6: User Story 5 — Honest persistence and system states (Priority: P1) — DONE
 
 **Goal**: Shared save/empty/error/offline patterns; keep consequential confirms  
 **Independent Test**: SaveIndicator on autosave; EmptyState; Local status; close/restore still confirmable
@@ -125,7 +125,7 @@
 
 ---
 
-## Phase 7: User Story 4 — Contextual editing and command palette (Priority: P2)
+## Phase 7: User Story 4 — Contextual editing and command palette (Priority: P2) — DONE
 
 **Goal**: Meta/Ctrl+K palette including Personal Actions  
 **Independent Test**: SC-U05; empty filter → EmptyState
@@ -141,7 +141,7 @@
 
 ---
 
-## Phase 8: User Story 6 — Accessibility and desktop practicality (Priority: P2)
+## Phase 8: User Story 6 — Accessibility and desktop practicality (Priority: P2) — DONE
 
 **Goal**: Keyboard SC-U01, focus rings, names, window sizes, shortcut degrade  
 **Independent Test**: SC-U01 ×3; FR-U13 at minimum size
@@ -158,7 +158,7 @@
 
 ---
 
-## Phase 9: Polish & Cross-Cutting Concerns
+## Phase 9: Polish & Cross-Cutting Concerns — DONE (pre-minimalism)
 
 - [x] T054 [P] Align `specs/004-lead-command-ux/quickstart.md` with nav labels, Inbox→Actions, Team/Reviews sub-nav, shortcuts, window sizes, contrast method
 - [x] T055 [P] Align `specs/004-lead-command-ux/plan.md` clarification→design mapping with post-clarify decisions (Actions secondary, section sub-nav, governance B, closed read-only, contrast B)
@@ -168,87 +168,209 @@
 
 ---
 
+## Phase 10: Modern Minimalism Foundation (Blocking for polish stories)
+
+**Purpose**: Density tokens, quiet background, shared list/row chrome, motion tokens per research R8 / contracts visual-density  
+**⚠️ CRITICAL**: Complete before Phases 11–16 polish story work
+
+- [ ] T059 Add density tokens to `apps/desktop/src/styles/tokens.css`: `--sidebar-width` (~200px), `--content-max`, `--motion-fast` (≤200ms), keep `theme` `"dark" | "light"` (default `"dark"`) and existing semantic status tokens
+- [ ] T060 Quiet page background in `apps/desktop/src/styles/base.css` — soft single-plane or very low-contrast atmosphere; tone down large accent radial wash so content leads (R8); no purple/glow aesthetic
+- [ ] T061 Replace stacked bordered-card list chrome in `apps/desktop/src/styles/base.css` (`.list li`, `.card` defaults) with hairline dividers / spacing for passive lists; reserve elevated `--bg-elevated` panels for interactive clusters only (forms, palette, confirms)
+- [ ] T062 [P] Add short motion utilities in `apps/desktop/src/styles/base.css` for palette/theme/route transitions using `--motion-fast` only (no decorative loops)
+
+**Checkpoint**: Tokens + base chrome ready for surface polish
+
+---
+
+## Phase 11: User Story 1 — Slim shell chrome (Priority: P1) 🎯 MVP polish
+
+**Goal**: Calm minimal shell — slim sidebar, quiet brand, LocalStatus as footer text (not a status dashboard)  
+**Independent Test**: Shell shows six primary nav items + LocalStatus; no stat strips/promo chrome; keyboard Tab still reaches nav
+
+### Implementation
+
+- [ ] T063 [US1] Slim `apps/desktop/src/shell/AppShell.tsx` + `.app-shell`/`.sidebar`/`.brand` in `apps/desktop/src/styles/base.css` to ~`--sidebar-width`; quiet brand (LOS + one short local-first line); LocalStatus footer only — no dashboard widgets
+- [ ] T064 [US1] Quiet active/hover styles for `apps/desktop/src/shell/Nav.tsx` and `apps/desktop/src/shell/SectionSubNav.tsx` (accent for focus/active only; no glow rings or pill clusters)
+- [ ] T065 [US1] Record slim-shell smoke (no seventh primary Actions; LocalStatus visible) in `specs/004-lead-command-ux/checklists/verification-evidence.md`
+
+**Checkpoint**: Shell reads modern/minimal without IA changes
+
+---
+
+## Phase 12: User Story 2 — Quiet tokens on core surfaces (Priority: P1)
+
+**Goal**: One title + short lede; reducer card chrome on Inbox/Actions/Reviews; theme remains readable  
+**Independent Test**: Theme toggle; Inbox/Planning first viewport has one h1 + lede; lists use dividers more than stacked cards
+
+### Implementation
+
+- [ ] T066 [US2] Apply SurfaceLayout (one `h1` + optional one-line lede; essential region first) to `apps/desktop/src/features/inbox/InboxPage.tsx` and `apps/desktop/src/features/inbox/QuickCapture.tsx` without removing Banner/SaveIndicator/EmptyState
+- [ ] T067 [P] [US2] Apply SurfaceLayout + divider list chrome to `apps/desktop/src/features/actions/ActionsPage.tsx`
+- [ ] T068 [P] [US2] Apply SurfaceLayout + quieter chrome to `apps/desktop/src/features/reviews/MonthlyReviewPage.tsx` (and `ReviewsPage.tsx` host if needed)
+- [ ] T069 [US2] Align `apps/desktop/src/ui/Row.tsx` / list consumers with divider-first chrome (no decorative multi-layer shadows)
+- [ ] T070 [US2] Re-run SC-U04 manual contrast spot-check after token/background changes; update notes in `specs/004-lead-command-ux/checklists/verification-evidence.md` for body, muted, status cues on Inbox + Planning × dark and light
+
+**Checkpoint**: Shared primitives still used; surfaces quieter
+
+---
+
+## Phase 13: User Story 3 — Planning hierarchy, minimal density (Priority: P1)
+
+**Goal**: Keep period/status/summary/demand honesty; compact summary; progressive disclosure for secondary; no fake 003 fields  
+**Independent Test**: SC-U02/U03 still hold; conflict banner visible; summary not a global chrome widget
+
+### Implementation
+
+- [ ] T071 [US3] Compact Planning first viewport in `apps/desktop/src/features/planning/CapacityPlanPage.tsx`: period identity + open/closed + conflicted StatusCue; load/remain + unallocated/unestimated when present; demand; warnings via Banner — secondary history/notes collapsed (FR-U05/U06)
+- [ ] T072 [US3] Restyle Planning summary strip / demand rows in `CapacityPlanPage.tsx` + related `base.css` classes (`.summary-strip`, `.period-header`) toward divider/spacing chrome without removing text status cues
+- [ ] T073 [US3] Honesty floor check: closed read-only, unknown ≠ `0`, conflicted text after soft-gate; still omit unimplemented 003 editors (FR-U12); note in verification-evidence.md
+
+**Checkpoint**: Planning remains decision-clear and visually quieter
+
+---
+
+## Phase 14: User Story 5 — Flow clarity + honest states (Priority: P1)
+
+**Goal**: Empty states name exactly one next action; Settings without card grids; saves/errors still observable  
+**Independent Test**: Empty Inbox/demand → one CTA; SaveIndicator still visible; close/restore still confirmable
+
+### Implementation
+
+- [ ] T074 [US5] Ensure `apps/desktop/src/ui/EmptyState.tsx` consumers on `InboxPage.tsx` and `CapacityPlanPage.tsx` name exactly one primary next action (contracts UX flow)
+- [ ] T075 [US5] Restyle `apps/desktop/src/features/settings/SettingsPage.tsx` as grouped prefs with spacing/dividers — no card-grid chrome; keep theme toggle + confirmable restore
+- [ ] T076 [P] [US5] Apply SurfaceLayout (one title + lede) to `apps/desktop/src/features/reviews/DailyReviewPage.tsx` and `apps/desktop/src/features/reviews/FortnightPlanPage.tsx` without dropping SaveIndicator
+- [ ] T077 [US5] Record empty/save/settings-minimal smoke in `specs/004-lead-command-ux/checklists/verification-evidence.md`
+
+**Checkpoint**: Flows clearer; honesty preserved
+
+---
+
+## Phase 15: User Story 4 — Quiet palette motion (Priority: P2)
+
+**Goal**: Short palette open/close motion; keep SC-U05 and empty-filter EmptyState  
+**Independent Test**: Meta/Ctrl+K → Planning under 5s; motion ≤ `--motion-fast`; Escape closes
+
+### Implementation
+
+- [ ] T078 [US4] Apply quiet open/close motion to `apps/desktop/src/shell/CommandPalette.tsx` + `.palette-backdrop`/`.palette-panel` in `apps/desktop/src/styles/base.css` using `--motion-fast`; remove heavy multi-layer shadow if present; keep elevated panel for interaction
+- [ ] T079 [US4] Optional ≤200ms route content fade in `apps/desktop/src/App.tsx` or `apps/desktop/src/shell/AppShell.tsx` main region only — no decorative animation noise
+- [ ] T080 [US4] Re-time SC-U05 palette→Planning dry-run; record in `specs/004-lead-command-ux/checklists/verification-evidence.md`
+
+**Checkpoint**: Palette remains keyboard-first and calm
+
+---
+
+## Phase 16: User Story 6 — A11y after polish (Priority: P2)
+
+**Goal**: Focus rings, names, keyboard SC-U01, window mins still hold after chrome changes  
+**Independent Test**: SC-U01 ×3; focus-visible on nav/fields/palette; FR-U13 at minimum size
+
+### Implementation
+
+- [ ] T081 [US6] Re-verify `:focus-visible` rings and accessible names on `AppShell.tsx`, `Nav.tsx`, `SectionSubNav.tsx`, `InboxPage.tsx`, `CapacityPlanPage.tsx`, `CommandPalette.tsx` after minimal chrome changes; fix gaps in those files / `base.css`
+- [ ] T082 [US6] Confirm progressive disclosure still collapses secondary before conflict banners at min window in `CapacityPlanPage.tsx`; re-check `tauri.conf.json` mins (FR-U13)
+- [ ] T083 [US6] Record SC-U01 keyboard Inbox capture → Planning ×3 after polish in `specs/004-lead-command-ux/checklists/verification-evidence.md`
+
+**Checkpoint**: Desktop UX gate still satisfied post-minimalism
+
+---
+
+## Phase 17: Polish & Cross-Cutting (modern minimal)
+
+**Purpose**: Docs, regression, honesty, complete-gate evidence for R8 pass
+
+- [ ] T084 [P] Align `specs/004-lead-command-ux/quickstart.md` check #11 (modern minimal) with implemented chrome; fix any drift
+- [ ] T085 [P] Confirm `specs/004-lead-command-ux/contracts/ui-shell.md` visual/density + UX flow sections match shipped behavior
+- [ ] T086 Run `pnpm test && pnpm lint && pnpm --filter @los/desktop build` (+ `cargo check` in `apps/desktop/src-tauri` if used); paste into verification-evidence.md (SC-U06/U07)
+- [ ] T087 Honesty pass: conflict/error/unknown/save/closed cues still text-visible after minimalism; 003 Track B still listed; do **not** mark FR-C05/C09/C12 done (FR-U11/U12)
+- [ ] T088 Record modern-minimal smoke + Desktop UX complete-gate refresh in `specs/004-lead-command-ux/checklists/verification-evidence.md`
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
 
-- Setup → Foundational → US1 → US2 → US3 → US5 (P1) → US4 / US6 (P2) → Polish
-- T001 does **not** block Phase 1–8 coding after spec approval; T058 blocks **complete**
+- Phases 1–9 (T001–T058): **complete**
+- Phase 10 (T059–T062): blocks Phases 11–16
+- Phase 11 (US1 slim shell) → Phase 12 (US2 surfaces) → Phase 13 (US3 Planning) → Phase 14 (US5 flows)
+- Phase 15 (US4) and Phase 16 (US6) after Phase 10; can follow Phase 11+
+- Phase 17 after desired polish stories
 
-### User Story Dependencies
+### User Story Dependencies (remaining)
 
 | Story | Depends on |
 |-------|------------|
-| US1 Shell | Phase 2 (+ SectionSubNav) |
-| US2 Tokens | US1 + Phase 2 |
-| US3 Planning | US1 + StatusCue/Banner |
-| US5 Persistence | US2 SaveIndicator/EmptyState |
-| US4 Palette | US1 routes (incl. `actions`) |
-| US6 A11y | US1 + focus/tokens |
+| US1 slim shell | Phase 10 |
+| US2 quiet surfaces | Phase 10 + US1 slim preferred |
+| US3 Planning density | Phase 10 + StatusCue/Banner intact |
+| US5 flow clarity | US2 EmptyState/SaveIndicator |
+| US4 palette motion | Phase 10 motion tokens |
+| US6 a11y recheck | After chrome changes on touched surfaces |
 
-### Parallel Opportunities
+### Parallel Opportunities (remaining)
 
-- T005 ∥ T006; T009–T014 ∥ T016 after T007/T008  
-- T028 ∥ T029 after T026  
-- T045 after T017  
-- T054 ∥ T055 in polish  
+- T061 ∥ T062 after T059/T060  
+- T067 ∥ T068 after T066  
+- T076 ∥ T075 after T074  
+- T084 ∥ T085 in Phase 17  
 
-### Parallel Example: Foundational
+### Parallel Example: Phase 12
 
 ```bash
-Task: "Add Field.tsx in apps/desktop/src/ui/Field.tsx"
-Task: "Add Select.tsx in apps/desktop/src/ui/Select.tsx"
-Task: "Add Banner.tsx in apps/desktop/src/ui/Banner.tsx"
-Task: "Add SectionSubNav.tsx in apps/desktop/src/shell/SectionSubNav.tsx"
+Task: "Apply SurfaceLayout to ActionsPage.tsx"
+Task: "Apply SurfaceLayout to MonthlyReviewPage.tsx"
 ```
 
 ---
 
 ## Implementation Strategy
 
-### MVP
+### MVP (remaining)
 
-Phases 1–5 through T038 (shell with Actions/Team/Reviews IA + tokens + Planning honesty/closed read-only) after **spec approval**.
+Phase 10 + Phase 11 (slim shell) + Phase 12 Inbox/Planning quiet chrome (T066, T070) — validate modern minimal first viewport.
 
 ### Incremental
 
-1. Setup + Foundational  
-2. US1 shell IA  
-3. US2 theme/primitives  
-4. US3 Planning honesty  
-5. US5 save/empty  
-6. US4 palette  
-7. US6 a11y  
-8. Polish + constitution complete-gate (T058)
+1. Phase 10 foundation tokens/chrome  
+2. US1 slim shell  
+3. US2 surface quieting + SC-U04 recheck  
+4. US3 Planning density  
+5. US5 empty/settings flows  
+6. US4 palette motion  
+7. US6 a11y recheck  
+8. Phase 17 evidence + regression  
 
 ---
 
 ## Requirement Traceability
 
-| Requirement / SC | Tasks |
-|------------------|-------|
-| FR-U01 shell + Actions secondary + Team/Reviews sub-nav | T016–T025 |
-| FR-U02 tokens | T004–T005, T007, T026 |
-| FR-U03 primitives (+ Select used) | T008–T015, T027–T030 |
-| FR-U04 non-color status | T011, T015, T034–T035, T042 |
-| FR-U05 Planning + closed read-only | T032–T038 |
-| FR-U06 progressive disclosure | T032, T051 |
-| FR-U07 palette (+ Actions) | T045–T048 |
-| FR-U08 save patterns | T012, T039–T044 |
-| FR-U09 keyboard + focus | T005, T018, T049–T053 |
-| FR-U10–U12 | T037, T056–T057 |
-| FR-U13 window sizes | T006, T051 |
-| SC-U01 | T053 |
-| SC-U02–U03 | T034–T035, T038 |
-| SC-U04 contrast + theme | T031 |
-| SC-U05 | T048 |
-| SC-U06–U07 | T056 |
-| Constitution complete-gate | T001, T058 |
+| Requirement / SC | Tasks (original) | Tasks (minimal polish) |
+|------------------|------------------|------------------------|
+| FR-U01 shell | T016–T025 | T063–T065 |
+| FR-U02 tokens | T004–T005, T007, T026 | T059–T060, T070 |
+| FR-U03 primitives | T008–T015, T027–T030 | T069 |
+| FR-U04 non-color status | T011, T015, T034–T035, T042 | T073, T087 |
+| FR-U05 Planning + closed | T032–T038 | T071–T073 |
+| FR-U06 progressive disclosure | T032, T051 | T071, T082 |
+| FR-U07 palette | T045–T048 | T078–T080 |
+| FR-U08 save patterns | T012, T039–T044 | T074, T076–T077 |
+| FR-U09 keyboard + focus | T005, T018, T049–T053 | T081, T083 |
+| FR-U10–U12 | T037, T056–T057 | T073, T086–T087 |
+| FR-U13 window sizes | T006, T051 | T082 |
+| SC-U01 | T053 | T083 |
+| SC-U02–U03 | T034–T035, T038 | T073 |
+| SC-U04 | T031 | T070 |
+| SC-U05 | T048 | T080 |
+| SC-U06–U07 | T056 | T086 |
+| Modern minimal (R8) | — | T059–T088 |
+| Constitution complete-gate | T001, T058 | T088 |
 
 ---
 
 ## Notes
 
 - Track B (003) remains out of 004 implementation  
-- Format: all tasks use `- [x] Tnnn [P?] [USn?] …` with file paths  
-- Sync note: `contracts/ui-shell.md` updated with this remediation; run T055 for plan.md alignment during polish (or before implement)
+- Do not reopen T001–T058 checkboxes; only mark T059+ as completed with evidence  
+- Format: all tasks use `- [ ] Tnnn [P?] [USn?] …` with file paths (open) or `- [x]` (done)  
+- Next: `/speckit-implement` starting at T059

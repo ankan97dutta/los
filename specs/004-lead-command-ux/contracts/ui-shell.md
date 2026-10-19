@@ -4,7 +4,7 @@ Presentation-only contracts. No new Tauri invokes required for MVP chrome.
 
 **Feature dir**: `specs/004-lead-command-ux`  
 **Git branch**: `feature/005-lead-command-ux`  
-**Aligned to**: clarify session 2026-10-19
+**Aligned to**: clarify session 2026-10-19 + modern minimalism plan refresh (R8)
 
 ## Primary routes
 
@@ -41,6 +41,18 @@ type UiTheme = 'dark' | 'light';
 
 Default: `dark`. Toggle control lives in Settings (optional shell affordance allowed).
 
+## Visual / density contract (modern minimal)
+
+| Rule | Requirement |
+|------|-------------|
+| Shell | Slim sidebar; brand + primary nav + LocalStatus; no stat strips or promo chrome |
+| Surfaces | One title + optional one-line lede; essential content first |
+| Chrome | Prefer spacing/dividers over stacked bordered cards for passive lists |
+| Elevation | Elevated panels allowed for interactive clusters (forms, palette, confirms) |
+| Status honesty | Conflict / error / unknown / save / closed cues MUST remain text-visible (never color-only, never removed for aesthetics) |
+| Motion | Palette + optional theme/route transition only; short duration; no decorative loops |
+| Anti-patterns | No purple-indigo default theme, glow stacks, pill clusters, emoji chrome, multi-layer shadows |
+
 ## Command palette actions
 
 ```ts
@@ -76,6 +88,15 @@ Documented open shortcut: `Meta+K` (macOS) / `Ctrl+K` (other). Escape closes. Em
 
 Closed planning period: frozen structure uses **read-only presentation** (non-focusable edit controls + clear closed cue); notes/history interactive only per 003.
 
+## UX flow contract (minimal path)
+
+| Flow | Contract |
+|------|----------|
+| Capture → plan | Keyboard: open Inbox → capture → navigate Planning (SC-U01); palette may shortcut either hop |
+| Empty → action | EmptyState names exactly one primary next action |
+| Conflicted plan | Conflict banner stays visible after soft-gate ack; secondary history remains disclosable |
+| Closed period | Structure read-only; notes/history per 003 |
+
 ## Window sizing (FR-U13)
 
 | | Size |
@@ -87,7 +108,7 @@ Prefer Tauri `minWidth`/`minHeight` when supported; otherwise document + verify 
 
 ## Contrast (SC-U04)
 
-Manual spot-check of body text, muted text, and danger/warning/unknown/conflicted status cues on Inbox + Planning for both themes; notes in verification-evidence (no formal WCAG tool).
+Manual spot-check of body text, muted text, and danger/warning/unknown/conflicted status cues on Inbox + Planning for both themes; notes in verification-evidence (no formal WCAG tool). Re-check after minimalism polish if token backgrounds change.
 
 ## Non-goals
 
@@ -95,3 +116,4 @@ Manual spot-check of body text, muted text, and danger/warning/unknown/conflicte
 - Fake controls for unimplemented 003 fields
 - Domain schema or capacity formula changes
 - Seventh primary nav item for Actions
+- Dashboard widget chrome or new product modules
