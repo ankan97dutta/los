@@ -31,3 +31,7 @@ One LOS instance writes the DB. Do not run two writers against the same file. Lo
 2. **Quit-and-replace**: Quit LOS, copy a backup over `los.sqlite`, relaunch (migrations run on open).
 
 Newer-schema backups are refused with `DB_SCHEMA_TOO_NEW` before replacing the live file.
+
+### Capacity planning (003)
+
+Sidebar **Capacity** opens fortnight team capacity, demand, allocations, soft-gate warnings, close/history, and optional carry-forward. Schema migration `002_capacity_planning.sql`. Closed periods freeze plan structure; outcome/carryover/trade-off notes remain editable. Vite preview uses MemoryStore planning tables; acceptance remains Tauri SQLite.

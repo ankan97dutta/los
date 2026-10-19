@@ -2,6 +2,14 @@ import type { PersonalAction } from './actions.js';
 import type { InboxItem } from './inbox.js';
 import type { DailyNextActionLine, DailyReview } from './daily.js';
 import type { Weekday } from './periods/fortnight.js';
+import type {
+  CandidateWorkItem,
+  CommitmentSnapshot,
+  PeriodMemberCapacity,
+  PlanningPeriodMeta,
+  TeamMember,
+  WorkAllocation,
+} from './planning.js';
 
 export type Application = {
   id: string;
@@ -72,6 +80,40 @@ export interface MonthlyRepository {
 export interface SettingsRepository {
   get(): Promise<WorkspaceSettings>;
   save(settings: WorkspaceSettings): Promise<void>;
+}
+
+export interface TeamMembersRepository {
+  list(): Promise<TeamMember[]>;
+  getById(id: string): Promise<TeamMember | null>;
+  save(member: TeamMember): Promise<void>;
+}
+
+export interface PlanningPeriodsRepository {
+  get(periodStart: string): Promise<PlanningPeriodMeta | null>;
+  save(period: PlanningPeriodMeta): Promise<void>;
+}
+
+export interface PeriodCapacityRepository {
+  listByPeriod(periodStart: string): Promise<PeriodMemberCapacity[]>;
+  get(periodStart: string, teamMemberId: string): Promise<PeriodMemberCapacity | null>;
+  save(row: PeriodMemberCapacity): Promise<void>;
+}
+
+export interface CandidateWorkRepository {
+  listByPeriod(periodStart: string): Promise<CandidateWorkItem[]>;
+  getById(id: string): Promise<CandidateWorkItem | null>;
+  save(item: CandidateWorkItem): Promise<void>;
+}
+
+export interface WorkAllocationRepository {
+  getByWorkItemId(workItemId: string): Promise<WorkAllocation | null>;
+  listByPeriodWorkIds(workItemIds: string[]): Promise<WorkAllocation[]>;
+  save(allocation: WorkAllocation): Promise<void>;
+}
+
+export interface CommitmentSnapshotRepository {
+  getByPeriod(periodStart: string): Promise<CommitmentSnapshot | null>;
+  save(snapshot: CommitmentSnapshot): Promise<void>;
 }
 
 export type { DailyNextActionLine, DailyReview };

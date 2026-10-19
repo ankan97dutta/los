@@ -11,6 +11,7 @@ import { FortnightPlanPage } from './features/reviews/FortnightPlanPage';
 import { MonthlyReviewPage } from './features/reviews/MonthlyReviewPage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { DbOpenError } from './features/status/DbOpenError';
+import { CapacityPlanPage } from './features/planning/CapacityPlanPage';
 
 type Route =
   | 'inbox'
@@ -18,6 +19,7 @@ type Route =
   | 'applications'
   | 'daily'
   | 'fortnight'
+  | 'capacity'
   | 'monthly'
   | 'settings'
   | 'quick';
@@ -28,6 +30,7 @@ const NAV: { id: Route; label: string }[] = [
   { id: 'applications', label: 'Applications' },
   { id: 'daily', label: 'Daily' },
   { id: 'fortnight', label: 'Fortnight' },
+  { id: 'capacity', label: 'Capacity' },
   { id: 'monthly', label: 'Monthly' },
   { id: 'settings', label: 'Settings' },
 ];
@@ -166,6 +169,7 @@ export function App() {
         {route === 'applications' ? <ApplicationsPage rt={rt} /> : null}
         {route === 'daily' ? <DailyReviewPage rt={rt} /> : null}
         {route === 'fortnight' ? <FortnightPlanPage rt={rt} /> : null}
+        {route === 'capacity' ? <CapacityPlanPage rt={rt} /> : null}
         {route === 'monthly' ? <MonthlyReviewPage rt={rt} /> : null}
         {route === 'settings' ? (
           <SettingsPage rt={rt} onRestored={() => setReloadKey((k) => k + 1)} />

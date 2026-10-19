@@ -1,10 +1,16 @@
 import type {
   Application,
+  CandidateWorkItem,
+  CommitmentSnapshot,
   FortnightPlan,
   InboxItem,
   MonthlyReview,
+  PeriodMemberCapacity,
   PersonalAction,
   DailyReview,
+  PlanningPeriodMeta,
+  TeamMember,
+  WorkAllocation,
   WorkspaceSettings,
 } from '@los/domain';
 import { newId } from '@los/domain';
@@ -18,9 +24,15 @@ export type LosDbSnapshot = {
   fortnights: FortnightPlan[];
   monthly: MonthlyReview[];
   settings: WorkspaceSettings;
+  teamMembers: TeamMember[];
+  planningPeriods: PlanningPeriodMeta[];
+  periodCapacities: PeriodMemberCapacity[];
+  candidateWork: CandidateWorkItem[];
+  workAllocations: WorkAllocation[];
+  commitmentSnapshots: CommitmentSnapshot[];
 };
 
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
 
 export function seedApplications(nowIso: string): Application[] {
   return ([1, 2, 3, 4] as const).map((slotIndex) => ({
@@ -51,17 +63,42 @@ export function createEmptySnapshot(nowIso: string = new Date().toISOString()): 
     fortnights: [],
     monthly: [],
     settings: defaultSettings(nowIso),
+    teamMembers: [],
+    planningPeriods: [],
+    periodCapacities: [],
+    candidateWork: [],
+    workAllocations: [],
+    commitmentSnapshots: [],
+  };
+}
+
+function normalizeSnapshot(data: LosDbSnapshot): LosDbSnapshot {
+  const empty = createEmptySnapshot(data.settings?.updatedAt);
+  return {
+    ...empty,
+    ...data,
+    version: Math.max(data.version ?? 1, SCHEMA_VERSION),
+    teamMembers: data.teamMembers ?? [],
+    planningPeriods: data.planningPeriods ?? [],
+    periodCapacities: data.periodCapacities ?? [],
+    candidateWork: data.candidateWork ?? [],
+    workAllocations: data.workAllocations ?? [],
+    commitmentSnapshots: data.commitmentSnapshots ?? [],
   };
 }
 
 export class MemoryStore {
-  constructor(public data: LosDbSnapshot = createEmptySnapshot()) {}
+  public data: LosDbSnapshot;
+
+  constructor(data: LosDbSnapshot = createEmptySnapshot()) {
+    this.data = normalizeSnapshot(data);
+  }
 
   clone(): LosDbSnapshot {
     return structuredClone(this.data);
   }
 
   replace(data: LosDbSnapshot): void {
-    this.data = structuredClone(data);
+    this.data = normalizeSnapshot(structuredClone(data));
   }
 }

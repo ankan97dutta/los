@@ -15,6 +15,8 @@ import type {
   WorkspaceSettings,
 } from '@los/domain';
 import type { MemoryStore } from './memory_store.js';
+import { createMemoryPlanningRepos } from './memory_planning.js';
+import type { PlanningRepos } from './planning_repos.js';
 
 export function createRepos(store: MemoryStore): {
   inbox: InboxRepository;
@@ -24,8 +26,10 @@ export function createRepos(store: MemoryStore): {
   fortnight: FortnightRepository;
   monthly: MonthlyRepository;
   settings: SettingsRepository;
+  planning: PlanningRepos;
 } {
   return {
+    planning: createMemoryPlanningRepos(store),
     inbox: {
       async listOpen() {
         return store.data.inbox

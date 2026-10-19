@@ -8,6 +8,8 @@ export * from './fortnight_repo.js';
 export * from './monthly_repo.js';
 export * from './ports.js';
 export * from './sqlite_repos.js';
+export * from './planning_repos.js';
+export * from './memory_planning.js';
 export * from './legacy_import.js';
 export {
   migrateWithScripts,

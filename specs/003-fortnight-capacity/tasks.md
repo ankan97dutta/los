@@ -19,8 +19,8 @@
 
 **Purpose**: Feature docs inventory and migration slot
 
-- [ ] T001 Create `specs/003-fortnight-capacity/checklists/verification-evidence.md` stub (commands + smoke table empty)
-- [ ] T002 [P] Confirm next migration number unused under `packages/persistence/migrations/` and reserve `002_capacity_planning.sql` in plan note if still free
+- [x] T001 Create `specs/003-fortnight-capacity/checklists/verification-evidence.md` stub (commands + smoke table empty)
+- [x] T002 [P] Confirm next migration number unused under `packages/persistence/migrations/` and reserve `002_capacity_planning.sql` in plan note if still free
 
 ---
 
@@ -30,16 +30,16 @@
 
 **⚠️ CRITICAL**: Complete before user-story UI phases
 
-- [ ] T003 Define pure capacity/load helpers in `packages/domain/src/capacity.ts` (`grossHours`/`deductionHours`/`netHours` may be negative; committed load excludes unknown and stretch; unallocated never in committed load) per `data-model.md` / research R3–R4
-- [ ] T004 [P] Add failing-then-passing Vitest for SC-C01 cases in `packages/domain/tests/capacity.test.ts` (unknown ≠ zero; negative net display; stretch excluded)
-- [ ] T005 Add allocation validation helpers in `packages/domain/src/planning.ts` (`commitmentKind=commitment` requires non-null `teamMemberId`; `estimateUnknown=true` ⇒ `estimateHours` MUST be null)
-- [ ] T006 [P] Vitest for assignee/estimate invariants in `packages/domain/tests/planning_work.test.ts`
-- [ ] T007 Extend repository ports in `packages/domain/src/ports.ts` for TeamMember, PeriodMemberCapacity, CandidateWorkItem (`carriedFromWorkItemId` optional), WorkAllocation, PlanningPeriodMeta (`warningsAcknowledgedAt`), CommitmentSnapshot
-- [ ] T008 Add SQL migration `packages/persistence/migrations/002_capacity_planning.sql` creating tables per `data-model.md` (unique `(period_start, team_member_id)`; `estimate_unknown` vs `estimate_hours`; `commitment_kind` check; `carried_from_work_item_id` nullable)
-- [ ] T009 Implement sqlite repos for planning entities in `packages/persistence/src/planning_repos.ts` (exported via persistence barrel / `createSqliteRepos` or parallel factory)
-- [ ] T010 [P] Vitest migrate applies `002` and round-trips capacity + work row in `packages/persistence/tests/capacity_migrate.test.ts`
-- [ ] T011 Bump `APP_MAX_SCHEMA_VERSION` and embed `002` in `packages/persistence/src/ports.ts` + `packages/persistence/src/migrations_embedded.ts` so Tauri/Node migrate includes capacity tables
-- [ ] T012 Export new ports/helpers from `packages/domain/src/index.ts` and persistence barrels without breaking browser-safe index
+- [x] T003 Define pure capacity/load helpers in `packages/domain/src/capacity.ts` (`grossHours`/`deductionHours`/`netHours` may be negative; committed load excludes unknown and stretch; unallocated never in committed load) per `data-model.md` / research R3–R4
+- [x] T004 [P] Add failing-then-passing Vitest for SC-C01 cases in `packages/domain/tests/capacity.test.ts` (unknown ≠ zero; negative net display; stretch excluded)
+- [x] T005 Add allocation validation helpers in `packages/domain/src/planning.ts` (`commitmentKind=commitment` requires non-null `teamMemberId`; `estimateUnknown=true` ⇒ `estimateHours` MUST be null)
+- [x] T006 [P] Vitest for assignee/estimate invariants in `packages/domain/tests/planning_work.test.ts`
+- [x] T007 Extend repository ports in `packages/domain/src/ports.ts` for TeamMember, PeriodMemberCapacity, CandidateWorkItem (`carriedFromWorkItemId` optional), WorkAllocation, PlanningPeriodMeta (`warningsAcknowledgedAt`), CommitmentSnapshot
+- [x] T008 Add SQL migration `packages/persistence/migrations/002_capacity_planning.sql` creating tables per `data-model.md` (unique `(period_start, team_member_id)`; `estimate_unknown` vs `estimate_hours`; `commitment_kind` check; `carried_from_work_item_id` nullable)
+- [x] T009 Implement sqlite repos for planning entities in `packages/persistence/src/planning_repos.ts` (exported via persistence barrel / `createSqliteRepos` or parallel factory)
+- [x] T010 [P] Vitest migrate applies `002` and round-trips capacity + work row in `packages/persistence/tests/capacity_migrate.test.ts`
+- [x] T011 Bump `APP_MAX_SCHEMA_VERSION` and embed `002` in `packages/persistence/src/ports.ts` + `packages/persistence/src/migrations_embedded.ts` so Tauri/Node migrate includes capacity tables
+- [x] T012 Export new ports/helpers from `packages/domain/src/index.ts` and persistence barrels without breaking browser-safe index
 
 **Checkpoint**: Domain tests green; migration applies on Node bootstrap
 
@@ -52,14 +52,14 @@
 
 ### Tests
 
-- [ ] T013 [P] [US1] App-services test capacity upsert + summary net hours in `packages/app-services/tests/capacity_planning.test.ts`
+- [x] T013 [P] [US1] App-services test capacity upsert + summary net hours in `packages/app-services/tests/capacity_planning.test.ts`
 
 ### Implementation
 
-- [ ] T014 [US1] Implement `planning.membersList` / `memberUpsert` / `capacityUpsert` / period ensure in `packages/app-services/src/capacity_planning.ts` (hours ≥ 0 step 0.5; reject empty `displayName` max 200)
-- [ ] T015 [US1] Wire planning API clients in `apps/desktop/src/lib/api.ts`
-- [ ] T016 [US1] Capacity UI: roster + per-member inputs + explainable breakdown in `apps/desktop/src/features/planning/CapacityPlanPage.tsx` (keyboard-focusable fields; FR-C18)
-- [ ] T017 [US1] Nav entry to planning page in `apps/desktop/src/App.tsx` without removing Inbox/Daily/Fortnight personal flows
+- [x] T014 [US1] Implement `planning.membersList` / `memberUpsert` / `capacityUpsert` / period ensure in `packages/app-services/src/capacity_planning.ts` (hours ≥ 0 step 0.5; reject empty `displayName` max 200)
+- [x] T015 [US1] Wire planning API clients in `apps/desktop/src/lib/api.ts`
+- [x] T016 [US1] Capacity UI: roster + per-member inputs + explainable breakdown in `apps/desktop/src/features/planning/CapacityPlanPage.tsx` (keyboard-focusable fields; FR-C18)
+- [x] T017 [US1] Nav entry to planning page in `apps/desktop/src/App.tsx` without removing Inbox/Daily/Fortnight personal flows
 - [ ] T018 [US1] Record capacity save + relaunch note in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
 
 **Checkpoint**: Capacity editable and durable on Tauri path
@@ -73,12 +73,12 @@
 
 ### Tests
 
-- [ ] T019 [P] [US2] App-services Vitest work upsert validation (`estimateUnknown` vs hours; status enum) in `packages/app-services/tests/planning_work.test.ts`
+- [x] T019 [P] [US2] App-services Vitest work upsert validation (`estimateUnknown` vs hours; status enum) in `packages/app-services/tests/planning_work.test.ts`
 
 ### Implementation
 
-- [ ] T020 [US2] Implement `planning.workUpsert` / `workList` in `packages/app-services/src/capacity_planning.ts` (statuses `ready|blocked|waiting_external|done|dropped`; required `title` max 4000 as the description—no separate description field; `applicationId` optional FK to existing Applications)
-- [ ] T021 [US2] Demand list UI in `apps/desktop/src/features/planning/DemandPanel.tsx` (or section on CapacityPlanPage) with unknown/blocked affordances
+- [x] T020 [US2] Implement `planning.workUpsert` / `workList` in `packages/app-services/src/capacity_planning.ts` (statuses `ready|blocked|waiting_external|done|dropped`; required `title` max 4000 as the description—no separate description field; `applicationId` optional FK to existing Applications)
+- [x] T021 [US2] Demand list UI in `apps/desktop/src/features/planning/DemandPanel.tsx` (or section on CapacityPlanPage) with unknown/blocked affordances
 - [ ] T022 [US2] Record demand persistence smoke row in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
 
 **Checkpoint**: Demand list round-trips; unknown distinct from zero
@@ -92,15 +92,15 @@
 
 ### Tests
 
-- [ ] T023 [P] [US3] App-services test: `allocate` persists conflicted commitment without `acceptWarnings`, returns `warnings` + `planConflicted=true` in `packages/app-services/tests/capacity_warnings.test.ts`
-- [ ] T024 [P] [US3] App-services test `COMMIT_REQUIRES_ASSIGNEE` when `commitmentKind=commitment` and `teamMemberId=null` in `packages/app-services/tests/allocate_assignee.test.ts`
+- [x] T023 [P] [US3] App-services test: `allocate` persists conflicted commitment without `acceptWarnings`, returns `warnings` + `planConflicted=true` in `packages/app-services/tests/capacity_warnings.test.ts`
+- [x] T024 [P] [US3] App-services test `COMMIT_REQUIRES_ASSIGNEE` when `commitmentKind=commitment` and `teamMemberId=null` in `packages/app-services/tests/allocate_assignee.test.ts`
 
 ### Implementation
 
-- [ ] T025 [US3] Implement `planning.allocate` + `planning.periodGet` summary/warnings/`planConflicted` in `packages/app-services/src/capacity_planning.ts` per `contracts/planning-api.md` (no `acceptWarnings` on allocate)
-- [ ] T026 [US3] Implement `planning.periodSaveMeta` for tradeoff notes (also allowed when closed — notes only)
-- [ ] T027 [US3] UI: allocation controls, load vs capacity, warning banners; confirm **before** calling allocate when result would be conflicted; conflicted badge remains after confirm in `apps/desktop/src/features/planning/CapacityPlanPage.tsx`
-- [ ] T028 [US3] Stretch vs commitment visual distinction; block commitment UI path when unallocated
+- [x] T025 [US3] Implement `planning.allocate` + `planning.periodGet` summary/warnings/`planConflicted` in `packages/app-services/src/capacity_planning.ts` per `contracts/planning-api.md` (no `acceptWarnings` on allocate)
+- [x] T026 [US3] Implement `planning.periodSaveMeta` for tradeoff notes (also allowed when closed — notes only)
+- [x] T027 [US3] UI: allocation controls, load vs capacity, warning banners; confirm **before** calling allocate when result would be conflicted; conflicted badge remains after confirm in `apps/desktop/src/features/planning/CapacityPlanPage.tsx`
+- [x] T028 [US3] Stretch vs commitment visual distinction; block commitment UI path when unallocated
 - [ ] T029 [US3] Record overload soft-gate + assignee-reject smokes in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
 
 **Checkpoint**: Cannot treat overload as clean; unallocated cannot be commitment
@@ -114,14 +114,14 @@
 
 ### Tests
 
-- [ ] T030 [P] [US4] Vitest close writes snapshot; live status change does not alter snapshot; structural edit → `PERIOD_CLOSED`; close with warnings requires `acceptWarnings=true` in `packages/app-services/tests/planning_close.test.ts`
-- [ ] T031 [P] [US4] Vitest carry-forward: eligible = `commitment` ∧ `status ∉ {done,dropped}`; auto-creates next period; `done`/`dropped` → `CARRY_FORWARD_INVALID`; snapshot unchanged in `packages/app-services/tests/planning_carry_forward.test.ts`
+- [x] T030 [P] [US4] Vitest close writes snapshot; live status change does not alter snapshot; structural edit → `PERIOD_CLOSED`; close with warnings requires `acceptWarnings=true` in `packages/app-services/tests/planning_close.test.ts`
+- [x] T031 [P] [US4] Vitest carry-forward: eligible = `commitment` ∧ `status ∉ {done,dropped}`; auto-creates next period; `done`/`dropped` → `CARRY_FORWARD_INVALID`; snapshot unchanged in `packages/app-services/tests/planning_carry_forward.test.ts`
 
 ### Implementation
 
-- [ ] T032 [US4] Implement transactional `planning.periodClose` (snapshot + status=`closed` + `acceptWarnings` soft gate + optional `carryForwardWorkItemIds` with U1 eligibility + next-period create) and `planning.historyGet` in `packages/app-services/src/capacity_planning.ts`
-- [ ] T033 [US4] Enforce `PERIOD_CLOSED` on capacity/work/allocate mutations; allow notes via `periodSaveMeta` in same service module
-- [ ] T034 [US4] History / read-only closed period UI + carry-forward multi-select (only eligible incomplete commitments) on close in `apps/desktop/src/features/planning/PlanningHistory.tsx` (or close dialog on CapacityPlanPage)
+- [x] T032 [US4] Implement transactional `planning.periodClose` (snapshot + status=`closed` + `acceptWarnings` soft gate + optional `carryForwardWorkItemIds` with U1 eligibility + next-period create) and `planning.historyGet` in `packages/app-services/src/capacity_planning.ts`
+- [x] T033 [US4] Enforce `PERIOD_CLOSED` on capacity/work/allocate mutations; allow notes via `periodSaveMeta` in same service module
+- [x] T034 [US4] History / read-only closed period UI + carry-forward multi-select (only eligible incomplete commitments) on close in `apps/desktop/src/features/planning/PlanningHistory.tsx` (or close dialog on CapacityPlanPage)
 - [ ] T035 [US4] Record close/history + carry-forward (+ missing next period) smokes in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
 
 **Checkpoint**: Closed period frozen; carry-forward creates next-period copies without rewriting history
@@ -137,16 +137,16 @@
 - [ ] T037 [P] [US5] Confirm no Jira/Confluence/LLM deps in capacity flow; record SC-C07 in verification-evidence.md
 - [ ] T038 [US5] Keyboard path smoke SC-C06 (member + work + allocate + save) recorded in verification-evidence.md
 - [ ] T039 [US5] Timed dry-run SC-C05 (roster + ≥3 items + allocations + commit) recorded in verification-evidence.md
-- [ ] T040 [US5] Backup then restore smoke with capacity/planning rows present (reuse 002 backup path); record constitution Migration-safety evidence in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
+- [x] T040 [US5] Backup then restore smoke with capacity/planning rows present (reuse 002 backup path); record constitution Migration-safety evidence in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
 
 ---
 
 ## Phase 8: Polish
 
-- [ ] T041 [P] Align `specs/003-fortnight-capacity/quickstart.md` with real scripts/nav labels
-- [ ] T042 Update `apps/desktop/README.md` (or root README) with Capacity planning entry + freeze/carry-forward notes
-- [ ] T043 Run `pnpm test && pnpm lint && pnpm --filter @los/desktop build` + `cargo check`; paste into verification-evidence.md
-- [ ] T044 Final honesty pass: only `[X]` with evidence; 001/002 flows still smoke-ok (inbox capture still works)
+- [x] T041 [P] Align `specs/003-fortnight-capacity/quickstart.md` with real scripts/nav labels
+- [x] T042 Update `apps/desktop/README.md` (or root README) with Capacity planning entry + freeze/carry-forward notes
+- [x] T043 Run `pnpm test && pnpm lint && pnpm --filter @los/desktop build` + `cargo check`; paste into verification-evidence.md
+- [x] T044 Final honesty pass: only `[X]` with evidence; 001/002 flows still smoke-ok (inbox capture still works)
 
 ---
 

@@ -16,6 +16,7 @@ import type {
   Weekday,
 } from '@los/domain';
 import type { DbSession } from './ports.js';
+import { createPlanningRepos, type PlanningRepos } from './planning_repos.js';
 
 export type WorkspaceRepos = {
   inbox: InboxRepository;
@@ -25,10 +26,12 @@ export type WorkspaceRepos = {
   fortnight: FortnightRepository;
   monthly: MonthlyRepository;
   settings: SettingsRepository;
+  planning: PlanningRepos;
 };
 
 export function createSqliteRepos(db: DbSession): WorkspaceRepos {
   return {
+    planning: createPlanningRepos(db),
     inbox: {
       async listOpen() {
         const rows = await db.query<{

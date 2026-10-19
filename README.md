@@ -36,4 +36,4 @@ Backup: Settings → Export (SQLite copy), or copy `los.sqlite` while quit. Rest
 
 ## Spec Kit
 
-Active feature: `specs/002-harden-foundation/` (see `spec.md`, `plan.md`, `tasks.md`). Baseline: `specs/001-foundation-workspace/`.
+Active feature: `specs/003-fortnight-capacity/` (capacity planning). Baselines: `specs/001-foundation-workspace/`, `specs/002-harden-foundation/`.

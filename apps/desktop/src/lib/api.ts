@@ -57,4 +57,35 @@ export const api = {
   previousFortnight: svc.previousFortnight,
   nextFortnight: svc.nextFortnight,
   localToday: svc.localToday,
+  planningPeriodGet: (rt: WorkspaceRuntime, periodStart?: string) =>
+    svc.planningPeriodGet(rt, periodStart),
+  planningPeriodSaveMeta: (
+    rt: WorkspaceRuntime,
+    input: Parameters<typeof svc.planningPeriodSaveMeta>[1],
+  ) => svc.planningPeriodSaveMeta(rt, input),
+  planningPeriodClose: (
+    rt: WorkspaceRuntime,
+    input: Parameters<typeof svc.planningPeriodClose>[1],
+  ) => svc.planningPeriodClose(rt, input),
+  planningHistoryGet: (rt: WorkspaceRuntime, periodStart: string) =>
+    svc.planningHistoryGet(rt, periodStart),
+  planningMembersList: (rt: WorkspaceRuntime) => svc.planningMembersList(rt),
+  planningMemberUpsert: (
+    rt: WorkspaceRuntime,
+    input: Parameters<typeof svc.planningMemberUpsert>[1],
+  ) => svc.planningMemberUpsert(rt, input),
+  planningCapacityUpsert: (
+    rt: WorkspaceRuntime,
+    input: Parameters<typeof svc.planningCapacityUpsert>[1],
+  ) => svc.planningCapacityUpsert(rt, input),
+  planningWorkList: (rt: WorkspaceRuntime, periodStart: string) =>
+    svc.planningWorkList(rt, periodStart),
+  planningWorkUpsert: (
+    rt: WorkspaceRuntime,
+    input: Parameters<typeof svc.planningWorkUpsert>[1],
+  ) => svc.planningWorkUpsert(rt, input),
+  planningAllocate: (
+    rt: WorkspaceRuntime,
+    input: Parameters<typeof svc.planningAllocate>[1],
+  ) => svc.planningAllocate(rt, input),
 };
