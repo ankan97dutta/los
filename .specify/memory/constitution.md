@@ -1,3 +1,14 @@
+<!--
+Sync Impact Report (temporary — remove before commit if desired)
+- Version change: 1.0.0 → 1.1.0 (MINOR: expand Principle X + Desktop UX gate)
+- Modified principles: X. Usable Desktop Experience (expanded; title unchanged)
+- Modified gates: Desktop UX row (expanded honesty / keyboard / save observability)
+- Added sections: none
+- Removed sections: none
+- Source: .specify/proposals/2026-10-19-constitution-ux-amendment.md (Approve as written)
+- Follow-up TODOs: none
+-->
+
 # LOS (Lead OS) Constitution
 
 ## Core Principles
@@ -93,14 +104,34 @@ is not done.
 constitution's constraints visible during build-out.
 
 ### X. Usable Desktop Experience
-LOS MUST support quick capture, keyboard-friendly workflows, a system-tray
-entry point, clear offline/sync status, and responsive interactions.
+LOS MUST support quick capture, keyboard-operable primary workflows, a system-tray
+entry point, clear offline/degraded status, and responsive interactions.
 Core functionality MUST remain accessible if optional capabilities
 (integrations, AI, sync) are unavailable.
 UI MUST communicate degraded or offline state without blocking core paths.
 
-**Rationale**: A lead OS fails if it is slow to capture context or opaque about
-connectivity and sync.
+Interactive controls for primary workflows MUST be keyboard-operable and MUST
+expose accessible names (and roles where the toolkit supports them).
+Decision-critical status—including unknown values, conflicts, persistence
+outcomes (saved / failed / pending), offline or degraded mode, and errors—MUST
+be communicated with an explicit non-color-only cue (text, icon+text, or
+equivalent), never by color alone.
+Successful and failed durable saves for core workflows MUST be observable to
+the user; consequential and destructive actions MUST remain confirmable
+(aligned with Principle VII).
+The UI MUST use progressive disclosure: surface essential decisions and
+blocking conflicts first; reveal advanced detail on demand without hiding
+required warnings or errors.
+Core surfaces MUST share coherent navigation and status patterns so the
+product remains learnable; specific visual themes and component libraries are
+feature-level choices, not constitutional mandates.
+Native desktop conventions MUST be respected: system tray and global shortcuts
+where provided by the OS, practical default window sizing for lead workflows,
+and non-blocking behavior when optional OS integrations fail.
+
+**Rationale**: A lead OS fails if it is slow to capture context, opaque about
+connectivity and sync, or unclear about conflicts, unknown values, and save
+outcomes.
 
 ## Quality Gates
 
@@ -118,7 +149,7 @@ met. Gates are measurable and reviewable in PR or release verification.
 | Migration safety | Schema changes ship with versioned migrations; backup/restore smoke test passes for persistence-touching releases. |
 | Test evidence | New/changed domain rules include automated tests; critical workflows have verification notes or automated coverage. |
 | Spec completeness | Linked spec, plan, tasks, acceptance criteria, and verification evidence exist for the feature increment. |
-| Desktop UX | Keyboard path exists for primary capture/navigation; offline/sync status is visible when integrations are configured. |
+| Desktop UX | Keyboard path exists for primary capture, navigation, and core planning/review entry; offline/degraded, conflict, unknown, and error states use non-color-only cues when applicable; durable save success/failure is observable in core flows. |
 
 ## Spec-Driven Delivery
 
@@ -166,4 +197,4 @@ constitution prevails unless formally amended.
 - Exceptions are temporary, written, time-bounded, and MUST include a removal
   plan; unreviewed exceptions are not allowed.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-10-19
+**Version**: 1.1.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-10-19

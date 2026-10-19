@@ -1,0 +1,32 @@
+node_modules/
+dist/
+build/
+coverage/
+*.log
+.env
+.env.*
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/
+
+# Rust / Tauri
+target/
+apps/desktop/src-tauri/target/
+*.rs.bk
+
+# Local DB / backups
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+
+# Locks from accidental npm
+package-lock.json
+yarn.lock
+
+# OS / tooling
+.turbo/
+*.tsbuildinfo
