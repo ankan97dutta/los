@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-19
 
-**Status**: Draft
+**Status**: Clarified
 
 **Input**: User description: "Harden the LOS foundation implementation to meet its existing constitution, plan, and acceptance criteria. Replace JSON/localStorage with SQLite in Tauri app data; versioned migrations and transactions; no silent data loss; backup/restore against real DB; finish Tauri bootstrap/handlers; daily-review atomicity; fortnight completed selections; settings-driven shortcuts; fix lint; verification evidence; reconcile tasks. Do not redesign product or weaken constitution/original spec."
 
@@ -15,6 +15,15 @@
 - Audit: foundation implementation audit (P0/P1/P2 findings against 001)
 
 This feature remediates gaps so 001’s acceptance criteria and constitution gates become true. It does **not** change 001’s product scope or replace 001’s specification text.
+
+## Clarifications
+
+### Session 2026-10-19
+
+- Q: When a lead first opens the hardened desktop app with valid legacy localStorage/JSON data but no SQLite file yet, how should that legacy data be handled? → A: Auto-import once when SQLite is missing and legacy data validates; show a brief success or failure notice (not silent).
+- Q: When the lead saves a new global shortcut accelerator (or enables/disables it) in Settings, when should LOS apply that change to OS registration? → A: Re-register immediately after an explicit Settings save.
+- Q: How must backup restore work for the live desktop SQLite database in this remediation? → A: Both documented quit-and-replace and in-app Settings restore targeting the live SQLite file.
+- Q: For Vite-only browser preview (`pnpm dev` without Tauri), what persistence is required in this remediation? → A: Non-durable or labeled preview storage allowed; durable SQLite required only for Tauri-dev/packaged.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -31,7 +40,7 @@ An engineering lead uses the packaged desktop workspace; all captures, actions, 
 1. **Given** a first launch with no prior database file, **When** the lead uses the workspace, **Then** a SQLite database is created in the documented Tauri application-data directory and four application slots are seeded exactly once.
 2. **Given** the lead captured inbox items and review content, **When** they quit and relaunch with network unavailable, **Then** 100% of previously successfully saved records for this workspace remain present and readable (maps to 001 SC-002 / FR-003).
 3. **Given** an existing database file is corrupt or fails validation, **When** the app starts, **Then** LOS does **not** delete or overwrite that file with a fresh seed; it surfaces a recoverable failure and preserves the original file for backup/recovery.
-4. **Given** legacy browser/dev JSON or localStorage data exists and no SQLite DB yet exists, **When** the desktop app first opens a clean SQLite path, **Then** LOS may import only if the legacy data validates; import failure never destroys the legacy source or a healthy SQLite DB.
+4. **Given** legacy browser/dev JSON or localStorage data exists and no SQLite DB yet exists, **When** the desktop app first opens a clean SQLite path, **Then** LOS MUST attempt a one-time auto-import if the legacy data validates, MUST show a brief success or failure notice (not silent), and MUST never destroy the legacy source or overwrite a healthy SQLite DB on failure.
 
 **Audit mapping**: P0 persistence plan gap; P0 silent localStorage wipe; P0 app-data path unused · Constitution VII · 001 FR-003, FR-017, FR-023, SC-002
 
@@ -64,9 +73,10 @@ The lead can copy out and restore the actual desktop database file (documented p
 
 **Acceptance Scenarios**:
 
-1. **Given** the documented SQLite path, **When** the lead (or test) copies the file out as backup, **Then** the backup is a complete workspace snapshot.
-2. **Given** a valid backup file, **When** it replaces the live DB while the app is quit (or via an explicit restore path that targets that file), **Then** relaunch shows the restored data.
-3. **Given** Settings or docs describe backup/restore, **When** a lead follows them, **Then** paths and steps match the live desktop database (no claim that localStorage alone is the desktop DB).
+1. **Given** the documented SQLite path, **When** the lead (or test) copies the file out as backup (or uses Settings export of that file), **Then** the backup is a complete workspace snapshot.
+2. **Given** a valid backup file and the app is quit, **When** the lead replaces the live SQLite file at the documented path and relaunches, **Then** the workspace shows the restored data.
+3. **Given** a valid backup file and the app is running, **When** the lead uses Settings restore targeting the live SQLite file, **Then** the workspace reloads with the restored data without requiring a manual quit-and-replace.
+4. **Given** Settings or docs describe backup/restore, **When** a lead follows them, **Then** paths and steps match the live desktop SQLite database (no claim that localStorage alone is the desktop DB).
 
 **Audit mapping**: P0/P1 FR-023 partial · Constitution VII migration/backup gate · 001 FR-023
 
@@ -101,7 +111,7 @@ The lead’s configured global shortcut accelerator is what the OS registration 
 
 1. **Given** WorkspaceSettings contains a global shortcut accelerator and enabled flag, **When** the desktop shell registers shortcuts, **Then** it uses that configuration (not a hard-coded key only).
 2. **Given** the OS denies or fails registration, **When** the workspace is open, **Then** in-app capture still works and Local-only/capabilities UI indicates shortcut unavailable or failed.
-3. **Given** the lead updates the accelerator with an explicit save, **When** registration is retried per product rules, **Then** success or failure is reflected in status without blocking core workflows.
+3. **Given** the lead updates the accelerator or enabled flag with an explicit Settings save, **When** that save completes, **Then** LOS re-registers the OS shortcut immediately and success or failure is reflected in status without blocking core workflows (restart not required).
 
 **Audit mapping**: P1 shortcut settings unwired · 001 FR-014, FR-021
 
@@ -139,20 +149,20 @@ Maintainers can run lint/type-check successfully, see task checkboxes and eviden
 
 ### Functional Requirements
 
-- **FR-H01**: Packaged desktop MUST persist workspace data in SQLite under the documented Tauri application-data directory (not browser localStorage as the durable store). *(Audit P0; 001 FR-003; plan R2)*
+- **FR-H01**: Tauri-dev and packaged desktop MUST persist workspace data in SQLite under the documented Tauri application-data directory (not browser localStorage as the durable store). Vite-only preview MAY use clearly labeled non-durable storage and MUST NOT be treated as satisfying desktop relaunch/backup acceptance. *(Audit P0; 001 FR-003; plan R2)*
 - **FR-H02**: LOS MUST apply versioned database migrations on startup before serving workspace commands. *(Constitution VII; 001 plan)*
 - **FR-H03**: Multi-entity operations that must stay consistent—at minimum daily review upsert with next-action Personal Action create/update—MUST commit or roll back as a single transaction. *(Audit P1; 001 FR-019)*
 - **FR-H04**: Corrupt, unreadable, or invalid existing database (or legacy import source) MUST NOT trigger destructive reseed/overwrite of the original bytes; LOS MUST provide a recoverable failure path that preserves the original data. *(Audit P0; 001 FR-017; Constitution VII)*
-- **FR-H05**: Backup and restore MUST operate on the live desktop SQLite file; automated restore smoke MUST prove a known inbox item returns after file replace. *(Audit FR-023 gap; 001 FR-023)*
-- **FR-H06**: Documentation (desktop README / settings copy) MUST state the real DB path and backup steps matching FR-H01/FR-H05. *(Audit P0 path mismatch)*
+- **FR-H05**: Backup and restore MUST operate on the live desktop SQLite file; LOS MUST support (a) documented quit-and-replace of that file and (b) in-app Settings restore that targets the same file; automated restore smoke MUST prove a known inbox item returns after restore. *(Audit FR-023 gap; 001 FR-023)*
+- **FR-H06**: Documentation (desktop README / settings copy) MUST state the real DB path and both restore paths (quit-and-replace and in-app) matching FR-H01/FR-H05. *(Audit P0 path mismatch)*
 - **FR-H07**: Tauri bootstrap MUST open/migrate the SQLite DB and expose command handlers needed for workspace operations (or an equivalent single durable bridge) so the UI does not rely on ephemeral web storage for packaged runs. *(Audit P1 T013–T016/T020 unfinished)*
 - **FR-H08**: Fortnight plan views MUST retain and display selected actions after those actions are completed. *(Audit P1; 001 edge case)*
-- **FR-H09**: Global shortcut registration MUST use WorkspaceSettings accelerator/enabled values and MUST surface registration failure without blocking core capture. *(Audit P1; 001 FR-014/021)*
+- **FR-H09**: Global shortcut registration MUST use WorkspaceSettings accelerator/enabled values; MUST re-register immediately after an explicit Settings save of those values; and MUST surface registration failure without blocking core capture. *(Audit P1; 001 FR-014/021)*
 - **FR-H10**: Repository lint/type-check scripts that failed due to TypeScript project configuration MUST be fixed so `pnpm lint` succeeds for domain and persistence. *(Audit P1)*
 - **FR-H11**: Verification evidence MUST cover: persistence across relaunch, offline core workflows, tray behavior, shortcut behavior, and keyboard accessibility—with recorded results. *(Audit P1 unverified SC/US7; 001 FR-022, SC-001–005)*
 - **FR-H12**: Task checkboxes and implementation evidence MUST be reconciled with actual code state; work MUST NOT be marked complete without verification. *(Audit P1; Constitution IX)*
 - **FR-H13**: This remediation MUST NOT introduce mandatory cloud, account, LLM, Jira, or Confluence requirements. *(Constitution I–IV; 001 FR-016)*
-- **FR-H14**: Optional one-time import from legacy localStorage/JSON is allowed only when no SQLite DB exists and the source validates; failure MUST leave all sources intact. *(Migration risk control)*
+- **FR-H14**: On first open when no SQLite DB file exists, LOS MUST attempt a one-time auto-import from valid legacy localStorage/JSON; MUST show a brief success or failure notice (not silent); MUST NOT import over an existing SQLite DB; failure MUST leave all sources intact. *(Migration risk control)*
 
 ### Key Entities
 
@@ -179,7 +189,7 @@ Maintainers can run lint/type-check successfully, see task checkboxes and eviden
 
 ### Measurable Outcomes
 
-- **SC-H01**: In an offline packaged (or Tauri-dev) run, a newly captured inbox item is still present after quit and relaunch in 100% of verification trials (minimum 3 consecutive trials).
+- **SC-H01**: In an offline Tauri-dev or packaged run (not Vite-only preview), a newly captured inbox item is still present after quit and relaunch in 100% of verification trials (minimum 3 consecutive trials).
 - **SC-H02**: Automated restore smoke against the SQLite file passes: known inbox item returns after backup → mutate → restore.
 - **SC-H03**: Injected mid-save failure during daily next-action materialization leaves zero inconsistent half-states in the automated transaction test.
 - **SC-H04**: Presenting a corrupt DB file at the documented path never results in silent replacement by an empty seeded DB; original file checksum/size remains unchanged after the failed open attempt.
@@ -194,8 +204,8 @@ Maintainers can run lint/type-check successfully, see task checkboxes and eviden
 - Target remains macOS-first for tray/shortcut acceptance; Windows/Linux may follow without changing domain rules.
 - Single local user / single writer per DB file.
 - Existing 001 domain rules (inbox max length, next-action `lineId` behavior, four application slots, fortnight weekday settings) remain in force; this feature does not reopen those product decisions.
-- Vite-only browser preview may keep a non-durable or clearly labeled “preview storage” mode, but packaged Tauri must use SQLite per FR-H01; docs must not conflate the two.
-- One-time legacy import (FR-H14) is best-effort for prototype users; production trust after hardening is SQLite-only.
+- Vite-only preview may use labeled non-durable storage; durable SQLite and SC-H01/FR-023 acceptance apply to Tauri-dev/packaged only. Docs must not conflate the two.
+- One-time legacy auto-import (FR-H14) runs only when SQLite is absent and the source validates, with a visible notice; after a successful SQLite DB exists, production trust is SQLite-only.
 - Constitution and `specs/001-foundation-workspace/spec.md` are not edited to weaken requirements; remediation closes gaps instead.
 - “Recoverable failure” for corrupt DB may be a blocking error screen with path + backup instructions; full GUI repair wizard is out of scope.
 - Unrelated UI redesign and new product features (capacity, sync, AI, integrations) remain out of scope.
