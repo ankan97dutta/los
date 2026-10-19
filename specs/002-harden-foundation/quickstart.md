@@ -1,15 +1,16 @@
-# Quickstart / Verification: Harden Foundation
+# Quickstart Validation: Harden Foundation
 
 **Feature**: `002-harden-foundation`  
-**Purpose**: Pre-implementation review + post-implementation verification commands (no code changes until review).
+**Purpose**: Runnable validation after implementation (not a substitute for `tasks.md`).
 
 ## Prerequisites
 
 - Branch `feature/002-harden-foundation`
-- macOS for tray/shortcut acceptance
-- Read baseline: `specs/001-foundation-workspace/spec.md`, constitution, foundation audit findings
+- macOS + Rust + pnpm for Tauri
+- Airplane mode / network off for offline trials
+- Read [spec.md](./spec.md) clarifications and [data-model.md](./data-model.md)
 
-## After implementation (do not claim pass until run)
+## Setup
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH:$HOME/.cargo/bin"
@@ -18,27 +19,39 @@ pnpm lint
 pnpm test
 pnpm --filter @los/desktop build
 (cd apps/desktop/src-tauri && cargo check)
-pnpm --filter @los/desktop tauri:dev
+pnpm --filter @los/desktop tauri:dev   # durable path — required for SC-H01
 ```
 
-### Persistence / restore
+Vite-only `pnpm --filter @los/desktop dev` is **preview only** (labeled non-durable); do not use it for relaunch/backup acceptance.
 
-- Confirm DB path in `apps/desktop/README.md` matches live app-data SQLite file
-- Run Vitest backup_restore against SQLite
-- Manual: capture → quit → relaunch offline → item present (3×)
+## Automated checks
 
-### Corrupt open
+```bash
+pnpm --filter @los/persistence test   # migrations, corrupt_open, daily_transaction, backup_restore, legacy_import
+pnpm --filter @los/domain test
+pnpm --filter @los/app-services test
+pnpm lint                             # must pass (SC-H05)
+```
 
-- Place invalid bytes at DB path (while app quit) → launch → original file unchanged + recoverable error
+Expected: migrate+seed 4 apps; corrupt file checksum unchanged; daily rollback test; SQLite backup restore returns known inbox item.
 
-### Fortnight / shortcut / keyboard
+## Manual / recorded smokes (write `checklists/verification-evidence.md`)
 
-- Select action → complete → still listed on fortnight
-- Toggle/deny shortcut → in-app capture works; status shows failure
-- Keyboard-only: capture → triage → open actions
+1. **Relaunch persistence (SC-H01)** — Tauri-dev, offline: capture → quit → relaunch ×3; item present.
+2. **Corrupt open (SC-H04)** — Invalid bytes at DB path → launch → error UI; file size/checksum unchanged.
+3. **Legacy import** — With no SQLite + valid localStorage/JSON: notice on success/fail; data present if success.
+4. **Daily atomicity** — Covered by automated transaction test; optional UI smoke.
+5. **Backup/restore** — Settings export + in-app restore; and quit-and-replace path from README.
+6. **Fortnight completed** — Select action → complete → still listed on plan.
+7. **Shortcut** — Change accel in Settings → immediate re-register or status error; in-app capture still works.
+8. **Tray** — Open workspace + quick capture (or skip with OS reason).
+9. **Keyboard (FR-022)** — Tab/Enter capture → triage → actions.
+10. **Scope** — No Jira/Confluence/LLM required.
 
-Record all results in `checklists/verification-evidence.md` (create during T016/T027).
+## DB path
 
-## Migration risk note
+Documented in `apps/desktop/README.md` after implement (app-data `los/los.sqlite`). Contracts: [desktop-bridge.md](./contracts/desktop-bridge.md).
 
-Prototype `localStorage` / JSON users: one-time import only if SQLite absent and source validates. Prefer export Settings/JSON before first hardened launch.
+## Evidence rule
+
+Do not mark tasks complete or claim SC pass without a recorded command/smoke row.

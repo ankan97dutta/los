@@ -2,69 +2,84 @@
 
 **Feature**: `002-harden-foundation`  
 **Date**: 2026-10-19  
-**Baseline**: `specs/001-foundation-workspace/research.md` (R2 SQLite decision remains binding)
+**Status**: Phase 0 complete (clarifications resolved; no NEEDS CLARIFICATION remain)
 
-## R1. Persistence technology (remediation)
+## R1. SQLite runtime split
 
-**Decision**: Replace durable desktop storage with SQLite in the Tauri app-data directory; keep domain ports unchanged; implement repositories against SQLite; retire localStorage as the packaged durable store.
+**Decision**: Shared SQL migrations under `packages/persistence/migrations/`. **Node/Vitest** uses `better-sqlite3`. **Tauri** uses `tauri-plugin-sql` (SQLite) against the same app-data file path and migrations.
 
-**Rationale**: Matches 001 plan/research R2 and constitution VII; closes audit P0.
+**Rationale**: Domain/app-services stay TypeScript-testable; packaged app gets a real file DB with OS app-data location. Matches 001 plan R2 without rewriting domain rules into Rust.
 
-**Alternatives considered**: Keep JSON file in app-data (simpler, still no SQL transactions as first-class)—rejected because 001 plan and constitution explicitly require SQLite + versioned migrations. Dual-write localStorage+SQLite—rejected (split brain).
+**Alternatives considered**:
+- **rusqlite-only in Rust**: Strong native control; forces reimplementing orchestration/commands in Rust or a thick bridge. Rejected for remediation scope.
+- **sql.js in webview + Tauri fs**: Single TS stack; weaker multi-connection/file locking story. Rejected vs plugin-sql.
+- **JSON file in app-data**: Simpler; fails constitution/plan SQLite + first-class transactions. Rejected.
 
 ## R2. Migration runner
 
-**Decision**: Versioned SQL migrations applied in a transaction per migration (or equivalent atomic apply+record); schema_migrations (or identical) table tracks versions; startup refuses to serve commands if migrate fails.
+**Decision**: Apply numbered SQL migrations in order inside a transaction per migration (or begin/commit around apply + version insert). Record versions in `schema_migrations`. Refuse to serve workspace commands if migrate fails. Never delete the DB file on failure.
 
-**Rationale**: Constitution VII; audit P0.
+**Rationale**: Constitution VII; FR-H02; SC-H04.
 
-## R3. Corrupt DB / no silent reseed
+## R3. Corrupt / invalid open
 
-**Decision**: Open path validates file; on failure, leave file untouched, surface recoverable error with path and backup guidance. Never call seed-and-overwrite on an existing invalid file. New DB only when file absent.
+**Decision**: If file exists but cannot open/validate, return `DB_OPEN_FAILED` (or equivalent); leave bytes unchanged; UI shows blocking recoverable error with path + backup instructions. Seed new DB only when file is absent.
 
-**Rationale**: Audit P0 silent wipe; FR-H04.
+**Rationale**: Audit P0; FR-H04; clarification session (no silent reseed).
 
-## R4. Legacy data
+## R4. Legacy import (clarified)
 
-**Decision**: Optional one-time import when SQLite file absent and legacy JSON/localStorage validates (version + four applications). On any validation failure, skip import and preserve sources. Never import over an existing SQLite file.
+**Decision**: When SQLite file absent, attempt one-time auto-import from valid `localStorage`/`los-db-v1` or documented JSON snapshot; show success/failure notice; never import over existing SQLite; never delete legacy source on failure.
 
-**Rationale**: Migration risk for prototype users without destructive overwrite.
+**Rationale**: Clarification Q1 → B.
 
-## R5. Daily atomicity
+## R5. Transactions for daily upsert
 
-**Decision**: `daily.upsert` materialization (action writes + review write) runs inside one SQLite transaction.
+**Decision**: `BEGIN` … materialize actions + save review … `COMMIT`; on error `ROLLBACK`. Test with injected failure after action insert.
 
-**Rationale**: Audit P1; FR-H03.
+**Rationale**: FR-H03; SC-H03.
 
-## R6. Tauri command surface
+## R6. Backup / restore (clarified)
 
-**Decision**: Bootstrap DB in Rust (path + migrate) and expose invoke handlers that delegate to persistence/app-services boundary as designed in 001 contracts; UI uses invoke in Tauri, not localStorage runtime.
+**Decision**: Backup = copy of live `los.sqlite` (Settings export and/or documented path). Restore = (a) quit-and-replace file, (b) in-app Settings restore that closes DB, replaces file, reopens/migrates, reloads UI.
 
-**Rationale**: Audit unfinished T020 / path bootstrap.
+**Rationale**: Clarification Q3 → B; FR-H05.
 
-## R7. Shortcut registration
+## R7. Shortcut registration (clarified)
 
-**Decision**: Read accelerator/enabled from settings (via command or shared settings row) at register time; emit capability events on failure; keep in-app capture.
+**Decision**: On Settings save of accelerator/enabled, invoke immediate unregister/register; emit capability status; never block inbox capture.
 
-**Rationale**: Audit P1; FR-H09.
+**Rationale**: Clarification Q2 → A; FR-H09.
 
-## R8. Lint
+## R8. Preview vs durable (clarified)
 
-**Decision**: Fix package tsconfigs so tests are typechecked without violating `rootDir` (separate tsconfig for tests or drop rootDir / project references).
+**Decision**: Vite-only preview may use labeled non-durable storage. Tauri-dev/packaged must use SQLite. SC-H01/FR-023 evidence only from Tauri paths.
 
-**Rationale**: Audit P1 lint failure.
+**Rationale**: Clarification Q4 → A.
 
-## Migration risks (existing user data)
+## R9. Lint
+
+**Decision**: Fix package `tsconfig` so tests are typechecked without `rootDir` conflict (e.g. remove `rootDir` or use project references / separate `tsconfig.tests.json` referenced by lint script).
+
+**Rationale**: FR-H10; SC-H05.
+
+## R10. Fortnight completed selections
+
+**Decision**: Fortnight UI loads actions by `selectedActionIds` including `done`; display status; do not filter to open-only for the selection list.
+
+**Rationale**: FR-H08; 001 edge case.
+
+## Migration risks
 
 | Source | Risk | Mitigation |
 |--------|------|------------|
-| `localStorage` `los-db-v1` | Lost if ignored; wiped if buggy import | Import only when SQLite absent + valid; never delete localStorage on failure |
-| JSON `los-db.json` (Node helper path) | Same | Same rules |
-| Partial SQLite after failed migrate | Unusable DB | Transactional migrations; refuse start; preserve file |
-| User copies “backup” that is only Settings JSON export from localStorage era | Incomplete restore | Docs + Settings must target SQLite file after hardening |
+| localStorage / JSON | Lost if skipped; corrupted if bad import | Auto-import only if absent SQLite + valid; notice; preserve sources |
+| Partial migrate | Unusable schema | Transactional migrate; refuse start; keep file |
+| In-app restore while open | File lock / half-open | Close connection before replace; reopen + migrate |
+| Newer-schema backup | Partial open | Refuse with clear error |
 
 ## Out of scope
 
-- Cloud backup, multi-device sync, encryption-at-rest beyond OS file permissions
-- Changing 001 product UX beyond fortight completed-selection display and status/shortcut honesty
-- Weakening constitution or editing 001 spec to match the incomplete implementation
+- Cloud backup, encryption productization, multi-writer sync
+- Weakening constitution or editing 001 product spec to match old incomplete code
+- Full GUI DB repair wizard

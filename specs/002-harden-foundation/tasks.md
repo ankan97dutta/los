@@ -32,7 +32,7 @@
 - [ ] T008 Implement transactional helper (`withTransaction`) in `packages/persistence/src/db.ts` used by multi-entity writes (**FR-H03**)
 - [ ] T009 [P] Implement corrupt/invalid open behavior: preserve file bytes, return explicit error, never reseed-overwrite in `packages/persistence/src/db.ts` + test `packages/persistence/tests/corrupt_open.test.ts` (**FR-H04 · SC-H04 · Audit P0 silent wipe**)
 - [ ] T010 Replace in-memory/JSON repository implementations with SQLite-backed repos in `packages/persistence/src/repos.ts` (keep port shapes from `@los/domain`) (**FR-H01**)
-- [ ] T011 [P] Optional legacy import when DB file absent + valid JSON/localStorage snapshot in `packages/persistence/src/legacy_import.ts` + tests; never import over existing DB (**FR-H14 · research R4**)
+- [ ] T011 [P] One-time auto legacy import when DB file absent + valid JSON/localStorage; success/failure notice; never import over existing DB — `packages/persistence/src/legacy_import.ts` + tests + UI notice (**FR-H14 · clarification · research R4**)
 
 **Checkpoint**: Persistence package can migrate, open safely, refuse corrupt overwrite, and CRUD via SQLite in Vitest
 
@@ -45,7 +45,7 @@
 
 - [ ] T012 [US1] Wire Tauri startup to resolve app-data DB path, run migrations, hold connection in `apps/desktop/src-tauri/src/` (**FR-H07 · Audit T016**)
 - [ ] T013 [US1] Expose Tauri invoke handlers for workspace commands/queries per `specs/001-foundation-workspace/contracts/` in `apps/desktop/src-tauri/` + thin clients in `apps/desktop/src/lib/api.ts` (**FR-H07 · Audit T020**)
-- [ ] T014 [US1] Remove durable `localStorage` runtime for packaged/Tauri mode from `apps/desktop/src/lib/runtime.ts` (preview mode must be explicitly labeled non-durable if kept) (**FR-H01 · Audit P0**)
+- [ ] T014 [US1] Split runtimes in `apps/desktop/src/lib/runtime.ts`: Tauri → SQLite bridge; Vite-only → labeled non-durable preview (not valid for SC-H01) (**FR-H01 · clarification · Audit P0**)
 - [ ] T015 [US1] Update `apps/desktop/README.md` + Settings copy with real SQLite path and backup steps (**FR-H06**)
 - [ ] T016 [US1] Record relaunch persistence verification (3 trials) in `specs/002-harden-foundation/checklists/verification-evidence.md` (**SC-H01 · FR-H11**)
 
@@ -72,7 +72,7 @@
 
 - [ ] T019 [US3] Implement/adjust backup+restore helpers for SQLite file paths in `packages/persistence/src/` (**FR-H05**)
 - [ ] T020 [US3] Rewrite `packages/persistence/tests/backup_restore.test.ts` to use SQLite seed → copy → mutate → restore → assert inbox item (**FR-H05 · SC-H02 · 001 FR-023**)
-- [ ] T021 [US3] Settings export/import or documented file replace targets live SQLite in `apps/desktop/src/features/settings/SettingsPage.tsx` (**FR-H05–H06**)
+- [ ] T021 [US3] Settings export + in-app restore (close/replace/reopen) and document quit-and-replace in `apps/desktop/src/features/settings/SettingsPage.tsx` + README (**FR-H05–H06 · clarification**)
 
 **Checkpoint**: Automated restore smoke green on SQLite
 
@@ -96,7 +96,7 @@
 **Independent Test**: SC-H07
 
 - [ ] T024 [US5] Register global shortcut from WorkspaceSettings in `apps/desktop/src-tauri/src/shortcuts.rs` (remove hard-coded-only path) (**FR-H09 · Audit P1**)
-- [ ] T025 [US5] On settings update of accelerator/enabled, re-register or document restart; emit `los:caps` with failure details (**FR-H09 · 001 FR-021**)
+- [ ] T025 [US5] On explicit Settings save of accelerator/enabled, immediately call `shortcuts.reregister`; emit `los:caps` with failure details (**FR-H09 · clarification · 001 FR-021**)
 - [ ] T026 [US5] Ensure `LocalStatus` shows shortcut registered/failed from capabilities events in `apps/desktop/src/features/status/LocalStatus.tsx` (**FR-H09 · SC-H07**)
 
 **Checkpoint**: Denied shortcut still allows in-app capture + visible status
