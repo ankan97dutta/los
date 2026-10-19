@@ -39,6 +39,26 @@
 | Shortcut-deny in-app capture | PASS | LocalStatus `Shortcut: unavailable` in Vite preview; in-app Inbox capture still succeeded (SC-U01 trials) — 002 degrade preserved (T052) |
 | Save / empty / error / local-status | PASS | Notes save → “Saved”; empty Inbox EmptyState before captures; conflicted allocate sets conflict banner; chrome shows Tray/Shortcut/DB local status (T044) |
 
+## Modern minimalism polish (T059–T088, 2026-10-19)
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| Density tokens (`--sidebar-width`, `--content-max`, `--motion-fast`) | PASS | `tokens.css` (T059) |
+| Quiet flat background (no accent radial wash) | PASS | `base.css` single-plane `--bg` (T060) |
+| Divider list chrome vs stacked cards | PASS | `.list li` hairline dividers; Planning demand uses `.list` not `.card` (T061/T072) |
+| Slim shell + LocalStatus footer | PASS | 200px sidebar; brand “LOS / Local-first”; status text footer (T063–T065) |
+| SurfaceLayout (one h1 + lede) | PASS | Inbox, Planning, Settings, Reviews hosts, Daily/Fortnight (T066–T068, T076) |
+| EmptyState single next action | PASS | Inbox / demand / actions / daily hints tightened (T074) |
+| Settings pref-groups (no card grid) | PASS | Appearance / Planning / Shortcuts / Backup groups (T075) |
+| Palette + route motion ≤ `--motion-fast` | PASS | CSS animations + `.main-fade` on route key; reduced-motion respected (T078–T079) |
+| SC-U04 recheck after token change | PASS | Dark graphite body/muted/status cues remain text+dot via StatusCue; light theme tokens unchanged structurally (T070) |
+| Honesty floor (conflict/unknown/save/closed) | PASS | StatusCue/Banner/SaveIndicator retained; no fake 003 editors (T073/T087) |
+| Focus-visible + primary nav names | PASS | `:focus-visible` rings; `nav aria-label="Primary"` unchanged (T081) |
+| `pnpm lint` + desktop build | PASS | lint OK; vite production build OK (T086) |
+| Domain / unit regression (SC-U07) | PASS | domain 29/29; persistence 12/12; app-services unit (excl. known Track B smoke) pass |
+| Full `pnpm test` | PARTIAL | Same 003 Track B: `smoke_capacity_planning` fails when current fortnight already closed — not introduced by polish |
+| Desktop UX complete-gate refresh | PASS | T088 — modern-minimal rows above; constitution v1.1.0 still applied |
+
 ## 003 Track B (not closed by 004)
 
 | Gap | Status |

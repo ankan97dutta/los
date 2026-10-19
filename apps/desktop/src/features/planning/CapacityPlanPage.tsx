@@ -175,7 +175,7 @@ export function CapacityPlanPage({ rt }: Props) {
   return (
     <section className="stack">
       <header className="period-header">
-        <h1 style={{ margin: 0 }}>Capacity planning</h1>
+        <h1>Capacity planning</h1>
         <StatusCue
           kind={closed ? 'muted' : 'ok'}
           label={closed ? 'Closed — structure frozen' : 'Open'}
@@ -186,9 +186,7 @@ export function CapacityPlanPage({ rt }: Props) {
           <StatusCue kind="ok" label="Clean" />
         )}
       </header>
-      <p className="lede">
-        Team capacity, demand, and commitments for the fortnight. Offline · no Jira/LLM required.
-      </p>
+      <p className="lede">Load vs capacity for this fortnight — conflicts and unknowns stay visible.</p>
 
       <div className="row">
         <Button
@@ -365,14 +363,14 @@ export function CapacityPlanPage({ rt }: Props) {
       {data.work.length === 0 ? (
         <EmptyState
           title="No demand items"
-          actionHint={closed ? 'This closed period has an empty demand list.' : 'Add a work title to start planning demand.'}
+          actionHint={closed ? 'Open a prior period or wait until this period reopens.' : 'Add a work title above.'}
         />
       ) : (
-        <ul className="stack">
+        <ul className="list">
           {data.work.map((w) => {
             const a = allocByWork.get(w.id);
             return (
-              <li key={w.id} className="card">
+              <li key={w.id}>
                 <strong>
                   {w.title}{' '}
                   <span className="muted">({w.status})</span>

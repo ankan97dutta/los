@@ -75,7 +75,7 @@ export function InboxPage({ rt, onConverted }: Props) {
       </form>
 
       {items.length === 0 ? (
-        <EmptyState title="Inbox is empty" actionHint="Capture a request to get started." />
+        <EmptyState title="Inbox is empty" actionHint="Capture a request above." />
       ) : (
         <ul className="list">
           {items.map((item) => (

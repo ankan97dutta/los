@@ -22,8 +22,9 @@ export function QuickCapture({ rt, onDone }: Props) {
   }
 
   return (
-    <form className="stack" onSubmit={onSubmit} style={{ padding: '1rem', maxWidth: 420 }}>
-      <h1 style={{ fontSize: '1.1rem' }}>Quick capture</h1>
+    <form className="stack panel" onSubmit={onSubmit} style={{ margin: '1rem', maxWidth: 420 }}>
+      <h1>Quick capture</h1>
+      <p className="lede">One inbox item — Enter to save, Escape to cancel.</p>
       <label htmlFor="quick-capture" className="muted">
         Inbox item
       </label>

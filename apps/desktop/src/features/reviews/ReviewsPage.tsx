@@ -13,7 +13,7 @@ export function ReviewsPage({ rt, section, onSection }: Props) {
   return (
     <section className="stack">
       <h1>Reviews</h1>
-      <p className="lede">Monthly review and closed planning history.</p>
+      <p className="lede">Monthly review and closed-period history.</p>
       <SectionSubNav
         label="Reviews sections"
         items={[

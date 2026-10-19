@@ -17,11 +17,7 @@ const COLOR: Record<Kind, string> = {
 
 export function StatusCue({ kind, label }: Props) {
   return (
-    <span
-      className="status-pill"
-      role="status"
-      style={{ borderColor: COLOR[kind], color: 'var(--text)' }}
-    >
+    <span className="status-pill" role="status" style={{ color: 'var(--text)' }}>
       <span className="dot" style={{ background: COLOR[kind] }} aria-hidden />
       {label}
     </span>

@@ -103,7 +103,7 @@ export function DailyReviewPage({ rt }: Props) {
       {empty ? (
         <EmptyState
           title="No notes for this day yet"
-          actionHint="Start typing — changes autosave."
+          actionHint="Type in Outcomes below — changes autosave."
         />
       ) : null}
 

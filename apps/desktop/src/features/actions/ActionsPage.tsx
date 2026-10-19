@@ -118,7 +118,7 @@ export function ActionsPage({ rt }: Props) {
       {actions.length === 0 ? (
         <EmptyState
           title="No actions match this filter"
-          actionHint="Create one here or convert from Inbox."
+          actionHint="Create an action above."
         />
       ) : (
         <ul className="list">

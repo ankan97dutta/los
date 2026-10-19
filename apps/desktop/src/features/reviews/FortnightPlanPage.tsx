@@ -73,7 +73,7 @@ export function FortnightPlanPage({ rt }: Props) {
   return (
     <section className="stack">
       <h1>Fortnight plan</h1>
-      <p className="lede">Select open actions and capture commitments for the current 14-day period.</p>
+      <p className="lede">Personal commitments for the current 14-day period.</p>
       <div className="row">
         <button
           type="button"

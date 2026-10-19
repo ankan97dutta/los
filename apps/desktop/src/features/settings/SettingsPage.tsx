@@ -158,64 +158,73 @@ export function SettingsPage({ rt, onRestored }: Props) {
   return (
     <section className="stack">
       <h1>Settings</h1>
-      <p className="lede">Local workspace preferences. No cloud account.</p>
+      <p className="lede">Local workspace preferences — no cloud account.</p>
 
-      <Select
-        id="ui-theme"
-        label="Appearance theme"
-        value={theme}
-        onChange={(e) => {
-          const next = e.target.value as UiTheme;
-          setTheme(next);
-          writeTheme(next);
-          setMessage('Theme updated (stored locally in this browser profile).');
-        }}
-      >
-        <option value="dark">Dark graphite (default)</option>
-        <option value="light">Light</option>
-      </Select>
-
-      <div className="field">
-        <label htmlFor="weekday">Fortnight start weekday</label>
-        <select
-          id="weekday"
-          value={settings.fortnightStartWeekday}
-          onChange={(e) => void changeWeekday(e.target.value as Weekday)}
-        >
-          {WEEKDAYS.map((w) => (
-            <option key={w} value={w}>
-              {w}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="field">
-        <label htmlFor="accel">Global shortcut accelerator</label>
-        <input
-          id="accel"
-          value={settings.globalShortcutAccel}
-          onChange={(e) =>
-            setSettings({ ...settings, globalShortcutAccel: e.target.value })
-          }
-          onBlur={() => void saveShortcut(settings)}
-        />
-      </div>
-      <label className="row">
-        <input
-          type="checkbox"
-          checked={settings.globalShortcutEnabled}
+      <div className="pref-group">
+        <h2>Appearance</h2>
+        <Select
+          id="ui-theme"
+          label="Theme"
+          value={theme}
           onChange={(e) => {
-            const next = { ...settings, globalShortcutEnabled: e.target.checked };
-            setSettings(next);
-            void saveShortcut(next);
+            const next = e.target.value as UiTheme;
+            setTheme(next);
+            writeTheme(next);
+            setMessage('Theme updated (stored locally in this browser profile).');
           }}
-        />
-        <span>Enable global shortcut</span>
-      </label>
+        >
+          <option value="dark">Dark graphite (default)</option>
+          <option value="light">Light</option>
+        </Select>
+      </div>
 
-      <div className="stack">
-        <strong>Backup / restore</strong>
+      <div className="pref-group">
+        <h2>Planning calendar</h2>
+        <div className="field">
+          <label htmlFor="weekday">Fortnight start weekday</label>
+          <select
+            id="weekday"
+            value={settings.fortnightStartWeekday}
+            onChange={(e) => void changeWeekday(e.target.value as Weekday)}
+          >
+            {WEEKDAYS.map((w) => (
+              <option key={w} value={w}>
+                {w}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="pref-group">
+        <h2>Shortcuts</h2>
+        <div className="field">
+          <label htmlFor="accel">Global shortcut accelerator</label>
+          <input
+            id="accel"
+            value={settings.globalShortcutAccel}
+            onChange={(e) =>
+              setSettings({ ...settings, globalShortcutAccel: e.target.value })
+            }
+            onBlur={() => void saveShortcut(settings)}
+          />
+        </div>
+        <label className="row">
+          <input
+            type="checkbox"
+            checked={settings.globalShortcutEnabled}
+            onChange={(e) => {
+              const next = { ...settings, globalShortcutEnabled: e.target.checked };
+              setSettings(next);
+              void saveShortcut(next);
+            }}
+          />
+          <span>Enable global shortcut</span>
+        </label>
+      </div>
+
+      <div className="pref-group">
+        <h2>Backup / restore</h2>
         <p className="muted">
           {isTauri() ? (
             <>
@@ -254,7 +263,7 @@ export function SettingsPage({ rt, onRestored }: Props) {
         </div>
       </div>
 
-      {message ? <p className="muted">{message}</p> : null}
+      {message ? <p className="muted" role="status">{message}</p> : null}
       {error ? <p className="error" role="alert">{error}</p> : null}
     </section>
   );

@@ -16,18 +16,20 @@ export function AppShell({ rt, route, onNavigatePrimary, notices, children }: Pr
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <div className="brand">LOS</div>
-        <p className="muted" style={{ margin: 0, fontSize: '0.85rem' }}>
-          Lead OS · local-first
-        </p>
+        <div>
+          <div className="brand">LOS</div>
+          <p className="brand-tag">Local-first</p>
+        </div>
         <Nav route={route} onNavigate={onNavigatePrimary} />
-        <div style={{ marginTop: 'auto' }}>
+        <div className="sidebar-status">
           <LocalStatus rt={rt} />
         </div>
       </aside>
       <main className="main">
         {notices}
-        {children}
+        <div key={route} className="main-fade">
+          {children}
+        </div>
       </main>
     </div>
   );

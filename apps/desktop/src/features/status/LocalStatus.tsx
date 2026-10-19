@@ -23,12 +23,11 @@ export function LocalStatus({ rt }: Props) {
   }, [rt]);
 
   return (
-    <div className="stack" style={{ gap: '0.4rem' }}>
-      <span className="status-pill" title="No cloud account or remote sync">
-        <span className="dot" aria-hidden />
+    <div className="stack" style={{ gap: '0.35rem' }}>
+      <p className="muted" style={{ margin: 0, fontSize: '0.8rem' }} title="No cloud account or remote sync">
         Local only
-      </span>
-      <p className="muted" style={{ margin: 0, fontSize: '0.78rem' }}>
+      </p>
+      <p className="muted" style={{ margin: 0, fontSize: '0.75rem' }}>
         Tray: {tray ? 'available' : 'unavailable'}
         <br />
         Shortcut:{' '}

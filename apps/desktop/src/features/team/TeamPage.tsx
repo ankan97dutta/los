@@ -13,7 +13,7 @@ export function TeamPage({ rt, section, onSection }: Props) {
   return (
     <section className="stack">
       <h1>Team</h1>
-      <p className="lede">Local roster and application slots — not multi-user auth.</p>
+      <p className="lede">Local roster and application slots.</p>
       <SectionSubNav
         label="Team sections"
         items={[

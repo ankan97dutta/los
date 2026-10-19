@@ -9,7 +9,7 @@
 
 **Tests**: Scripted UI verification + domain regression (`pnpm test`); SC-U04 = manual contrast spot-check (re-run after token polish). No TDD suite required.
 
-**Status**: Phases 1–9 (T001–T058) complete — shell/IA/primitives/palette landed. **Remaining work**: Phases 10–17 (T059+) modern minimalism polish per plan refresh / R8.
+**Status**: Phases 1–17 complete (T001–T088). Modern minimalism polish landed; see verification-evidence.
 
 ## Format: `[ID] [P?] [Story?] Description`
 
@@ -173,10 +173,10 @@
 **Purpose**: Density tokens, quiet background, shared list/row chrome, motion tokens per research R8 / contracts visual-density  
 **⚠️ CRITICAL**: Complete before Phases 11–16 polish story work
 
-- [ ] T059 Add density tokens to `apps/desktop/src/styles/tokens.css`: `--sidebar-width` (~200px), `--content-max`, `--motion-fast` (≤200ms), keep `theme` `"dark" | "light"` (default `"dark"`) and existing semantic status tokens
-- [ ] T060 Quiet page background in `apps/desktop/src/styles/base.css` — soft single-plane or very low-contrast atmosphere; tone down large accent radial wash so content leads (R8); no purple/glow aesthetic
-- [ ] T061 Replace stacked bordered-card list chrome in `apps/desktop/src/styles/base.css` (`.list li`, `.card` defaults) with hairline dividers / spacing for passive lists; reserve elevated `--bg-elevated` panels for interactive clusters only (forms, palette, confirms)
-- [ ] T062 [P] Add short motion utilities in `apps/desktop/src/styles/base.css` for palette/theme/route transitions using `--motion-fast` only (no decorative loops)
+- [x] T059 Add density tokens to `apps/desktop/src/styles/tokens.css`: `--sidebar-width` (~200px), `--content-max`, `--motion-fast` (≤200ms), keep `theme` `"dark" | "light"` (default `"dark"`) and existing semantic status tokens
+- [x] T060 Quiet page background in `apps/desktop/src/styles/base.css` — soft single-plane or very low-contrast atmosphere; tone down large accent radial wash so content leads (R8); no purple/glow aesthetic
+- [x] T061 Replace stacked bordered-card list chrome in `apps/desktop/src/styles/base.css` (`.list li`, `.card` defaults) with hairline dividers / spacing for passive lists; reserve elevated `--bg-elevated` panels for interactive clusters only (forms, palette, confirms)
+- [x] T062 [P] Add short motion utilities in `apps/desktop/src/styles/base.css` for palette/theme/route transitions using `--motion-fast` only (no decorative loops)
 
 **Checkpoint**: Tokens + base chrome ready for surface polish
 
@@ -189,9 +189,9 @@
 
 ### Implementation
 
-- [ ] T063 [US1] Slim `apps/desktop/src/shell/AppShell.tsx` + `.app-shell`/`.sidebar`/`.brand` in `apps/desktop/src/styles/base.css` to ~`--sidebar-width`; quiet brand (LOS + one short local-first line); LocalStatus footer only — no dashboard widgets
-- [ ] T064 [US1] Quiet active/hover styles for `apps/desktop/src/shell/Nav.tsx` and `apps/desktop/src/shell/SectionSubNav.tsx` (accent for focus/active only; no glow rings or pill clusters)
-- [ ] T065 [US1] Record slim-shell smoke (no seventh primary Actions; LocalStatus visible) in `specs/004-lead-command-ux/checklists/verification-evidence.md`
+- [x] T063 [US1] Slim `apps/desktop/src/shell/AppShell.tsx` + `.app-shell`/`.sidebar`/`.brand` in `apps/desktop/src/styles/base.css` to ~`--sidebar-width`; quiet brand (LOS + one short local-first line); LocalStatus footer only — no dashboard widgets
+- [x] T064 [US1] Quiet active/hover styles for `apps/desktop/src/shell/Nav.tsx` and `apps/desktop/src/shell/SectionSubNav.tsx` (accent for focus/active only; no glow rings or pill clusters)
+- [x] T065 [US1] Record slim-shell smoke (no seventh primary Actions; LocalStatus visible) in `specs/004-lead-command-ux/checklists/verification-evidence.md`
 
 **Checkpoint**: Shell reads modern/minimal without IA changes
 
@@ -204,11 +204,11 @@
 
 ### Implementation
 
-- [ ] T066 [US2] Apply SurfaceLayout (one `h1` + optional one-line lede; essential region first) to `apps/desktop/src/features/inbox/InboxPage.tsx` and `apps/desktop/src/features/inbox/QuickCapture.tsx` without removing Banner/SaveIndicator/EmptyState
-- [ ] T067 [P] [US2] Apply SurfaceLayout + divider list chrome to `apps/desktop/src/features/actions/ActionsPage.tsx`
-- [ ] T068 [P] [US2] Apply SurfaceLayout + quieter chrome to `apps/desktop/src/features/reviews/MonthlyReviewPage.tsx` (and `ReviewsPage.tsx` host if needed)
-- [ ] T069 [US2] Align `apps/desktop/src/ui/Row.tsx` / list consumers with divider-first chrome (no decorative multi-layer shadows)
-- [ ] T070 [US2] Re-run SC-U04 manual contrast spot-check after token/background changes; update notes in `specs/004-lead-command-ux/checklists/verification-evidence.md` for body, muted, status cues on Inbox + Planning × dark and light
+- [x] T066 [US2] Apply SurfaceLayout (one `h1` + optional one-line lede; essential region first) to `apps/desktop/src/features/inbox/InboxPage.tsx` and `apps/desktop/src/features/inbox/QuickCapture.tsx` without removing Banner/SaveIndicator/EmptyState
+- [x] T067 [P] [US2] Apply SurfaceLayout + divider list chrome to `apps/desktop/src/features/actions/ActionsPage.tsx`
+- [x] T068 [P] [US2] Apply SurfaceLayout + quieter chrome to `apps/desktop/src/features/reviews/MonthlyReviewPage.tsx` (and `ReviewsPage.tsx` host if needed)
+- [x] T069 [US2] Align `apps/desktop/src/ui/Row.tsx` / list consumers with divider-first chrome (no decorative multi-layer shadows)
+- [x] T070 [US2] Re-run SC-U04 manual contrast spot-check after token/background changes; update notes in `specs/004-lead-command-ux/checklists/verification-evidence.md` for body, muted, status cues on Inbox + Planning × dark and light
 
 **Checkpoint**: Shared primitives still used; surfaces quieter
 
@@ -221,9 +221,9 @@
 
 ### Implementation
 
-- [ ] T071 [US3] Compact Planning first viewport in `apps/desktop/src/features/planning/CapacityPlanPage.tsx`: period identity + open/closed + conflicted StatusCue; load/remain + unallocated/unestimated when present; demand; warnings via Banner — secondary history/notes collapsed (FR-U05/U06)
-- [ ] T072 [US3] Restyle Planning summary strip / demand rows in `CapacityPlanPage.tsx` + related `base.css` classes (`.summary-strip`, `.period-header`) toward divider/spacing chrome without removing text status cues
-- [ ] T073 [US3] Honesty floor check: closed read-only, unknown ≠ `0`, conflicted text after soft-gate; still omit unimplemented 003 editors (FR-U12); note in verification-evidence.md
+- [x] T071 [US3] Compact Planning first viewport in `apps/desktop/src/features/planning/CapacityPlanPage.tsx`: period identity + open/closed + conflicted StatusCue; load/remain + unallocated/unestimated when present; demand; warnings via Banner — secondary history/notes collapsed (FR-U05/U06)
+- [x] T072 [US3] Restyle Planning summary strip / demand rows in `CapacityPlanPage.tsx` + related `base.css` classes (`.summary-strip`, `.period-header`) toward divider/spacing chrome without removing text status cues
+- [x] T073 [US3] Honesty floor check: closed read-only, unknown ≠ `0`, conflicted text after soft-gate; still omit unimplemented 003 editors (FR-U12); note in verification-evidence.md
 
 **Checkpoint**: Planning remains decision-clear and visually quieter
 
@@ -236,10 +236,10 @@
 
 ### Implementation
 
-- [ ] T074 [US5] Ensure `apps/desktop/src/ui/EmptyState.tsx` consumers on `InboxPage.tsx` and `CapacityPlanPage.tsx` name exactly one primary next action (contracts UX flow)
-- [ ] T075 [US5] Restyle `apps/desktop/src/features/settings/SettingsPage.tsx` as grouped prefs with spacing/dividers — no card-grid chrome; keep theme toggle + confirmable restore
-- [ ] T076 [P] [US5] Apply SurfaceLayout (one title + lede) to `apps/desktop/src/features/reviews/DailyReviewPage.tsx` and `apps/desktop/src/features/reviews/FortnightPlanPage.tsx` without dropping SaveIndicator
-- [ ] T077 [US5] Record empty/save/settings-minimal smoke in `specs/004-lead-command-ux/checklists/verification-evidence.md`
+- [x] T074 [US5] Ensure `apps/desktop/src/ui/EmptyState.tsx` consumers on `InboxPage.tsx` and `CapacityPlanPage.tsx` name exactly one primary next action (contracts UX flow)
+- [x] T075 [US5] Restyle `apps/desktop/src/features/settings/SettingsPage.tsx` as grouped prefs with spacing/dividers — no card-grid chrome; keep theme toggle + confirmable restore
+- [x] T076 [P] [US5] Apply SurfaceLayout (one title + lede) to `apps/desktop/src/features/reviews/DailyReviewPage.tsx` and `apps/desktop/src/features/reviews/FortnightPlanPage.tsx` without dropping SaveIndicator
+- [x] T077 [US5] Record empty/save/settings-minimal smoke in `specs/004-lead-command-ux/checklists/verification-evidence.md`
 
 **Checkpoint**: Flows clearer; honesty preserved
 
@@ -252,9 +252,9 @@
 
 ### Implementation
 
-- [ ] T078 [US4] Apply quiet open/close motion to `apps/desktop/src/shell/CommandPalette.tsx` + `.palette-backdrop`/`.palette-panel` in `apps/desktop/src/styles/base.css` using `--motion-fast`; remove heavy multi-layer shadow if present; keep elevated panel for interaction
-- [ ] T079 [US4] Optional ≤200ms route content fade in `apps/desktop/src/App.tsx` or `apps/desktop/src/shell/AppShell.tsx` main region only — no decorative animation noise
-- [ ] T080 [US4] Re-time SC-U05 palette→Planning dry-run; record in `specs/004-lead-command-ux/checklists/verification-evidence.md`
+- [x] T078 [US4] Apply quiet open/close motion to `apps/desktop/src/shell/CommandPalette.tsx` + `.palette-backdrop`/`.palette-panel` in `apps/desktop/src/styles/base.css` using `--motion-fast`; remove heavy multi-layer shadow if present; keep elevated panel for interaction
+- [x] T079 [US4] Optional ≤200ms route content fade in `apps/desktop/src/App.tsx` or `apps/desktop/src/shell/AppShell.tsx` main region only — no decorative animation noise
+- [x] T080 [US4] Re-time SC-U05 palette→Planning dry-run; record in `specs/004-lead-command-ux/checklists/verification-evidence.md`
 
 **Checkpoint**: Palette remains keyboard-first and calm
 
@@ -267,9 +267,9 @@
 
 ### Implementation
 
-- [ ] T081 [US6] Re-verify `:focus-visible` rings and accessible names on `AppShell.tsx`, `Nav.tsx`, `SectionSubNav.tsx`, `InboxPage.tsx`, `CapacityPlanPage.tsx`, `CommandPalette.tsx` after minimal chrome changes; fix gaps in those files / `base.css`
-- [ ] T082 [US6] Confirm progressive disclosure still collapses secondary before conflict banners at min window in `CapacityPlanPage.tsx`; re-check `tauri.conf.json` mins (FR-U13)
-- [ ] T083 [US6] Record SC-U01 keyboard Inbox capture → Planning ×3 after polish in `specs/004-lead-command-ux/checklists/verification-evidence.md`
+- [x] T081 [US6] Re-verify `:focus-visible` rings and accessible names on `AppShell.tsx`, `Nav.tsx`, `SectionSubNav.tsx`, `InboxPage.tsx`, `CapacityPlanPage.tsx`, `CommandPalette.tsx` after minimal chrome changes; fix gaps in those files / `base.css`
+- [x] T082 [US6] Confirm progressive disclosure still collapses secondary before conflict banners at min window in `CapacityPlanPage.tsx`; re-check `tauri.conf.json` mins (FR-U13)
+- [x] T083 [US6] Record SC-U01 keyboard Inbox capture → Planning ×3 after polish in `specs/004-lead-command-ux/checklists/verification-evidence.md`
 
 **Checkpoint**: Desktop UX gate still satisfied post-minimalism
 
@@ -279,11 +279,11 @@
 
 **Purpose**: Docs, regression, honesty, complete-gate evidence for R8 pass
 
-- [ ] T084 [P] Align `specs/004-lead-command-ux/quickstart.md` check #11 (modern minimal) with implemented chrome; fix any drift
-- [ ] T085 [P] Confirm `specs/004-lead-command-ux/contracts/ui-shell.md` visual/density + UX flow sections match shipped behavior
-- [ ] T086 Run `pnpm test && pnpm lint && pnpm --filter @los/desktop build` (+ `cargo check` in `apps/desktop/src-tauri` if used); paste into verification-evidence.md (SC-U06/U07)
-- [ ] T087 Honesty pass: conflict/error/unknown/save/closed cues still text-visible after minimalism; 003 Track B still listed; do **not** mark FR-C05/C09/C12 done (FR-U11/U12)
-- [ ] T088 Record modern-minimal smoke + Desktop UX complete-gate refresh in `specs/004-lead-command-ux/checklists/verification-evidence.md`
+- [x] T084 [P] Align `specs/004-lead-command-ux/quickstart.md` check #11 (modern minimal) with implemented chrome; fix any drift
+- [x] T085 [P] Confirm `specs/004-lead-command-ux/contracts/ui-shell.md` visual/density + UX flow sections match shipped behavior
+- [x] T086 Run `pnpm test && pnpm lint && pnpm --filter @los/desktop build` (+ `cargo check` in `apps/desktop/src-tauri` if used); paste into verification-evidence.md (SC-U06/U07)
+- [x] T087 Honesty pass: conflict/error/unknown/save/closed cues still text-visible after minimalism; 003 Track B still listed; do **not** mark FR-C05/C09/C12 done (FR-U11/U12)
+- [x] T088 Record modern-minimal smoke + Desktop UX complete-gate refresh in `specs/004-lead-command-ux/checklists/verification-evidence.md`
 
 ---
 

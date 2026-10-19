@@ -22,6 +22,9 @@
   --space-3: 0.75rem;
   --space-4: 1rem;
   --space-5: 1.5rem;
+  --sidebar-width: 200px;
+  --content-max: 52rem;
+  --motion-fast: 160ms;
   --font: 'IBM Plex Sans', 'Segoe UI', sans-serif;
   --mono: 'IBM Plex Mono', ui-monospace, monospace;
   --focus-ring: color-mix(in srgb, var(--accent) 45%, transparent);
