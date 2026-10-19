@@ -1,0 +1,77 @@
+import type { PersonalAction } from './actions.js';
+import type { InboxItem } from './inbox.js';
+import type { DailyNextActionLine, DailyReview } from './daily.js';
+import type { Weekday } from './periods/fortnight.js';
+
+export type Application = {
+  id: string;
+  slotIndex: 1 | 2 | 3 | 4;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type FortnightPlan = {
+  id: string;
+  periodStart: string;
+  periodEnd: string;
+  commitments: string;
+  selectedActionIds: string[];
+  updatedAt: string;
+};
+
+export type MonthlyReview = {
+  id: string;
+  yearMonth: string;
+  improvementPriorities: string;
+  updatedAt: string;
+};
+
+export type WorkspaceSettings = {
+  fortnightStartWeekday: Weekday;
+  globalShortcutEnabled: boolean;
+  globalShortcutAccel: string;
+  updatedAt: string;
+};
+
+export interface InboxRepository {
+  listOpen(): Promise<InboxItem[]>;
+  getById(id: string): Promise<InboxItem | null>;
+  save(item: InboxItem): Promise<void>;
+}
+
+export interface ActionsRepository {
+  list(filter?: { status?: 'open' | 'done' | 'all'; applicationId?: string | null }): Promise<
+    PersonalAction[]
+  >;
+  getById(id: string): Promise<PersonalAction | null>;
+  save(action: PersonalAction): Promise<void>;
+}
+
+export interface ApplicationsRepository {
+  list(): Promise<Application[]>;
+  getById(id: string): Promise<Application | null>;
+  save(app: Application): Promise<void>;
+}
+
+export interface DailyRepository {
+  getByDate(date: string): Promise<DailyReview | null>;
+  save(review: DailyReview): Promise<void>;
+}
+
+export interface FortnightRepository {
+  getByPeriodStart(periodStart: string): Promise<FortnightPlan | null>;
+  save(plan: FortnightPlan): Promise<void>;
+}
+
+export interface MonthlyRepository {
+  getByYearMonth(yearMonth: string): Promise<MonthlyReview | null>;
+  save(review: MonthlyReview): Promise<void>;
+}
+
+export interface SettingsRepository {
+  get(): Promise<WorkspaceSettings>;
+  save(settings: WorkspaceSettings): Promise<void>;
+}
+
+export type { DailyNextActionLine, DailyReview };

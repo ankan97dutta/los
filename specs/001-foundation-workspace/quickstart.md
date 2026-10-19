@@ -6,84 +6,55 @@
 ## Prerequisites
 
 - macOS development machine
-- Node.js + Rust toolchain suitable for Tauri 2 (versions pinned in repo when scaffolded)
+- Node.js + Rust toolchain suitable for Tauri 2
 - Network **disabled** (or airplane mode) for offline acceptance scenarios
 - Feature branch `feature/001-foundation-workspace`
 
-## Setup (once implementation exists)
+## Setup
 
 ```bash
-# From repo root — exact package scripts to be added during implement
+export PATH="$HOME/.local/bin:$PATH"
 pnpm install
-pnpm --filter @los/domain test
-pnpm --filter @los/persistence test
-pnpm --filter desktop tauri dev
+pnpm test
+pnpm --filter @los/desktop dev        # UI (localStorage DB)
+pnpm --filter @los/desktop tauri:dev  # full shell when validating tray/shortcut
 ```
 
-Database file location: OS app data directory for the LOS app (document exact path in README during implement). Migrations run on first launch.
+Database: see `apps/desktop/README.md` (`los-db-v1` / `$APP_DATA/los/los-db.json`).
 
-## Automated checks (domain)
+## Automated checks
 
 ```bash
 pnpm --filter @los/domain test
+pnpm --filter @los/persistence test
+pnpm --filter @los/app-services test
 ```
 
 Must cover at least:
-- Fortnight period math (Monday default; ±14 navigation; timezone fixture)
+
+- Fortnight period math (Monday default; ±14 navigation; stable within period)
 - Inbox capture validation (empty / too long)
 - Triage convert/dismiss/keep
 - Daily next-action materialization idempotence (`lineId`)
 - Application seed count = 4
+- Backup/restore file smoke (`backup_restore.test.ts`)
 
 ## Manual desktop smoke (offline)
 
-1. **Cold start + capture (SC-001, P1)**  
-   - Launch app with network off.  
-   - Capture inbox item “Smoke request”.  
-   - Quit and relaunch offline → item still present.
+1. **Cold start + capture (SC-001, P1)** — Launch offline; capture “Smoke request”; quit/relaunch → present.
+2. **Triage (P2)** — Convert / dismiss / keep behaviors.
+3. **Applications (P3, SC-006)** — Application 1–4; rename; link/unlink action.
+4. **Daily review autosave (P4, FR-019/020)** — unsaved → saving → saved; no duplicate next-actions.
+5. **Fortnight (P5)** — select actions; commitments; prev/next.
+6. **Monthly (P6)** — priorities persist across relaunch.
+7. **Tray + shortcut (P7, FR-014/021)** — tray open + quick capture; shortcut or graceful degrade; in-app capture still works.
+8. **Local-only status (FR-015)** — Local only indicator; no Jira/Confluence/LLM prompts.
+9. **Keyboard path (FR-022)** — Tab/Enter capture → triage → actions.
+10. **Backup / restore (FR-023)** — Export/copy DB → mutate → restore → item returns (or run persistence backup test).
 
-2. **Triage (P2)**  
-   - Convert one item → appears as open Personal Action.  
-   - Dismiss another → gone from open inbox.  
-   - Keep one → remains open.
+## Evidence
 
-3. **Applications (P3, SC-006)**  
-   - Confirm Application 1–4 exist.  
-   - Rename one; link an action; clear link.
-
-4. **Daily review autosave (P4, FR-019/020)**  
-   - Edit outcomes/blockers/follow-ups/next actions.  
-   - Observe unsaved → saving → saved.  
-   - Confirm next-action lines created Personal Actions once; edit again without duplicates.
-
-5. **Fortnight (P5)**  
-   - Open current fortnight; select actions; add commitment; autosave.  
-   - Navigate to previous fortnight; current data unchanged.
-
-6. **Monthly (P6)**  
-   - Record improvement priorities; relaunch; still present.
-
-7. **Tray + shortcut (P7, FR-014/021)**  
-   - Tray: open window; quick capture.  
-   - Global shortcut (if registered): quick capture.  
-   - If shortcut denied: in-app capture still works; status indicates local/degraded shortcut.
-
-8. **Local-only status (FR-015)**  
-   - UI indicates local-only; no prompt requiring Jira/Confluence/LLM.
-
-9. **Keyboard path (FR-022)**  
-   - With pointer unused, Tab/Enter through: capture inbox item → open triage → open actions (smoke).
-
-10. **Backup / restore (FR-023)**  
-   - Note DB path from README.  
-   - Create a known inbox item; copy DB file aside; delete/change item; restore DB file; relaunch and confirm known item returns.  
-   - Or run `packages/persistence/tests/backup_restore.test.ts` / `scripts/smoke-backup-restore.sh`.
-
-## Evidence to attach for “done”
-
-- Vitest output (domain + persistence)  
-- Notes or screenshots for manual smoke steps 1–8  
-- Confirmation migrations applied (version table / log)
+See `specs/001-foundation-workspace/checklists/implementation-evidence.md`.
 
 ## References
 
