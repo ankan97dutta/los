@@ -60,7 +60,7 @@
 - [x] T015 [US1] Wire planning API clients in `apps/desktop/src/lib/api.ts`
 - [x] T016 [US1] Capacity UI: roster + per-member inputs + explainable breakdown in `apps/desktop/src/features/planning/CapacityPlanPage.tsx` (keyboard-focusable fields; FR-C18)
 - [x] T017 [US1] Nav entry to planning page in `apps/desktop/src/App.tsx` without removing Inbox/Daily/Fortnight personal flows
-- [ ] T018 [US1] Record capacity save + relaunch note in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
+- [x] T018 [US1] Record capacity save + relaunch note in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
 
 **Checkpoint**: Capacity editable and durable on Tauri path
 
@@ -79,7 +79,7 @@
 
 - [x] T020 [US2] Implement `planning.workUpsert` / `workList` in `packages/app-services/src/capacity_planning.ts` (statuses `ready|blocked|waiting_external|done|dropped`; required `title` max 4000 as the description—no separate description field; `applicationId` optional FK to existing Applications)
 - [x] T021 [US2] Demand list UI in `apps/desktop/src/features/planning/DemandPanel.tsx` (or section on CapacityPlanPage) with unknown/blocked affordances
-- [ ] T022 [US2] Record demand persistence smoke row in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
+- [x] T022 [US2] Record demand persistence smoke row in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
 
 **Checkpoint**: Demand list round-trips; unknown distinct from zero
 
@@ -101,7 +101,7 @@
 - [x] T026 [US3] Implement `planning.periodSaveMeta` for tradeoff notes (also allowed when closed — notes only)
 - [x] T027 [US3] UI: allocation controls, load vs capacity, warning banners; confirm **before** calling allocate when result would be conflicted; conflicted badge remains after confirm in `apps/desktop/src/features/planning/CapacityPlanPage.tsx`
 - [x] T028 [US3] Stretch vs commitment visual distinction; block commitment UI path when unallocated
-- [ ] T029 [US3] Record overload soft-gate + assignee-reject smokes in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
+- [x] T029 [US3] Record overload soft-gate + assignee-reject smokes in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
 
 **Checkpoint**: Cannot treat overload as clean; unallocated cannot be commitment
 
@@ -122,7 +122,7 @@
 - [x] T032 [US4] Implement transactional `planning.periodClose` (snapshot + status=`closed` + `acceptWarnings` soft gate + optional `carryForwardWorkItemIds` with U1 eligibility + next-period create) and `planning.historyGet` in `packages/app-services/src/capacity_planning.ts`
 - [x] T033 [US4] Enforce `PERIOD_CLOSED` on capacity/work/allocate mutations; allow notes via `periodSaveMeta` in same service module
 - [x] T034 [US4] History / read-only closed period UI + carry-forward multi-select (only eligible incomplete commitments) on close in `apps/desktop/src/features/planning/PlanningHistory.tsx` (or close dialog on CapacityPlanPage)
-- [ ] T035 [US4] Record close/history + carry-forward (+ missing next period) smokes in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
+- [x] T035 [US4] Record close/history + carry-forward (+ missing next period) smokes in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
 
 **Checkpoint**: Closed period frozen; carry-forward creates next-period copies without rewriting history
 
@@ -133,10 +133,10 @@
 **Goal**: Offline durability; no Jira/LLM; keyboard path  
 **Independent Test**: SC-C02, SC-C06, SC-C07
 
-- [ ] T036 [US5] Execute offline edit + relaunch ×3; record SC-C02 in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
-- [ ] T037 [P] [US5] Confirm no Jira/Confluence/LLM deps in capacity flow; record SC-C07 in verification-evidence.md
-- [ ] T038 [US5] Keyboard path smoke SC-C06 (member + work + allocate + save) recorded in verification-evidence.md
-- [ ] T039 [US5] Timed dry-run SC-C05 (roster + ≥3 items + allocations + commit) recorded in verification-evidence.md
+- [x] T036 [US5] Execute offline edit + relaunch ×3; record SC-C02 in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
+- [x] T037 [P] [US5] Confirm no Jira/Confluence/LLM deps in capacity flow; record SC-C07 in verification-evidence.md
+- [x] T038 [US5] Keyboard path smoke SC-C06 (member + work + allocate + save) recorded in verification-evidence.md
+- [x] T039 [US5] Timed dry-run SC-C05 (roster + ≥3 items + allocations + commit) recorded in verification-evidence.md
 - [x] T040 [US5] Backup then restore smoke with capacity/planning rows present (reuse 002 backup path); record constitution Migration-safety evidence in `specs/003-fortnight-capacity/checklists/verification-evidence.md`
 
 ---
