@@ -1,5 +1,6 @@
 # Git Branching Workflow Extension Configuration
 # Copied to .specify/extensions/git/git-config.yml on install
+# Project customizations: gitflow branching + release management (see branching/release below)
 
 # Branch numbering strategy: "sequential" (001, 002, ...) or "timestamp" (YYYYMMDD-HHMMSS)
 branch_numbering: sequential
@@ -10,9 +11,9 @@ branch_numbering: sequential
 # Example for monorepos: "{author}/{app}/{number}-{slug}"
 branch_template: ""
 
-# Optional shorthand namespace. Leave empty to use branch_template/default behavior.
-# Example: "features/{app}" expands to "features/{app}/{number}-{slug}"
-branch_prefix: ""
+# Gitflow feature namespace — expands to "feature/{number}-{slug}"
+# (used by /speckit-git-feature / before_specify hook)
+branch_prefix: "feature"
 
 # Commit message used by `git commit` during repository initialization
 init_commit_message: "chore: initial commit"
@@ -23,6 +24,40 @@ init_commit_message: "chore: initial commit"
 #                  Conventional Commit message (e.g. "feat: add OAuth spec")
 #                  instead of using the messages configured below.
 commit_style: conventional
+
+# ---------------------------------------------------------------------------
+# Project: gitflow branching (read by /speckit-git-hotfix, /speckit-git-release,
+# /speckit-git-pr). Official Spec Kit scripts ignore unknown top-level keys.
+# ---------------------------------------------------------------------------
+branching:
+  strategy: gitflow
+  production: main
+  development: develop
+  prefixes:
+    feature: feature
+    release: release
+    hotfix: hotfix
+  # Ensure long-lived branches exist before creating feature/release/hotfix
+  ensure_base_branches: true
+
+# ---------------------------------------------------------------------------
+# Project: release management (read by /speckit-git-release)
+# ---------------------------------------------------------------------------
+release:
+  enabled: true
+  # Where the current version lives. Supported: VERSION | package.json | pyproject.toml
+  # If the file is missing, create VERSION on first release.
+  version_file: VERSION
+  changelog: CHANGELOG.md
+  tag_prefix: v
+  # auto = derive from Conventional Commits since last tag (BREAKING→major, feat→minor, else patch)
+  bump: auto
+  create_github_release: true
+  # Branch name shape for gitflow releases: release/{tag_prefix}{version}
+  branch_from: develop
+  merge_targets:
+    - main
+    - develop
 
 # Auto-commit before/after core commands.
 # Set "default" to enable for all commands, then override per-command.
