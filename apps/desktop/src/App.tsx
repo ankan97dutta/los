@@ -1,39 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { WorkspaceRuntime } from '@los/app-services';
 import { bootWorkspaceRuntime, type BootNotice } from './lib/runtime';
-import { LocalStatus } from './features/status/LocalStatus';
 import { InboxPage } from './features/inbox/InboxPage';
 import { QuickCapture } from './features/inbox/QuickCapture';
 import { ActionsPage } from './features/actions/ActionsPage';
-import { ApplicationsPage } from './features/applications/ApplicationsPage';
 import { DailyReviewPage } from './features/reviews/DailyReviewPage';
 import { FortnightPlanPage } from './features/reviews/FortnightPlanPage';
-import { MonthlyReviewPage } from './features/reviews/MonthlyReviewPage';
+import { ReviewsPage } from './features/reviews/ReviewsPage';
 import { SettingsPage } from './features/settings/SettingsPage';
 import { DbOpenError } from './features/status/DbOpenError';
 import { CapacityPlanPage } from './features/planning/CapacityPlanPage';
-
-type Route =
-  | 'inbox'
-  | 'actions'
-  | 'applications'
-  | 'daily'
-  | 'fortnight'
-  | 'capacity'
-  | 'monthly'
-  | 'settings'
-  | 'quick';
-
-const NAV: { id: Route; label: string }[] = [
-  { id: 'inbox', label: 'Inbox' },
-  { id: 'actions', label: 'Actions' },
-  { id: 'applications', label: 'Applications' },
-  { id: 'daily', label: 'Daily' },
-  { id: 'fortnight', label: 'Fortnight' },
-  { id: 'capacity', label: 'Capacity' },
-  { id: 'monthly', label: 'Monthly' },
-  { id: 'settings', label: 'Settings' },
-];
+import { TeamPage } from './features/team/TeamPage';
+import { AppShell } from './shell/AppShell';
+import {
+  CommandPalette,
+  DEFAULT_PALETTE_ACTIONS,
+  type PaletteAction,
+} from './shell/CommandPalette';
+import { SectionSubNav } from './shell/SectionSubNav';
+import { defaultChild, type PrimaryRouteId, type RouteId } from './shell/routes';
+import { initTheme } from './ui/theme';
 
 declare global {
   interface Window {
@@ -48,7 +34,7 @@ declare global {
 }
 
 export function App() {
-  const [route, setRoute] = useState<Route>(() =>
+  const [route, setRoute] = useState<RouteId>(() =>
     new URLSearchParams(window.location.search).get('view') === 'quick' ? 'quick' : 'inbox',
   );
   const [rt, setRt] = useState<WorkspaceRuntime | null>(null);
@@ -59,6 +45,11 @@ export function App() {
   } | null>(null);
   const [notices, setNotices] = useState<BootNotice[]>([]);
   const [reloadKey, setReloadKey] = useState(0);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    initTheme();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,12 +103,41 @@ export function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const meta = e.metaKey || e.ctrlKey;
+      if (meta && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  function navigatePrimary(id: PrimaryRouteId) {
+    setRoute(defaultChild(id));
+  }
+
+  function runPalette(action: PaletteAction) {
+    setPaletteOpen(false);
+    if (action.run === 'quick-capture') {
+      setRoute('quick');
+      return;
+    }
+    if (action.route) setRoute(action.route);
+  }
+
   if (bootError) {
     return <DbOpenError error={bootError} />;
   }
 
   if (!rt) {
-    return <p className="muted" style={{ padding: '2rem' }}>Opening local database…</p>;
+    return (
+      <p className="muted" style={{ padding: '2rem' }}>
+        Opening local database…
+      </p>
+    );
   }
 
   if (route === 'quick') {
@@ -134,47 +154,84 @@ export function App() {
     );
   }
 
+  const noticesNode = notices.map((n, i) => (
+    <p key={`${n.kind}-${i}`} className={n.kind === 'error' ? 'error' : 'muted'} role="status">
+      {n.text}
+    </p>
+  ));
+
+  let content: ReactNode = null;
+  if (route === 'today') {
+    content = <DailyReviewPage rt={rt} />;
+  } else if (route === 'inbox' || route === 'actions') {
+    content = (
+      <section className="stack">
+        <SectionSubNav
+          label="Inbox sections"
+          items={[
+            { id: 'inbox', label: 'Inbox' },
+            { id: 'actions', label: 'Actions' },
+          ]}
+          activeId={route}
+          onSelect={(id) => setRoute(id as RouteId)}
+        />
+        {route === 'inbox' ? (
+          <InboxPage rt={rt} onConverted={() => setRoute('actions')} />
+        ) : (
+          <ActionsPage rt={rt} />
+        )}
+      </section>
+    );
+  } else if (route === 'planning-capacity' || route === 'planning-fortnight') {
+    content = (
+      <section className="stack">
+        <SectionSubNav
+          label="Planning sections"
+          items={[
+            { id: 'planning-capacity', label: 'Capacity' },
+            { id: 'planning-fortnight', label: 'Fortnight' },
+          ]}
+          activeId={route}
+          onSelect={(id) => setRoute(id as RouteId)}
+        />
+        {route === 'planning-capacity' ? (
+          <CapacityPlanPage rt={rt} />
+        ) : (
+          <FortnightPlanPage rt={rt} />
+        )}
+      </section>
+    );
+  } else if (route === 'team-roster' || route === 'team-apps') {
+    content = (
+      <TeamPage
+        rt={rt}
+        section={route}
+        onSection={(id) => setRoute(id)}
+      />
+    );
+  } else if (route === 'reviews-monthly' || route === 'reviews-history') {
+    content = (
+      <ReviewsPage
+        rt={rt}
+        section={route}
+        onSection={(id) => setRoute(id)}
+      />
+    );
+  } else if (route === 'settings') {
+    content = <SettingsPage rt={rt} onRestored={() => setReloadKey((k) => k + 1)} />;
+  }
+
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <div className="brand">LOS</div>
-        <p className="muted" style={{ margin: 0, fontSize: '0.85rem' }}>
-          Lead OS · offline workspace
-        </p>
-        <nav className="nav" aria-label="Primary">
-          {NAV.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={route === item.id ? 'active' : undefined}
-              aria-current={route === item.id ? 'page' : undefined}
-              onClick={() => setRoute(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
-        <div style={{ marginTop: 'auto' }}>
-          <LocalStatus rt={rt} />
-        </div>
-      </aside>
-      <main className="main">
-        {notices.map((n, i) => (
-          <p key={`${n.kind}-${i}`} className={n.kind === 'error' ? 'error' : 'muted'} role="status">
-            {n.text}
-          </p>
-        ))}
-        {route === 'inbox' ? <InboxPage rt={rt} onConverted={() => setRoute('actions')} /> : null}
-        {route === 'actions' ? <ActionsPage rt={rt} /> : null}
-        {route === 'applications' ? <ApplicationsPage rt={rt} /> : null}
-        {route === 'daily' ? <DailyReviewPage rt={rt} /> : null}
-        {route === 'fortnight' ? <FortnightPlanPage rt={rt} /> : null}
-        {route === 'capacity' ? <CapacityPlanPage rt={rt} /> : null}
-        {route === 'monthly' ? <MonthlyReviewPage rt={rt} /> : null}
-        {route === 'settings' ? (
-          <SettingsPage rt={rt} onRestored={() => setReloadKey((k) => k + 1)} />
-        ) : null}
-      </main>
-    </div>
+    <>
+      <AppShell rt={rt} route={route} onNavigatePrimary={navigatePrimary} notices={noticesNode}>
+        {content}
+      </AppShell>
+      <CommandPalette
+        open={paletteOpen}
+        actions={DEFAULT_PALETTE_ACTIONS}
+        onClose={() => setPaletteOpen(false)}
+        onRun={runPalette}
+      />
+    </>
   );
 }

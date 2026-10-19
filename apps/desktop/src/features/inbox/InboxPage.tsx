@@ -2,6 +2,10 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 import type { WorkspaceRuntime } from '@los/app-services';
 import type { InboxItem } from '@los/domain';
 import { api } from '../../lib/api';
+import { Banner } from '../../ui/Banner';
+import { Button } from '../../ui/Button';
+import { EmptyState } from '../../ui/EmptyState';
+import { TextAreaField } from '../../ui/Field';
 
 type Props = { rt: WorkspaceRuntime; onConverted?: () => void };
 
@@ -48,32 +52,30 @@ export function InboxPage({ rt, onConverted }: Props) {
       <p className="lede">Capture requests quickly. Newest first. Keyboard: Tab to field, Enter to submit.</p>
 
       <form className="stack" onSubmit={onSubmit}>
-        <div className="field">
-          <label htmlFor="inbox-capture">New item</label>
-          <textarea
-            id="inbox-capture"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                e.currentTarget.form?.requestSubmit();
-              }
-            }}
-            placeholder="What needs attention?"
-            rows={3}
-          />
-        </div>
+        <TextAreaField
+          id="inbox-capture"
+          label="New item"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              e.currentTarget.form?.requestSubmit();
+            }
+          }}
+          placeholder="What needs attention?"
+          rows={3}
+        />
         <div className="row">
-          <button type="submit" className="primary">
+          <Button variant="primary" type="submit">
             Capture
-          </button>
-          {error ? <span className="error" role="alert">{error}</span> : null}
+          </Button>
+          {error ? <Banner tone="error">{error}</Banner> : null}
         </div>
       </form>
 
       {items.length === 0 ? (
-        <div className="empty">Inbox is empty. Capture a request to get started.</div>
+        <EmptyState title="Inbox is empty" actionHint="Capture a request to get started." />
       ) : (
         <ul className="list">
           {items.map((item) => (

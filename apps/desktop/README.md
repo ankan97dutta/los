@@ -34,4 +34,19 @@ Newer-schema backups are refused with `DB_SCHEMA_TOO_NEW` before replacing the l
 
 ### Capacity planning (003)
 
-Sidebar **Capacity** opens fortnight team capacity, demand, allocations, soft-gate warnings, close/history, and optional carry-forward. Schema migration `002_capacity_planning.sql`. Closed periods freeze plan structure; outcome/carryover/trade-off notes remain editable. Vite preview uses MemoryStore planning tables; acceptance remains Tauri SQLite.
+Primary nav **Planning → Capacity** opens fortnight team capacity, demand, allocations, soft-gate warnings, close/history, and optional carry-forward. Schema migration `002_capacity_planning.sql`. Closed periods freeze plan structure (read-only presentation); outcome/carryover/trade-off notes remain editable. Vite preview uses MemoryStore planning tables; acceptance remains Tauri SQLite.
+
+### Window sizes (004)
+
+| | Size |
+|--|------|
+| Default | 1200 × 800 |
+| Minimum | 1024 × 680 (`minWidth` / `minHeight` in `src-tauri/tauri.conf.json`) |
+
+### Theme (004)
+
+Settings → Appearance theme. Persisted in `localStorage` key `los.ui.theme` (`dark` \| `light`). Default dark graphite.
+
+### Shell IA (004)
+
+Primary: Today, Inbox, Planning, Team, Reviews, Settings. Personal Actions under Inbox secondary. Command palette: `Meta+K` / `Ctrl+K`.

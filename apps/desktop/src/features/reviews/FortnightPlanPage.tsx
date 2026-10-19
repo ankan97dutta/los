@@ -3,6 +3,7 @@ import type { WorkspaceRuntime } from '@los/app-services';
 import type { PersonalAction } from '@los/domain';
 import { api } from '../../lib/api';
 import { useDebouncedAutosave } from '../../lib/autosave';
+import { SaveIndicator } from '../../ui/SaveIndicator';
 
 type Props = { rt: WorkspaceRuntime };
 
@@ -101,10 +102,7 @@ export function FortnightPlanPage({ rt }: Props) {
         >
           Next
         </button>
-        <span className="autosave" aria-live="polite">
-          {status}
-          {error ? ` — ${error}` : ''}
-        </span>
+        <SaveIndicator status={status} message={error} />
       </div>
 
       {!draft.commitments && draft.selectedActionIds.length === 0 ? (

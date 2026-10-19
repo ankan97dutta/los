@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { WorkspaceRuntime } from '@los/app-services';
 import { api } from '../../lib/api';
 import { useDebouncedAutosave } from '../../lib/autosave';
+import { SaveIndicator } from '../../ui/SaveIndicator';
 
 type Props = { rt: WorkspaceRuntime };
 
@@ -62,10 +63,7 @@ export function MonthlyReviewPage({ rt }: Props) {
         <button type="button" onClick={() => void load(shiftMonth(draft.yearMonth, 1))}>
           Next month
         </button>
-        <span className="autosave" aria-live="polite">
-          {status}
-          {error ? ` — ${error}` : ''}
-        </span>
+        <SaveIndicator status={status} message={error} />
       </div>
       {!draft.improvementPriorities.trim() ? (
         <div className="empty">No priorities recorded for this month yet.</div>

@@ -2,6 +2,8 @@ import { FormEvent, useCallback, useEffect, useState } from 'react';
 import type { WorkspaceRuntime } from '@los/app-services';
 import type { Application, PersonalAction } from '@los/domain';
 import { api } from '../../lib/api';
+import { EmptyState } from '../../ui/EmptyState';
+import { Select } from '../../ui/Select';
 
 type Props = { rt: WorkspaceRuntime };
 
@@ -88,33 +90,36 @@ export function ActionsPage({ rt }: Props) {
       </form>
 
       <div className="row">
-        <label className="muted" htmlFor="status-filter">
-          Status
-        </label>
-        <select
+        <Select
           id="status-filter"
+          label="Status"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as 'open' | 'done' | 'all')}
         >
           <option value="open">Open</option>
           <option value="done">Done</option>
           <option value="all">All</option>
-        </select>
-        <label className="muted" htmlFor="app-filter">
-          Application
-        </label>
-        <select id="app-filter" value={appFilter} onChange={(e) => setAppFilter(e.target.value)}>
+        </Select>
+        <Select
+          id="app-filter"
+          label="Application"
+          value={appFilter}
+          onChange={(e) => setAppFilter(e.target.value)}
+        >
           <option value="">Any</option>
           {apps.map((a) => (
             <option key={a.id} value={a.id}>
               {a.name}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {actions.length === 0 ? (
-        <div className="empty">No actions match this filter. Create one or convert from inbox.</div>
+        <EmptyState
+          title="No actions match this filter"
+          actionHint="Create one here or convert from Inbox."
+        />
       ) : (
         <ul className="list">
           {actions.map((action) => (

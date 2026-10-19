@@ -4,6 +4,8 @@ import type { DailyNextActionLine } from '@los/domain';
 import { newId } from '@los/domain';
 import { api } from '../../lib/api';
 import { useDebouncedAutosave } from '../../lib/autosave';
+import { EmptyState } from '../../ui/EmptyState';
+import { SaveIndicator } from '../../ui/SaveIndicator';
 
 type Props = { rt: WorkspaceRuntime };
 
@@ -95,13 +97,15 @@ export function DailyReviewPage({ rt }: Props) {
         <button type="button" onClick={() => setDate((d) => addDays(d, 1))}>
           Next day
         </button>
-        <span className="autosave" aria-live="polite">
-          {status}
-          {error ? ` — ${error}` : ''}
-        </span>
+        <SaveIndicator status={status} message={error} />
       </div>
 
-      {empty ? <div className="empty">No notes for this day yet. Start typing — changes autosave.</div> : null}
+      {empty ? (
+        <EmptyState
+          title="No notes for this day yet"
+          actionHint="Start typing — changes autosave."
+        />
+      ) : null}
 
       {(
         [

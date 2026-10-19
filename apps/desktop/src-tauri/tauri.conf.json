@@ -14,8 +14,10 @@
       {
         "label": "main",
         "title": "LOS — Lead OS",
-        "width": 1100,
-        "height": 720,
+        "width": 1200,
+        "height": 800,
+        "minWidth": 1024,
+        "minHeight": 680,
         "resizable": true,
         "fullscreen": false
       }

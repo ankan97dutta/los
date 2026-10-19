@@ -2,6 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import type { WorkspaceRuntime } from '@los/app-services';
 import type { CommitmentKind, TeamMember, WorkStatus } from '@los/domain';
 import { api } from '../../lib/api';
+import { Banner } from '../../ui/Banner';
+import { Button } from '../../ui/Button';
+import { EmptyState } from '../../ui/EmptyState';
+import { SaveIndicator } from '../../ui/SaveIndicator';
+import { Select } from '../../ui/Select';
+import { StatusCue } from '../../ui/StatusCue';
 
 type Props = { rt: WorkspaceRuntime };
 
@@ -19,6 +25,7 @@ export function CapacityPlanPage({ rt }: Props) {
   const [tradeoff, setTradeoff] = useState('');
   const [carryIds, setCarryIds] = useState<string[]>([]);
   const [historyPayload, setHistoryPayload] = useState<string | null>(null);
+  const [notesSave, setNotesSave] = useState<'idle' | 'pending' | 'saved' | 'failed'>('idle');
 
   const load = useCallback(
     async (periodStart?: string) => {
@@ -51,6 +58,7 @@ export function CapacityPlanPage({ rt }: Props) {
 
   const closed = data.period.status === 'closed';
   const allocByWork = new Map(data.allocations.map((a) => [a.workItemId, a]));
+  const totals = data.capacitySummary.totals;
 
   async function addMember() {
     const r = await api.planningMemberUpsert(rt, { displayName: newMember });
@@ -134,12 +142,18 @@ export function CapacityPlanPage({ rt }: Props) {
   }
 
   async function saveNotes() {
+    setNotesSave('pending');
     const r = await api.planningPeriodSaveMeta(rt, {
       periodStart: data!.period.periodStart,
       tradeoffNotes: tradeoff,
     });
-    if (!r.ok) setError(r.error.message);
-    else await load(data!.period.periodStart);
+    if (!r.ok) {
+      setNotesSave('failed');
+      setError(r.error.message);
+    } else {
+      setNotesSave('saved');
+      await load(data!.period.periodStart);
+    }
   }
 
   async function closePeriod() {
@@ -160,13 +174,24 @@ export function CapacityPlanPage({ rt }: Props) {
 
   return (
     <section className="stack">
-      <h1>Capacity planning</h1>
+      <header className="period-header">
+        <h1 style={{ margin: 0 }}>Capacity planning</h1>
+        <StatusCue
+          kind={closed ? 'muted' : 'ok'}
+          label={closed ? 'Closed — structure frozen' : 'Open'}
+        />
+        {data.period.planConflicted ? (
+          <StatusCue kind="conflicted" label="Conflicted" />
+        ) : (
+          <StatusCue kind="ok" label="Clean" />
+        )}
+      </header>
       <p className="lede">
         Team capacity, demand, and commitments for the fortnight. Offline · no Jira/LLM required.
       </p>
+
       <div className="row">
-        <button
-          type="button"
+        <Button
           onClick={() => {
             const prev = api.previousFortnight({
               periodStart: data.period.periodStart,
@@ -176,13 +201,11 @@ export function CapacityPlanPage({ rt }: Props) {
           }}
         >
           Previous
-        </button>
+        </Button>
         <strong>
-          {data.period.periodStart} → {data.period.periodEnd} · {data.period.status}
-          {data.period.planConflicted ? ' · conflicted' : ''}
+          {data.period.periodStart} → {data.period.periodEnd}
         </strong>
-        <button
-          type="button"
+        <Button
           onClick={() => {
             const next = api.nextFortnight({
               periodStart: data.period.periodStart,
@@ -192,19 +215,36 @@ export function CapacityPlanPage({ rt }: Props) {
           }}
         >
           Next
-        </button>
+        </Button>
       </div>
-      {error ? (
-        <p className="error" role="alert">
-          {error}
-        </p>
-      ) : null}
+
+      <div className="summary-strip" aria-label="Capacity summary">
+        <span>
+          Unallocated: <strong>{totals.unallocatedCount}</strong>
+        </span>
+        <span>
+          Unestimated commitments: <strong>{totals.unestimatedCommitCount}</strong>
+        </span>
+        <span>
+          Members: <strong>{data.capacitySummary.members.length}</strong>
+        </span>
+      </div>
+
+      {error ? <Banner tone="error">{error}</Banner> : null}
       {data.warnings.length > 0 ? (
-        <ul className="error" aria-live="polite">
-          {data.warnings.map((w, i) => (
-            <li key={`${w.code}-${i}`}>{w.message}</li>
-          ))}
-        </ul>
+        <Banner tone="warning" title="Plan warnings">
+          <ul style={{ margin: '0.35rem 0 0', paddingLeft: '1.1rem' }}>
+            {data.warnings.map((w, i) => (
+              <li key={`${w.code}-${i}`}>{w.message}</li>
+            ))}
+          </ul>
+        </Banner>
+      ) : null}
+      {data.period.planConflicted ? (
+        <Banner tone="warning" title="Conflicted">
+          Plan remains conflicted until overload / blocked / unestimated commitment issues are
+          resolved. Soft-gate acknowledgment does not clear this status.
+        </Banner>
       ) : null}
 
       <h2>Team capacity</h2>
@@ -220,9 +260,9 @@ export function CapacityPlanPage({ rt }: Props) {
               }}
             />
           </label>
-          <button type="button" className="primary" onClick={() => void addMember()}>
+          <Button variant="primary" onClick={() => void addMember()}>
             Add member
-          </button>
+          </Button>
         </div>
       ) : null}
       <table className="table">
@@ -251,25 +291,30 @@ export function CapacityPlanPage({ rt }: Props) {
                 ] as const
               ).map((field) => (
                 <td key={field}>
-                  <input
-                    type="number"
-                    step={0.5}
-                    min={0}
-                    disabled={closed}
-                    defaultValue={m[field]}
-                    aria-label={`${m.displayName} ${field}`}
-                    onBlur={(e) => {
-                      const v = Number(e.target.value);
-                      void saveCapacity(m.teamMemberId, {
-                        availableHours: field === 'availableHours' ? v : m.availableHours,
-                        leaveHours: field === 'leaveHours' ? v : m.leaveHours,
-                        reservedCommitmentHours:
-                          field === 'reservedCommitmentHours' ? v : m.reservedCommitmentHours,
-                        unplannedBufferHours:
-                          field === 'unplannedBufferHours' ? v : m.unplannedBufferHours,
-                      });
-                    }}
-                  />
+                  {closed ? (
+                    <span className="readonly-field" aria-label={`${m.displayName} ${field} (read-only)`}>
+                      {m[field]}
+                    </span>
+                  ) : (
+                    <input
+                      type="number"
+                      step={0.5}
+                      min={0}
+                      defaultValue={m[field]}
+                      aria-label={`${m.displayName} ${field}`}
+                      onBlur={(e) => {
+                        const v = Number(e.target.value);
+                        void saveCapacity(m.teamMemberId, {
+                          availableHours: field === 'availableHours' ? v : m.availableHours,
+                          leaveHours: field === 'leaveHours' ? v : m.leaveHours,
+                          reservedCommitmentHours:
+                            field === 'reservedCommitmentHours' ? v : m.reservedCommitmentHours,
+                          unplannedBufferHours:
+                            field === 'unplannedBufferHours' ? v : m.unplannedBufferHours,
+                        });
+                      }}
+                    />
+                  )}
                 </td>
               ))}
               <td>{m.netHours}</td>
@@ -312,30 +357,42 @@ export function CapacityPlanPage({ rt }: Props) {
             />{' '}
             Unknown estimate
           </label>
-          <button type="button" className="primary" onClick={() => void addWork()}>
+          <Button variant="primary" onClick={() => void addWork()}>
             Add work
-          </button>
+          </Button>
         </div>
       ) : null}
-      <ul className="stack">
-        {data.work.map((w) => {
-          const a = allocByWork.get(w.id);
-          return (
-            <li key={w.id} className="card">
-              <strong>
-                {w.title}{' '}
-                <span className="muted">
-                  ({w.status}
-                  {w.estimateUnknown ? '; unestimated' : `; ${w.estimateHours}h`})
-                  {a?.commitmentKind === 'stretch' ? ' · stretch' : ''}
-                  {a?.commitmentKind === 'commitment' ? ' · commitment' : ''}
-                </span>
-              </strong>
-              {!closed ? (
-                <div className="row">
-                  <label>
-                    Assignee{' '}
-                    <select
+      {data.work.length === 0 ? (
+        <EmptyState
+          title="No demand items"
+          actionHint={closed ? 'This closed period has an empty demand list.' : 'Add a work title to start planning demand.'}
+        />
+      ) : (
+        <ul className="stack">
+          {data.work.map((w) => {
+            const a = allocByWork.get(w.id);
+            return (
+              <li key={w.id} className="card">
+                <strong>
+                  {w.title}{' '}
+                  <span className="muted">({w.status})</span>
+                </strong>{' '}
+                {w.estimateUnknown ? (
+                  <StatusCue kind="unknown" label="Unknown estimate" />
+                ) : (
+                  <span className="muted">{w.estimateHours ?? 0}h</span>
+                )}
+                {a?.commitmentKind === 'stretch' ? (
+                  <span className="muted"> · stretch</span>
+                ) : null}
+                {a?.commitmentKind === 'commitment' ? (
+                  <span className="muted"> · commitment</span>
+                ) : null}
+                {!closed ? (
+                  <div className="row">
+                    <Select
+                      id={`assignee-${w.id}`}
+                      label="Assignee"
                       value={a?.teamMemberId ?? ''}
                       onChange={(e) => {
                         const id = e.target.value || null;
@@ -348,11 +405,10 @@ export function CapacityPlanPage({ rt }: Props) {
                           {m.displayName}
                         </option>
                       ))}
-                    </select>
-                  </label>
-                  <label>
-                    Kind{' '}
-                    <select
+                    </Select>
+                    <Select
+                      id={`kind-${w.id}`}
+                      label="Kind"
                       value={a?.commitmentKind ?? 'none'}
                       onChange={(e) => {
                         const kind = e.target.value as CommitmentKind;
@@ -362,11 +418,10 @@ export function CapacityPlanPage({ rt }: Props) {
                       <option value="none">None</option>
                       <option value="commitment">Commitment</option>
                       <option value="stretch">Stretch</option>
-                    </select>
-                  </label>
-                  <label>
-                    Status{' '}
-                    <select
+                    </Select>
+                    <Select
+                      id={`status-${w.id}`}
+                      label="Status"
                       value={w.status}
                       onChange={async (e) => {
                         const status = e.target.value as WorkStatus;
@@ -387,14 +442,18 @@ export function CapacityPlanPage({ rt }: Props) {
                       <option value="waiting_external">waiting_external</option>
                       <option value="done">done</option>
                       <option value="dropped">dropped</option>
-                    </select>
-                  </label>
-                </div>
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
+                    </Select>
+                  </div>
+                ) : (
+                  <p className="muted" style={{ margin: '0.35rem 0 0' }}>
+                    Assignee / kind / status frozen (read-only).
+                  </p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       <h2>Trade-offs / close</h2>
       <label>
@@ -407,13 +466,12 @@ export function CapacityPlanPage({ rt }: Props) {
         />
       </label>
       <div className="row">
-        <button type="button" onClick={() => void saveNotes()}>
-          Save notes
-        </button>
+        <Button onClick={() => void saveNotes()}>Save notes</Button>
+        <SaveIndicator status={notesSave} />
         {!closed ? (
-          <button type="button" className="primary" onClick={() => void closePeriod()}>
+          <Button variant="primary" onClick={() => void closePeriod()}>
             Close period
-          </button>
+          </Button>
         ) : null}
       </div>
       {!closed ? (
@@ -443,9 +501,12 @@ export function CapacityPlanPage({ rt }: Props) {
         </fieldset>
       ) : null}
       {historyPayload ? (
-        <pre className="muted" style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>
-          Snapshot: {historyPayload}
-        </pre>
+        <details>
+          <summary>Closed period history snapshot</summary>
+          <pre className="muted" style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>
+            {historyPayload}
+          </pre>
+        </details>
       ) : null}
     </section>
   );

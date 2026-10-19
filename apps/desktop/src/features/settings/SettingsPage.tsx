@@ -4,6 +4,8 @@ import type { Weekday, WorkspaceSettings } from '@los/domain';
 import { APP_MAX_SCHEMA_VERSION, DbError } from '@los/persistence';
 import { api } from '../../lib/api';
 import { exportDbJson, importDbJson } from '../../lib/runtime';
+import { Select } from '../../ui/Select';
+import { readTheme, writeTheme, type UiTheme } from '../../ui/theme';
 
 type Props = { rt: WorkspaceRuntime; onRestored?: () => void };
 
@@ -17,6 +19,7 @@ export function SettingsPage({ rt, onRestored }: Props) {
   const [settings, setSettings] = useState<WorkspaceSettings | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [theme, setTheme] = useState<UiTheme>(() => readTheme());
 
   useEffect(() => {
     void api.settingsGet(rt).then((r) => {
@@ -156,6 +159,21 @@ export function SettingsPage({ rt, onRestored }: Props) {
     <section className="stack">
       <h1>Settings</h1>
       <p className="lede">Local workspace preferences. No cloud account.</p>
+
+      <Select
+        id="ui-theme"
+        label="Appearance theme"
+        value={theme}
+        onChange={(e) => {
+          const next = e.target.value as UiTheme;
+          setTheme(next);
+          writeTheme(next);
+          setMessage('Theme updated (stored locally in this browser profile).');
+        }}
+      >
+        <option value="dark">Dark graphite (default)</option>
+        <option value="light">Light</option>
+      </Select>
 
       <div className="field">
         <label htmlFor="weekday">Fortnight start weekday</label>
