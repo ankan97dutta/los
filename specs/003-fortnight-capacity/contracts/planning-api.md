@@ -44,7 +44,7 @@ Input:  {
   outcomeSummary?,
   carryoverNotes?,
   acceptWarnings?: boolean,
-  carryForwardWorkItemIds?: string[]  // incomplete committed items only
+  carryForwardWorkItemIds?: string[]  // commitment + status not done/dropped
 }
 Output: {
   period,
@@ -54,12 +54,12 @@ Output: {
 }
 Errors:
   INVALID_PERIOD
-  | ALREADY_CLOSED            // idempotent success preferred; if error, must not wipe notes
   | CAPACITY_OVERLOAD
   | COMMIT_BLOCKED_ITEM
   | COMMIT_UNKNOWN_ESTIMATE
-  | CARRY_FORWARD_INVALID     // id not incomplete commitment in this period
-// Soft gate: overload/blocked/unknown require acceptWarnings=true to proceed.
+  | CARRY_FORWARD_INVALID     // id not eligible (not commitment, or status done/dropped, or wrong period)
+// Soft gate on close: overload/blocked/unknown require acceptWarnings=true.
+// Already-closed: idempotent success (same snapshotId); do not wipe notes.
 // If carryForwardWorkItemIds non-empty and next period missing, create next open period.
 ```
 
@@ -112,6 +112,8 @@ Errors:
   | WORK_NOT_FOUND
   | MEMBER_NOT_FOUND
   | COMMIT_REQUIRES_ASSIGNEE   // commitmentKind=commitment with null teamMemberId
+// No acceptWarnings flag. Persists valid allocations including conflicted commitments.
+// UI must confirm before calling when the resulting plan would be conflicted.
 ```
 
 ## History
@@ -134,4 +136,4 @@ Errors: NOT_FOUND
 | `COMMIT_REQUIRES_ASSIGNEE` | Commitment without team member |
 | `MEMBER_INACTIVE` | Allocation to inactive member |
 | `PERIOD_CLOSED` | Structural edit on closed period |
-| `CARRY_FORWARD_INVALID` | Carry-forward id not eligible |
+| `CARRY_FORWARD_INVALID` | Carry-forward id not eligible (`commitment` required; status must not be `done` or `dropped`) |

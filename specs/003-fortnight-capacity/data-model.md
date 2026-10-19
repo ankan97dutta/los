@@ -57,7 +57,7 @@ Per member per period capacity inputs.
 |-------|--------|
 | `id` | UUID PK |
 | `periodStart` | fortnight key |
-| `title` | Required non-empty; max 4000 |
+| `title` | Required non-empty; max 4000 (this is the work description; no separate description field) |
 | `priority` | enum: `p0` \| `p1` \| `p2` \| `p3`; default `p2` |
 | `estimateHours` | number ≥ 0 step 0.5, **or null** if unknown |
 | `estimateUnknown` | bool; if true, `estimateHours` MUST be null |
@@ -123,12 +123,12 @@ CandidateWorkItem.status: ready | blocked | waiting_external | done | dropped
 ## Close transaction (atomic)
 
 1. Validate period open (or idempotent closed).
-2. If warnings present and `acceptWarnings` false → return warning errors.
+2. If commitment warnings present and `acceptWarnings` false → return warning errors (close only; allocate has no `acceptWarnings`).
 3. Write/replace CommitmentSnapshot from current commitments/stretch.
 4. Set status=`closed`, review fields, `closedAt`.
 5. If `carryForwardWorkItemIds` non-empty:
    - Resolve next period; create `PlanningPeriodMeta` open row if missing.
-   - For each eligible id (incomplete, `commitment`, in this period): insert new CandidateWorkItem (+ default allocation `none`/unallocated) with `carriedFromWorkItemId`.
+   - For each eligible id: `commitmentKind=commitment` AND `status ∉ {done, dropped}` AND belongs to this period → insert new CandidateWorkItem (+ default allocation `none`/unallocated) with `carriedFromWorkItemId`. Others → `CARRY_FORWARD_INVALID`.
 6. Commit.
 
 ## Validation summary

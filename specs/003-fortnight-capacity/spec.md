@@ -117,7 +117,7 @@ All capacity and planning workflows work offline on the durable local workspace.
 - Concurrent edit: single-writer assumption from 002; fail safe rather than corrupt.
 - Closing an already-closed period: idempotent; does not wipe outcome notes.
 - Editing roster, capacity, candidate work, allocations, or commitment/stretch on a closed period: rejected with a clear error; outcome/carryover/trade-off notes may still be updated.
-- Optional carry-forward copy on close: only incomplete **committed** items are eligible; stretch/neither items are not auto-offered; copies are new period-scoped rows (not shared identity with the closed period’s items).
+- Optional carry-forward copy on close: eligible items are **committed** with status not `done` or `dropped` (includes ready/blocked/waiting-external); stretch/neither items are not auto-offered; copies are new period-scoped rows (not shared identity with the closed period’s items).
 - Missing next period on carry-forward: auto-created as an open period using the workspace fortnight calendar (start = day after closed period end).
 - Stretch-only period (no commitments): allowed; summary shows zero committed load.
 - Marking commitment without an assignee: rejected with a clear error; load totals never include unallocated “commitments.”
@@ -130,7 +130,7 @@ All capacity and planning workflows work offline on the durable local workspace.
 - **FR-C02**: LOS MUST support a local team roster for a period (members with display names) without requiring user accounts or multi-user login.
 - **FR-C03**: For each member in a period, LOS MUST capture available working time, planned leave, hours reserved for existing commitments, and reserved unplanned-work buffer, and MUST show an explainable calculation of net capacity (gross minus deductions).
 - **FR-C04**: Capacity calculations MUST be deterministic given the same inputs; LOS MUST show the formula inputs used (not a black-box number).
-- **FR-C05**: LOS MUST allow candidate work items for a period with at least: title/description, priority, estimated effort (or explicitly unknown), optional actual effort, target application (one of the workspace applications or unassigned), status including ready / blocked / waiting-external / done / dropped, and dependency notes.
+- **FR-C05**: LOS MUST allow candidate work items for a period with at least: a required title (the work description; no separate description field required), priority, estimated effort (or explicitly unknown), optional actual effort, target application (one of the workspace applications or unassigned), status including ready / blocked / waiting-external / done / dropped, and dependency notes.
 - **FR-C06**: LOS MUST distinguish unknown estimate from zero estimate; unknown MUST NOT be treated as zero in load totals.
 - **FR-C07**: LOS MUST distinguish estimated effort from actual effort when both are recorded.
 - **FR-C08**: LOS MUST allow allocating candidate work to a team member or leaving it unallocated, and selecting items as commitment vs stretch for the period. An item MUST be allocated to a team member before it can be marked as a commitment; unallocated items MAY be stretch or neither only.
@@ -138,7 +138,7 @@ All capacity and planning workflows work offline on the durable local workspace.
 - **FR-C10**: LOS MUST warn on capacity overload and on committing blocked/waiting-external/unestimated items; LOS MUST NOT silently resolve conflicts or auto-promise work without explicit lead action. Overload and readiness warnings are a **soft gate**: the lead MAY keep the selection after explicit acknowledgment, and LOS MUST continue to mark the plan as conflicted / not clean until the underlying conflict is removed.
 - **FR-C11**: LOS MUST allow documenting trade-off notes for a period when the lead accepts risk or changes scope.
 - **FR-C12**: When a period is closed, LOS MUST preserve a readable historical view of commitments (including incomplete ones), carryover notes, and outcome summary; later status changes to live work MUST NOT erase that historical view. After close, roster, capacity inputs, candidate work, allocations, and commitment/stretch selections for that period MUST be read-only; outcome, carryover, and trade-off notes MAY still be edited.
-- **FR-C19**: On period close, LOS MUST allow the lead to optionally select incomplete committed items to duplicate into the next open planning period as new candidate work items; the closed period’s historical snapshot MUST remain unchanged whether or not copies are created. Carryover notes remain available even when no items are copied. If carry-forward items are selected and the next period does not yet exist, LOS MUST create that next open period (using existing fortnight boundary rules) and place the copies there as part of the close action.
+- **FR-C19**: On period close, LOS MUST allow the lead to optionally select incomplete committed items to duplicate into the next open planning period as new candidate work items. Incomplete means commitment selection is commitment and status is not done or dropped. The closed period’s historical snapshot MUST remain unchanged whether or not copies are created. Carryover notes remain available even when no items are copied. If carry-forward items are selected and the next period does not yet exist, LOS MUST create that next open period (using existing fortnight boundary rules) and place the copies there as part of the close action.
 - **FR-C13**: All capacity and planning data MUST persist in the durable local workspace (same relaunch durability expectations as foundation hardening) and MUST remain usable offline.
 - **FR-C14**: Capacity planning MUST NOT require Jira, Confluence, an LLM, an account, or a cloud backend.
 - **FR-C15**: LOS MUST reuse existing Application slots as the project/application targets for candidate work and MUST NOT introduce a parallel application catalog.
@@ -183,7 +183,8 @@ All capacity and planning workflows work offline on the durable local workspace.
 - Soft maximum team size is left unbounded in product rules but expected to stay small (typical lead team); no enterprise resource-management features (skills matrices, Gantt, financial costing).
 - Stretch goals never count toward “committed load” totals; they may be shown separately against remaining capacity as informational only.
 - Committed load is always attributable to an assigned member; unallocated work cannot contribute to committed load.
-- Capacity overload and readiness conflicts use a soft gate: acknowledgment allows proceeding while the plan stays visibly conflicted until resolved.
+- Capacity overload and readiness conflicts use a soft gate: acknowledgment allows proceeding while the plan stays visibly conflicted until resolved. Allocate persists with warnings (UI confirms first); close requires an explicit `acceptWarnings` acknowledgment when warnings remain.
+- Candidate work “description” is the required title field (no separate description attribute in MVP).
 - Constitution and 001/002 baselines remain in force; migrations must be versioned; no silent data loss.
 
 ## Out of Scope

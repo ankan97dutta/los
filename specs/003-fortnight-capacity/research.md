@@ -73,15 +73,21 @@ Closed period plan structure is **read-only** (roster/capacity/work/allocations/
 
 ## R8. Conflicts (soft gate)
 
-**Decision**: Warnings are first-class (`CAPACITY_OVERLOAD`, `COMMIT_BLOCKED_ITEM`, `COMMIT_UNKNOWN_ESTIMATE`). Soft gate: lead may proceed with `acceptWarnings=true` / UI confirm; plan remains **conflicted** (`planConflicted: true` in period get) until underlying conflicts are removed. Never auto-rebalance or treat conflicted as clean.
+**Decision**: Warnings are first-class (`CAPACITY_OVERLOAD`, `COMMIT_BLOCKED_ITEM`, `COMMIT_UNKNOWN_ESTIMATE`).
+- **`planning.allocate`**: Persists the selection when valid (including conflicted commitments); response includes `warnings` + `planConflicted`. No `acceptWarnings` flag. UI MUST confirm before invoking allocate when the resulting plan would be conflicted (or when changing into a warned commitment).
+- **`planning.periodClose`**: If warnings remain, requires `acceptWarnings=true` or returns warning errors.
+- `planConflicted` stays true until underlying conflicts are removed; acknowledgment never means “clean.”
 
-**Rationale**: FR-C10, SC-C03; clarify Q1.
+**Rationale**: FR-C10, SC-C03; analyze remediation I1 (align plan vs contract).
 
 ## R9. Carry-forward copy
 
-**Decision**: On close, UI/API accepts optional `carryForwardWorkItemIds` (subset of incomplete committed items). Copies are **new** `CandidateWorkItem` rows in the next period with title, priority, estimate/unknown, applicationId, dependencyNotes; status defaults to `ready` (or preserve `blocked`/`waiting_external` if still blocked); allocation starts unallocated with `commitment_kind = none`; optional `carriedFromWorkItemId` for traceability. Stretch/neither not offered. If next period meta missing, auto-create open period.
+**Decision**: On close, UI/API accepts optional `carryForwardWorkItemIds`.
+- **Eligible (“incomplete commitment”)**: `commitmentKind = commitment` AND `status ∉ {done, dropped}` (includes `ready`, `blocked`, `waiting_external`).
+- Copies are **new** `CandidateWorkItem` rows in the next period with title, priority, estimate/unknown, applicationId, dependencyNotes; status defaults to `ready` (or preserve `blocked`/`waiting_external` if still blocked); allocation starts unallocated with `commitment_kind = none`; optional `carriedFromWorkItemId` for traceability.
+- Stretch/neither not offered. If next period meta missing, auto-create open period.
 
-**Rationale**: FR-C19, SC-C08; clarify Q3/Q5.
+**Rationale**: FR-C19, SC-C08; clarify Q3/Q5; analyze remediation U1.
 
 **Alternatives considered**: Notes-only (rejected by clarify); automatic copy of all incomplete (rejected).
 
@@ -90,6 +96,12 @@ Closed period plan structure is **read-only** (roster/capacity/work/allocations/
 **Decision**: `commitment_kind = commitment` is invalid when `team_member_id` is null. Error `COMMIT_REQUIRES_ASSIGNEE`. Unallocated may be `stretch` or `none` only.
 
 **Rationale**: FR-C08; clarify Q4.
+
+## R11. Work title vs description
+
+**Decision**: Single required `title` field (max 4000) is the work description. No separate `description` column in MVP.
+
+**Rationale**: Analyze remediation U2; keeps schema minimal while satisfying FR-C05 intent.
 
 ## Out of scope (confirmed)
 

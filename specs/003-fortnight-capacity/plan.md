@@ -41,7 +41,7 @@ Add period-scoped **team capacity**, **candidate work demand**, **allocations/co
 | Adapter isolation | Pass — Jira optional/out of scope |
 | Ownership clarity | Pass — planning entities LOS-owned; Applications reused |
 | Modular boundaries | Pass — domain pure; SQL in persistence; UI thin |
-| Migration safety | Pass — versioned SQL + transactional close (snapshot + carry-forward) |
+| Migration safety | Pass — versioned SQL + transactional close; backup/restore smoke tasked (T040 / C1) |
 | Test evidence | Pass — calculation + persistence + verification checklist |
 | Spec completeness | Pass — clarify session locked soft gate, freeze, carry-forward, assignee |
 | Desktop UX | Pass — keyboard FR-C18; conflicted plan honesty |
@@ -96,13 +96,15 @@ apps/desktop/src/features/planning/
 |---------------|---------------|
 | Hours | Store effort/capacity as numeric hours (0.5 steps); gross = free-entry availableHours |
 | Local roster | `team_members` + period capacity rows; no auth |
-| Soft overload gate | `acceptWarnings` on allocate/close; `planConflicted` stays true until conflicts cleared |
+| Soft overload gate (I1) | `allocate` may persist conflicted commitments and returns `warnings` + `planConflicted`; UI must confirm before calling allocate when the result would be conflicted. `periodClose` requires `acceptWarnings=true` if warnings remain. Acknowledgment never clears `planConflicted` until conflicts are gone. |
 | Freeze on close | Structural commands return `PERIOD_CLOSED`; notes via `periodSaveMeta` allowed |
-| Optional carry-forward | `carryForwardWorkItemIds` on close; new rows + `carriedFromWorkItemId` |
+| Optional carry-forward (U1) | `carryForwardWorkItemIds` on close; eligible = `commitment` and `status ∉ {done, dropped}`; new rows + `carriedFromWorkItemId` |
 | Auto-create next period | Close resolves next fortnight; inserts open `PlanningPeriodMeta` if missing |
 | Commitment requires assignee | Domain/API reject `commitment` with null `teamMemberId` |
+| Title as description (U2) | Candidate work has required `title` only (no separate description column); FR-C05 “description” = title text |
 | Stretch vs commit | `commitment_kind` enum; stretch excluded from committed load |
 | Unknown ≠ zero | `estimate_hours` null + `estimate_unknown` |
+| Backup/restore (C1) | Persistence-touching release: record backup/restore smoke in verification-evidence (reuse 002 path) |
 
 ## Phase 0 / Phase 1 outputs
 
