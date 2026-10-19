@@ -79,6 +79,27 @@ Discriminated UI state for shared patterns:
 
 Maps onto existing autosave helpers (`apps/desktop/src/lib/autosave.ts`) without changing persistence semantics.
 
+## CapabilityStatusCue
+
+Presentation model for LocalStatus tray/shortcut lines (FR-U14). Not persisted.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `cause` | `'preview'` \| `'os-unavailable'` \| `'registration-failed'` \| `'available'` | Derived from Tauri presence + capability flags |
+| `channel` | `'tray'` \| `'shortcut'` | |
+| `label` | string | Canonical phrase per research R9 / FR-U14 |
+| `detail` | string optional | Registration error text when present |
+
+**Transitions (shortcut)**:
+
+```text
+preview → (enter Tauri) → available | registration-failed | os-unavailable
+registration-failed → available  (after successful re-register)
+available → registration-failed (OS deny / settings re-register fail)
+```
+
+**Validation**: Preview MUST NOT render bare `unavailable`. Settings MUST NOT own these labels.
+
 ## Out of model (explicit non-entities)
 
 - No new domain types for CandidateWork, capacity math, freeze, or soft-gate.

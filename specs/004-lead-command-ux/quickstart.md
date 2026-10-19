@@ -10,7 +10,7 @@ export PATH="$HOME/.local/bin:$PATH:$HOME/.cargo/bin"
 pnpm install
 pnpm test   # must keep 001/003 domain + capacity unit tests green
 pnpm --filter @los/desktop tauri:dev
-# or: pnpm --filter @los/desktop dev  # Vite-only when shell chrome is enough
+# or: pnpm --filter @los/desktop dev  # Vite preview — expect FR-U14 preview phrases
 ```
 
 ## Checks
@@ -26,6 +26,7 @@ pnpm --filter @los/desktop tauri:dev
 9. **SC-U06/U07** — No Jira/LLM; `pnpm test` green.
 10. **Window** — Default 1200×800, min 1024×680; primary actions usable at minimum.
 11. **Modern minimal** — Primary surfaces show one title + short lede; list chrome uses dividers/spacing more than stacked cards; conflict/error/save cues still text-visible; no purple/glow aesthetic.
+12. **SC-U08 / FR-U14** — Vite (`pnpm --filter @los/desktop dev`): LocalStatus shows exactly `Tray: n/a (browser preview)` and `Shortcut: n/a (browser preview)`. Tauri with failed shortcut: `Shortcut: unavailable (registration failed)` (+ optional error); in-app capture still works. Settings does **not** duplicate those FR-U14 lines (short Tauri-only note OK).
 
 ## Evidence
 

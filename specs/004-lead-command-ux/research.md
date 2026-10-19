@@ -2,7 +2,7 @@
 
 **Feature**: `specs/004-lead-command-ux` | **Git branch**: `feature/005-lead-command-ux`  
 **Date**: 2026-10-19  
-**Status**: Phase 0 complete (refreshed for modern minimalism polish)
+**Status**: Phase 0 complete (refreshed for modern minimalism + FR-U14 capability phrases)
 
 ## R1. UI framework
 
@@ -94,6 +94,27 @@ Legacy route ids (`daily`, `capacity`, `fortnight`, `actions`, `applications`, `
 - New component library (rejected—R1)
 - Removing Planning summary density (rejected—capacity decisions need load/remain/unknown; use progressive disclosure, not deletion)
 
+## R9. LocalStatus tray/shortcut phrases (FR-U14)
+
+**Decision**: Map capability flags to **cause classes** and **canonical visible phrases**:
+
+| Cause | Detection | Visible text |
+|-------|-----------|--------------|
+| `preview` | Not running in Tauri (`!window.__TAURI__` / boot without Tauri caps) | `Tray: n/a (browser preview)` · `Shortcut: n/a (browser preview)` |
+| `registration-failed` | Tauri + shortcut available path but not registered (or error present) | `Shortcut: unavailable (registration failed)` optional `: {error}` |
+| `os-unavailable` | Tauri + tray not available | `Tray: unavailable (OS)` |
+| `available` / `registered` | Flags true | `Tray: available` · `Shortcut: registered` |
+
+Settings MUST NOT duplicate these phrases; MAY note that OS registration is Tauri-only.
+
+**Rationale**: Vite preview correctly has no OS tray/shortcut; bare “unavailable” looked like a product defect (clarify 2026-10-20). Aligns with 001 FR-021 / 002 SC-H07 honesty without inventing fake capabilities.
+
+**Alternatives considered**:
+
+- Hide tray/shortcut lines in Vite (rejected—clarify chose explicit preview wording)
+- Fake “available” in Vite (rejected—dishonest)
+- Duplicate FR-U14 copy in Settings (rejected—clarify B: LocalStatus only)
+
 ## Resolved clarifications
 
-All Technical Context items are decided (no remaining `NEEDS CLARIFICATION`). Spec clarify session 2026-10-19 (framework, theme, nav IA, 003 split) remains binding. Modern minimalism is an additive visual/flow decision (R8), not a constitution or domain change.
+All Technical Context items are decided (no remaining `NEEDS CLARIFICATION`). Spec clarify sessions 2026-10-19 and 2026-10-20 (FR-U14 phrases + Settings ownership) are binding. Modern minimalism (R8) and capability honesty (R9) are presentation-only.

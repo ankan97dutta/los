@@ -30,3 +30,4 @@ yarn.lock
 # OS / tooling
 .turbo/
 *.tsbuildinfo
+apps/desktop/.vite/

@@ -27,6 +27,12 @@
 - Q: How should the SC-U04 “contrast check documented” requirement be satisfied for dark and light themes? → A: **Manual documented spot-check** (body, muted, status cues) on Inbox + Planning × both themes; notes in verification-evidence (no formal WCAG tool required).
 - Q: For a closed planning period, how strictly must frozen fields look non-editable? → A: **Read-only presentation** for frozen structure (non-focusable edit controls + clear closed cue); notes/history stay interactive per 003.
 
+### Session 2026-10-20 (clarify)
+
+- Q: When tray or global shortcut is not available, what should LocalStatus show the lead? → A: **Distinguish preview vs OS/registration failure** with a short reason text (not a flat “unavailable” for all cases).
+- Q: What user-facing reason text should LocalStatus use for the two inactive cases? → A: **Fixed short phrases** — Preview: `Tray: n/a (browser preview)` / `Shortcut: n/a (browser preview)`; Tauri fail: `Shortcut: unavailable (registration failed)` (+ error detail when present); tray `unavailable (OS)` when not available in Tauri.
+- Q: Should the Settings shortcut section also explain preview vs registration failure, or only LocalStatus? → A: **LocalStatus only** for FR-U14 phrases; Settings keeps a short Tauri-only note (no duplicate cause-class copy).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Coherent shell and navigation (Priority: P1)
@@ -109,22 +115,24 @@ Across core surfaces, the lead sees loading, empty, offline/local, save pending/
 1. **Given** a durable save succeeds or fails, **When** the lead edited a core field with autosave or explicit save, **Then** the outcome is observable (saved / failed / pending) within the shared save-indicator pattern.
 2. **Given** offline/local operation, **When** the lead views the shell, **Then** status continues to indicate local/offline-capable operation without requiring network.
 3. **Given** an empty Inbox or empty demand list, **When** the lead views that surface, **Then** a shared empty state explains the next useful action.
+4. **Given** tray or global shortcut is not active, **When** the lead views LocalStatus, **Then** the cue uses the FR-U14 canonical phrases: preview → `Tray: n/a (browser preview)` / `Shortcut: n/a (browser preview)`; Tauri registration failure → `Shortcut: unavailable (registration failed)` (append reported error when present); Tauri tray not available → `Tray: unavailable (OS)`.
 
 ---
 
 ### User Story 6 - Accessibility and desktop practicality (Priority: P2)
 
-Primary workflows remain keyboard-operable; focus is visible; controls have accessible names. Default window size supports lead workflows; tray and global shortcut entry points remain available when the OS permits.
+Primary workflows remain keyboard-operable; focus is visible; controls have accessible names. Default window size supports lead workflows; tray and global shortcut entry points remain available when the OS permits. When they are not active, LocalStatus explains **why** (preview vs OS/registration failure) so the lead does not mistake expected preview limits for a product defect.
 
-**Why this priority**: Amends Desktop UX gate; builds on 001 FR-022/023.
+**Why this priority**: Amends Desktop UX gate; builds on 001 FR-022/023 and 002 SC-H07 honesty.
 
-**Independent Test**: Keyboard path for Inbox capture and Planning nav; verify focus ring; confirm tray/shortcut not removed.
+**Independent Test**: Keyboard path for Inbox capture and Planning nav; verify focus ring; confirm tray/shortcut not removed in Tauri when registered; in Vite preview, LocalStatus shows preview-reason wording (not flat unavailable).
 
 **Acceptance Scenarios**:
 
 1. **Given** keyboard-only use, **When** the lead completes inbox capture and opens Planning, **Then** both succeed without a pointer.
 2. **Given** focus moves among controls, **When** a control is focused, **Then** a visible focus indicator is present.
-3. **Given** optional OS integrations fail (shortcut registration), **When** the lead uses in-app capture, **Then** capture still works (existing 002 behavior preserved).
+3. **Given** optional OS integrations fail (shortcut registration) in the Tauri shell, **When** the lead uses in-app capture, **Then** capture still works and LocalStatus shows an OS/registration failure reason (existing 002 behavior preserved, wording clarified).
+4. **Given** LOS is running in browser/Vite preview (no Tauri), **When** the lead views LocalStatus, **Then** tray and shortcut lines read `Tray: n/a (browser preview)` and `Shortcut: n/a (browser preview)`.
 
 ---
 
@@ -135,6 +143,8 @@ Primary workflows remain keyboard-operable; focus is visible; controls have acce
 - Narrow window: progressive disclosure collapses secondary panels before hiding conflict banners.
 - Missing 003 fields: do not show placeholder inputs that post nowhere.
 - Command palette with no match: empty result state, not a blank dialog.
+- Tray/shortcut inactive in Vite preview: LocalStatus MUST show `Tray: n/a (browser preview)` and `Shortcut: n/a (browser preview)`; MUST NOT imply the durable desktop shell failed.
+- Tray/shortcut inactive in Tauri after OS deny or registration error: LocalStatus MUST show `Shortcut: unavailable (registration failed)` (optional `: {error}`) and/or `Tray: unavailable (OS)`; in-app capture MUST remain usable.
 
 ## Requirements *(mandatory)*
 
@@ -153,6 +163,7 @@ Primary workflows remain keyboard-operable; focus is visible; controls have acce
 - **FR-U11**: This feature MUST NOT weaken or silently alter 001–003 domain rules, SQLite schema contracts, or soft-gate/freeze/carry-forward behavior.
 - **FR-U12**: Missing 003 business capabilities (fields not exposed by services or not yet implemented) MUST NOT be faked in the UI; gaps MUST be tracked as 003 follow-ups, not marked complete by restyle alone.
 - **FR-U13**: Practical default and minimum window sizes for the desktop shell MUST be documented and verified for Inbox + Planning primary actions.
+- **FR-U14**: LocalStatus (or equivalent shell status) MUST distinguish tray/global-shortcut inactivity causes with short non-color-only reason text. Canonical visible phrases: (a) **preview** (not Tauri): `Tray: n/a (browser preview)` and `Shortcut: n/a (browser preview)`; (b) **Tauri registration failed / denied**: `Shortcut: unavailable (registration failed)` and MAY append the reported error; (c) **Tauri tray not available**: `Tray: unavailable (OS)`. Flat undifferentiated “unavailable” for both preview and Tauri failure is forbidden. In-app capture MUST remain usable in all of these cases (aligned with 001 FR-021 / 002 FR-H09). Settings MUST NOT duplicate these FR-U14 phrases; Settings MAY keep a short note that OS shortcut registration applies in the Tauri desktop shell only.
 
 ### Key Entities (presentation-level)
 
@@ -160,6 +171,7 @@ Primary workflows remain keyboard-operable; focus is visible; controls have acce
 - **Shell Route**: Named destination with label, keyboard target, backing feature.
 - **Command Palette Action**: Navigational or capture action with id, label, shortcut hint.
 - **Surface State**: loading | empty | ready | error | offline/degraded | conflicted (as applicable).
+- **Capability Status Cue**: Tray/shortcut presentation state with cause class `preview` | `os-unavailable` | `registration-failed` | `available` and short reason text.
 
 ## Success Criteria *(mandatory)*
 
@@ -172,6 +184,7 @@ Primary workflows remain keyboard-operable; focus is visible; controls have acce
 - **SC-U05**: Command palette opens via documented shortcut and navigates to Planning in under 5 seconds in a timed dry-run.
 - **SC-U06**: No Jira/Confluence/LLM dependency is required for any acceptance scenario in this feature.
 - **SC-U07**: Existing 001 inbox capture and 003 capacity calculation unit tests remain green after UX changes (no domain regressions).
+- **SC-U08**: In Vite/browser preview, LocalStatus shows exactly `Tray: n/a (browser preview)` and `Shortcut: n/a (browser preview)` in 100% of scripted checks (minimum 1). In Tauri with failed/denied shortcut registration, LocalStatus shows `Shortcut: unavailable (registration failed)` (error detail optional) while in-app capture still succeeds (maps to 002 SC-H07 with clearer copy).
 
 ## Assumptions
 
@@ -188,6 +201,7 @@ Primary workflows remain keyboard-operable; focus is visible; controls have acce
 - Soft-gate and freeze rules remain owned by 003 domain/app-services; 004 only presents them honestly.
 - Jira/LLM remain optional/absent.
 - **Governance**: Spec approval unlocks UI implementation; constitution v1.1.0 (or written time-bounded exception) is required before calling the feature complete.
+- **Tray/shortcut status honesty**: Preview (non-Tauri) vs OS/registration failure (Tauri) MUST use the FR-U14 canonical phrases in LocalStatus; do not substitute bare “unavailable” for preview. Settings is not the owner of those phrases (short Tauri-only note allowed).
 
 ## Out of Scope
 

@@ -4,7 +4,7 @@ Presentation-only contracts. No new Tauri invokes required for MVP chrome.
 
 **Feature dir**: `specs/004-lead-command-ux`  
 **Git branch**: `feature/005-lead-command-ux`  
-**Aligned to**: clarify session 2026-10-19 + modern minimalism plan refresh (R8)
+**Aligned to**: clarify 2026-10-19 + modern minimalism (R8) + capability honesty FR-U14 (2026-10-20 / R9)
 
 ## Primary routes
 
@@ -50,8 +50,23 @@ Default: `dark`. Toggle control lives in Settings (optional shell affordance all
 | Chrome | Prefer spacing/dividers over stacked bordered cards for passive lists |
 | Elevation | Elevated panels allowed for interactive clusters (forms, palette, confirms) |
 | Status honesty | Conflict / error / unknown / save / closed cues MUST remain text-visible (never color-only, never removed for aesthetics) |
+| Capability honesty | LocalStatus tray/shortcut MUST use FR-U14 phrases (see below); Settings MUST NOT duplicate them |
 | Motion | Palette + optional theme/route transition only; short duration; no decorative loops |
 | Anti-patterns | No purple-indigo default theme, glow stacks, pill clusters, emoji chrome, multi-layer shadows |
+
+## LocalStatus capability phrases (FR-U14 / SC-U08)
+
+```ts
+type CapabilityCause = 'preview' | 'os-unavailable' | 'registration-failed' | 'available';
+
+// Canonical visible strings (must match exactly for SC-U08 preview check):
+// preview:   "Tray: n/a (browser preview)" | "Shortcut: n/a (browser preview)"
+// tray OS:   "Tray: unavailable (OS)"
+// shortcut:  "Shortcut: unavailable (registration failed)" (+ optional error detail)
+// ok:        "Tray: available" | "Shortcut: registered"
+```
+
+Detection: **preview** when not in Tauri desktop shell; otherwise use existing workspace capability flags (`trayAvailable`, `globalShortcutAvailable`, `globalShortcutRegistered`, `globalShortcutError`).
 
 ## Command palette actions
 
@@ -96,6 +111,8 @@ Closed planning period: frozen structure uses **read-only presentation** (non-fo
 | Empty → action | EmptyState names exactly one primary next action |
 | Conflicted plan | Conflict banner stays visible after soft-gate ack; secondary history remains disclosable |
 | Closed period | Structure read-only; notes/history per 003 |
+| Vite preview | LocalStatus shows `n/a (browser preview)` for tray and shortcut (SC-U08) |
+| Tauri shortcut deny | LocalStatus shows `unavailable (registration failed)`; in-app capture still works |
 
 ## Window sizing (FR-U13)
 
@@ -117,3 +134,5 @@ Manual spot-check of body text, muted text, and danger/warning/unknown/conflicte
 - Domain schema or capacity formula changes
 - Seventh primary nav item for Actions
 - Dashboard widget chrome or new product modules
+- Duplicating FR-U14 phrases inside Settings (short Tauri-only note only)
+- Faking tray/shortcut as available in Vite preview

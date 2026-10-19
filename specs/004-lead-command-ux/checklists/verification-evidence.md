@@ -39,6 +39,17 @@
 | Shortcut-deny in-app capture | PASS | LocalStatus `Shortcut: unavailable` in Vite preview; in-app Inbox capture still succeeded (SC-U01 trials) — 002 degrade preserved (T052) |
 | Save / empty / error / local-status | PASS | Notes save → “Saved”; empty Inbox EmptyState before captures; conflicted allocate sets conflict banner; chrome shows Tray/Shortcut/DB local status (T044) |
 
+## FR-U14 / SC-U08 LocalStatus capability phrases (T089–T098, 2026-10-20)
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| Vite preview phrases | PASS | `capabilityPhrases.ts` + `LocalStatus.tsx`: when `!window.__TAURI__`, lines are exactly `Tray: n/a (browser preview)` and `Shortcut: n/a (browser preview)` (SC-U08) |
+| Tauri registration-failed | PASS | When shortcut not registered / error set: `Shortcut: unavailable (registration failed)` (+ optional error); tray false → `Tray: unavailable (OS)` |
+| Settings ownership | PASS | Shortcuts group has short Tauri-only note; does **not** duplicate FR-U14 phrases (clarify B) |
+| In-app capture when shortcut unavailable | PASS | Unchanged 002 path — Inbox capture does not require OS shortcut (SC-H07) |
+| `pnpm lint` + desktop build | PASS | Recorded with T097 run |
+| FR-U14 complete-gate | PASS | T098 |
+
 ## Modern minimalism polish (T059–T088, 2026-10-19)
 
 | Check | Result | Notes |

@@ -1,15 +1,15 @@
 # Tasks: Lead Command Center UX & Design System
 
 **Input**: Design documents from `/specs/004-lead-command-ux/`  
-**Prerequisites**: plan.md (modern minimalism refresh), spec.md (clarify 2026-10-19), research.md (R8), data-model.md, contracts/ui-shell.md, quickstart.md  
+**Prerequisites**: plan.md (FR-U14 refresh), spec.md (clarify 2026-10-19 + 2026-10-20), research.md (R8/R9), data-model.md, contracts/ui-shell.md, quickstart.md  
 **Git branch**: `feature/005-lead-command-ux` | **Feature dir**: `specs/004-lead-command-ux`  
-**Governance**: Constitution v1.1.0 applied. Feature **complete** requires Desktop UX verification evidence (incl. modern-minimal polish smoke).  
+**Governance**: Constitution v1.1.0 applied. Feature **complete** requires Desktop UX verification evidence (incl. SC-U08).  
 **Rule**: Never mark `[X]` without a verification-evidence row  
-**Baseline**: Do not change 001–003 domain rules, SQLite contracts, soft-gate/freeze/carry-forward; do not fake missing 003 fields (FR-U12). Minimalism MUST NOT hide Banner/StatusCue/SaveIndicator text (R8 honesty floor).
+**Baseline**: Do not change 001–003 domain rules, SQLite contracts, soft-gate/freeze/carry-forward; do not fake missing 003 fields (FR-U12). Minimalism MUST NOT hide Banner/StatusCue/SaveIndicator text (R8). LocalStatus MUST NOT use bare “unavailable” for Vite preview (FR-U14).
 
-**Tests**: Scripted UI verification + domain regression (`pnpm test`); SC-U04 = manual contrast spot-check (re-run after token polish). No TDD suite required.
+**Tests**: Scripted UI verification + domain regression (`pnpm test`); SC-U04 contrast spot-check; SC-U08 Vite LocalStatus phrase check. No TDD suite required.
 
-**Status**: Phases 1–17 complete (T001–T088). Modern minimalism polish landed; see verification-evidence.
+**Status**: Phases 1–20 complete (T001–T098). FR-U14 / SC-U08 capability phrases landed.
 
 ## Format: `[ID] [P?] [Story?] Description`
 
@@ -287,39 +287,76 @@
 
 ---
 
+## Phase 18: Foundational — Capability phrase helper (FR-U14)
+
+**Purpose**: Shared cause→label mapping per research R9 / `CapabilityStatusCue`  
+**⚠️ CRITICAL**: Complete before US5/US6 LocalStatus wiring
+
+- [x] T089 Add `apps/desktop/src/features/status/capabilityPhrases.ts` exporting cause class `'preview' | 'os-unavailable' | 'registration-failed' | 'available'` and exact FR-U14 strings: preview `Tray: n/a (browser preview)` / `Shortcut: n/a (browser preview)`; Tauri tray `Tray: unavailable (OS)`; Tauri shortcut fail `Shortcut: unavailable (registration failed)` (optional error suffix); ok `Tray: available` / `Shortcut: registered`
+- [x] T090 Document detection rule in `capabilityPhrases.ts` (or adjacent comment): **preview** when not Tauri (`!window.__TAURI__`); else use workspace flags `trayAvailable`, `globalShortcutAvailable`, `globalShortcutRegistered`, `globalShortcutError`
+
+**Checkpoint**: Pure phrase helper ready (no UI yet)
+
+---
+
+## Phase 19: User Story 5 — Honest LocalStatus capability cues (Priority: P1) 🎯 MVP
+
+**Goal**: LocalStatus distinguishes Vite preview vs Tauri OS/registration failure with FR-U14 phrases  
+**Independent Test**: Vite preview shows exact `n/a (browser preview)` lines; bare `unavailable` absent for preview
+
+### Implementation
+
+- [x] T091 [US5] Wire `apps/desktop/src/features/status/LocalStatus.tsx` to `capabilityPhrases.ts` using runtime Tauri detection + existing `api.workspaceStatus` flags; render canonical tray/shortcut lines (FR-U14)
+- [x] T092 [US5] Ensure Settings does **not** duplicate FR-U14 phrases in `apps/desktop/src/features/settings/SettingsPage.tsx`; keep/add only a short Tauri-only note under Shortcuts if missing (clarify B)
+- [x] T093 [US5] Record SC-U08 Vite preview LocalStatus phrase smoke in `specs/004-lead-command-ux/checklists/verification-evidence.md` (exact `Tray: n/a (browser preview)` and `Shortcut: n/a (browser preview)`)
+
+**Checkpoint**: Preview no longer looks like a broken desktop shell
+
+---
+
+## Phase 20: User Story 6 — Tauri degrade path + polish (Priority: P2)
+
+**Goal**: Tauri registration-fail / OS-unavailable wording; in-app capture still works; docs aligned  
+**Independent Test**: Tauri fail shows `Shortcut: unavailable (registration failed)` (+ optional error); Inbox capture still succeeds
+
+### Implementation
+
+- [x] T094 [US6] Verify Tauri path in `LocalStatus.tsx`: when `globalShortcutAvailable` but not registered (or `globalShortcutError` set), show `Shortcut: unavailable (registration failed)` with optional error detail; when tray false in Tauri show `Tray: unavailable (OS)`; when registered/available show ok phrases
+- [x] T095 [US6] Confirm in-app Inbox capture still works when shortcut unavailable (002 SC-H07); note in verification-evidence.md
+- [x] T096 [P] Align `specs/004-lead-command-ux/quickstart.md` check #12 and `contracts/ui-shell.md` LocalStatus section with shipped phrases
+- [x] T097 Run `pnpm lint && pnpm --filter @los/desktop build` (+ domain/persistence unit tests); paste into verification-evidence.md
+- [x] T098 Record FR-U14 / SC-U08 complete-gate row in `specs/004-lead-command-ux/checklists/verification-evidence.md`
+
+**Checkpoint**: Capability honesty complete for preview and Tauri
+
+---
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
 
-- Phases 1–9 (T001–T058): **complete**
-- Phase 10 (T059–T062): blocks Phases 11–16
-- Phase 11 (US1 slim shell) → Phase 12 (US2 surfaces) → Phase 13 (US3 Planning) → Phase 14 (US5 flows)
-- Phase 15 (US4) and Phase 16 (US6) after Phase 10; can follow Phase 11+
-- Phase 17 after desired polish stories
+- Phases 1–17 (T001–T088): **complete**
+- Phase 18 (T089–T090): blocks Phase 19–20
+- Phase 19 (US5 LocalStatus): MVP for FR-U14
+- Phase 20 (US6 Tauri + docs): after Phase 19
 
 ### User Story Dependencies (remaining)
 
 | Story | Depends on |
 |-------|------------|
-| US1 slim shell | Phase 10 |
-| US2 quiet surfaces | Phase 10 + US1 slim preferred |
-| US3 Planning density | Phase 10 + StatusCue/Banner intact |
-| US5 flow clarity | US2 EmptyState/SaveIndicator |
-| US4 palette motion | Phase 10 motion tokens |
-| US6 a11y recheck | After chrome changes on touched surfaces |
+| US5 LocalStatus phrases | Phase 18 helper |
+| US6 Tauri degrade + evidence | Phase 19 |
 
 ### Parallel Opportunities (remaining)
 
-- T061 ∥ T062 after T059/T060  
-- T067 ∥ T068 after T066  
-- T076 ∥ T075 after T074  
-- T084 ∥ T085 in Phase 17  
+- T092 ∥ T091 after T089 (different files)  
+- T096 ∥ T095 after T094  
 
-### Parallel Example: Phase 12
+### Parallel Example: Phase 19
 
 ```bash
-Task: "Apply SurfaceLayout to ActionsPage.tsx"
-Task: "Apply SurfaceLayout to MonthlyReviewPage.tsx"
+Task: "Wire LocalStatus.tsx to capabilityPhrases.ts"
+Task: "Ensure SettingsPage.tsx has Tauri-only note without FR-U14 duplicates"
 ```
 
 ---
@@ -328,49 +365,46 @@ Task: "Apply SurfaceLayout to MonthlyReviewPage.tsx"
 
 ### MVP (remaining)
 
-Phase 10 + Phase 11 (slim shell) + Phase 12 Inbox/Planning quiet chrome (T066, T070) — validate modern minimal first viewport.
+Phase 18 + Phase 19 (T089–T093) — Vite preview honesty (SC-U08).
 
 ### Incremental
 
-1. Phase 10 foundation tokens/chrome  
-2. US1 slim shell  
-3. US2 surface quieting + SC-U04 recheck  
-4. US3 Planning density  
-5. US5 empty/settings flows  
-6. US4 palette motion  
-7. US6 a11y recheck  
-8. Phase 17 evidence + regression  
+1. Phrase helper (T089–T090)  
+2. LocalStatus + Settings note + SC-U08 evidence (T091–T093)  
+3. Tauri fail path + docs + regression (T094–T098)  
 
 ---
 
 ## Requirement Traceability
 
-| Requirement / SC | Tasks (original) | Tasks (minimal polish) |
-|------------------|------------------|------------------------|
-| FR-U01 shell | T016–T025 | T063–T065 |
-| FR-U02 tokens | T004–T005, T007, T026 | T059–T060, T070 |
-| FR-U03 primitives | T008–T015, T027–T030 | T069 |
-| FR-U04 non-color status | T011, T015, T034–T035, T042 | T073, T087 |
-| FR-U05 Planning + closed | T032–T038 | T071–T073 |
-| FR-U06 progressive disclosure | T032, T051 | T071, T082 |
-| FR-U07 palette | T045–T048 | T078–T080 |
-| FR-U08 save patterns | T012, T039–T044 | T074, T076–T077 |
-| FR-U09 keyboard + focus | T005, T018, T049–T053 | T081, T083 |
-| FR-U10–U12 | T037, T056–T057 | T073, T086–T087 |
-| FR-U13 window sizes | T006, T051 | T082 |
-| SC-U01 | T053 | T083 |
-| SC-U02–U03 | T034–T035, T038 | T073 |
-| SC-U04 | T031 | T070 |
-| SC-U05 | T048 | T080 |
-| SC-U06–U07 | T056 | T086 |
-| Modern minimal (R8) | — | T059–T088 |
-| Constitution complete-gate | T001, T058 | T088 |
+| Requirement / SC | Tasks (original) | Tasks (minimal polish) | Tasks (FR-U14) |
+|------------------|------------------|------------------------|----------------|
+| FR-U01 shell | T016–T025 | T063–T065 | — |
+| FR-U02 tokens | T004–T005, T007, T026 | T059–T060, T070 | — |
+| FR-U03 primitives | T008–T015, T027–T030 | T069 | — |
+| FR-U04 non-color status | T011, T015, T034–T035, T042 | T073, T087 | T091 |
+| FR-U05 Planning + closed | T032–T038 | T071–T073 | — |
+| FR-U06 progressive disclosure | T032, T051 | T071, T082 | — |
+| FR-U07 palette | T045–T048 | T078–T080 | — |
+| FR-U08 save patterns | T012, T039–T044 | T074, T076–T077 | — |
+| FR-U09 keyboard + focus | T005, T018, T049–T053 | T081, T083 | — |
+| FR-U10–U12 | T037, T056–T057 | T073, T086–T087 | — |
+| FR-U13 window sizes | T006, T051 | T082 | — |
+| FR-U14 capability phrases | — | — | T089–T098 |
+| SC-U01 | T053 | T083 | — |
+| SC-U02–U03 | T034–T035, T038 | T073 | — |
+| SC-U04 | T031 | T070 | — |
+| SC-U05 | T048 | T080 | — |
+| SC-U06–U07 | T056 | T086 | T097 |
+| SC-U08 preview phrases | — | — | T093, T098 |
+| Modern minimal (R8) | — | T059–T088 | — |
+| Constitution complete-gate | T001, T058 | T088 | T098 |
 
 ---
 
 ## Notes
 
 - Track B (003) remains out of 004 implementation  
-- Do not reopen T001–T058 checkboxes; only mark T059+ as completed with evidence  
+- Do not reopen T001–T088 checkboxes; only mark T089+ as completed with evidence  
 - Format: all tasks use `- [ ] Tnnn [P?] [USn?] …` with file paths (open) or `- [x]` (done)  
-- Next: `/speckit-implement` starting at T059
+- Next: `/speckit-git-commit` then optional PR to develop for FR-U14

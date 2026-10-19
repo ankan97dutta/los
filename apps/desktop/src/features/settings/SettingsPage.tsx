@@ -198,6 +198,10 @@ export function SettingsPage({ rt, onRestored }: Props) {
 
       <div className="pref-group">
         <h2>Shortcuts</h2>
+        <p className="muted" style={{ margin: 0 }}>
+          OS global shortcut registration applies in the Tauri desktop shell only. Status of tray/shortcut
+          availability is shown in the sidebar (LocalStatus)—not duplicated here.
+        </p>
         <div className="field">
           <label htmlFor="accel">Global shortcut accelerator</label>
           <input

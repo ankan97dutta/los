@@ -3,17 +3,19 @@
 **Branch**: `feature/005-lead-command-ux` (git) | **Feature dir**: `specs/004-lead-command-ux` | **Date**: 2026-10-19 | **Spec**: [spec.md](./spec.md)
 
 **Input**: Feature specification from `/specs/004-lead-command-ux/spec.md`  
-**Plan refresh (2026-10-19)**: User direction — redesign UI and UX flows for a **modern, minimalistic** touch (calm chrome, quieter density, clearer primary flows) without changing 001–003 domain rules  
+**Plan refresh (2026-10-19)**: Modern, minimalistic chrome polish  
+**Plan refresh (2026-10-20)**: Clarify session — **FR-U14 / SC-U08** LocalStatus tray/shortcut cause phrases (preview vs OS/registration)  
 **Gate**: Spec approval unlocks UI implementation. Constitution v1.1.0 applied; feature **complete** still requires Desktop UX verification evidence  
 **Baselines**: 001–003 domain/persistence unchanged; no new UI framework
 
-> **Numbering note**: Spec artifacts live under `004-*` (created before the feature branch). Git branch is `feature/005-lead-command-ux` because sequential numbering saw `specs/004-*` already present. Prefer `SPECIFY_FEATURE_DIRECTORY=specs/004-lead-command-ux` (persisted in `.specify/feature.json`).
+> **Numbering note**: Spec artifacts live under `004-*`. Git branch is `feature/005-lead-command-ux`. Prefer `SPECIFY_FEATURE_DIRECTORY=specs/004-lead-command-ux` (`.specify/feature.json`).
 
 ## Summary
 
-Deliver a coherent **Lead OS** presentation layer that is **modern and minimal**: restrained dark-graphite / light tokens, slim shared shell, progressive disclosure, honest status/save cues, command palette, and Planning hierarchy for existing service data—**without** altering capacity math, freeze/soft-gate rules, or inventing fake 003 fields.
+Deliver a coherent **Lead OS** presentation layer that is **modern and minimal**: restrained tokens, slim shell, progressive disclosure, honest status/save cues, command palette, Planning hierarchy—**without** altering capacity math or inventing fake 003 fields.
 
-**Shell/IA and primitives already landed** under this feature. This plan refresh locks the remaining **visual + flow polish**: reduce bordered “card” chrome, quiet backgrounds, clearer typographic hierarchy, fewer competing elements in the first viewport of each primary surface, and 2–3 intentional motion moments (palette, theme, route)—while preserving FR-U01–U13 and SC-U01–U07.
+**Landed**: Shell/IA, primitives, modern-minimal polish (T001–T088).  
+**Remaining increment**: Implement **FR-U14** LocalStatus copy so Vite preview does not look like a broken desktop shell (`n/a (browser preview)` vs Tauri `unavailable (registration failed)` / `unavailable (OS)`), plus SC-U08 evidence. Settings keeps a short Tauri-only note only (no duplicate FR-U14 phrases).
 
 ## Technical Context
 
@@ -21,19 +23,19 @@ Deliver a coherent **Lead OS** presentation layer that is **modern and minimal**
 
 **Primary Dependencies**: Existing `@los/*` packages, Tauri 2, Vite; **no** MUI/Tailwind/shadcn
 
-**Storage**: No schema change for MVP. Theme preference in `localStorage` (`los.ui.theme`) — UI-only, not synced. Avoid `WorkspaceSettings` / SQLite migration unless a later task proves backup-restore of theme is required.
+**Storage**: No schema change. Theme in `localStorage` (`los.ui.theme`). Capability cues are runtime-only (detect Tauri via `window.__TAURI__` / existing `WorkspaceRuntime` capability flags)—no persistence.
 
-**Testing**: Vitest keeps 001/003 domain + capacity unit tests green; desktop smoke for keyboard path, theme toggle, conflicted/unknown labels, minimal chrome smoke; verification-evidence checklist rows for SC-U01–U07
+**Testing**: Vitest keeps 001/003 domain + capacity unit tests green; SC-U08 Vite preview LocalStatus phrase check; Tauri registration-fail path when exercising shortcut deny; verification-evidence rows for SC-U01–U08
 
-**Target Platform**: macOS-first desktop (same as foundation)
+**Target Platform**: macOS-first desktop (same as foundation); Vite preview is a supported **dev** surface with honest capability cues
 
 **Project Type**: Desktop presentation feature on existing monorepo (`apps/desktop`)
 
-**Performance Goals**: Shell navigation and palette open feel immediate (&lt;100ms perceived); palette→Planning under 5s timed dry-run (SC-U05); theme/route transitions ≤200ms perceived; no domain regressions
+**Performance Goals**: Unchanged — shell/palette immediate; palette→Planning &lt;5s (SC-U05)
 
-**Constraints**: Local-first; keyboard-operable primary paths; non-color-only decision-critical status; preserve tray/global shortcut; practical window sizes; no Jira/LLM/account required; do not fake missing 003 fields; **minimal chrome** (no decorative card stacks, pill clusters, glow, or multi-layer shadows); avoid AI-default purple/cream aesthetic clichés
+**Constraints**: Local-first; non-color-only status; FR-U14 forbids flat “unavailable” for preview; Settings must not duplicate FR-U14 phrases; in-app capture always usable when tray/shortcut inactive
 
-**Scale/Scope**: Existing shell + tokens + palette + Planning honesty remain. Polish pass targets `tokens.css`, `base.css`, shell chrome, and primary surface layouts (Inbox, Planning, Today, Team, Reviews, Settings) for modern minimal density and flow clarity—not new routes or domain APIs
+**Scale/Scope**: Touch `LocalStatus.tsx` (+ optional tiny helper); optional one-line Settings Tauri note if missing; no domain/API changes
 
 ## Constitution Check
 
@@ -43,16 +45,16 @@ Deliver a coherent **Lead OS** presentation layer that is **modern and minimal**
 |------|-------------|
 | Offline core | Pass — no network UI requirements |
 | No LLM required | Pass — presentation only |
-| Privacy default | Pass — theme pref local (`localStorage`); no outbound |
+| Privacy default | Pass — theme pref local; no outbound |
 | Adapter isolation | Pass — N/A (no new adapters) |
 | Ownership clarity | Pass — no sync ownership change |
-| Modular boundaries | Pass — tokens/components in `apps/desktop`; domain/persistence untouched |
-| Migration safety | Pass — no schema for MVP theme storage |
-| Test evidence | Pass — regression `pnpm test` + UI verification checklist |
-| Spec completeness | Pass when checklist + evidence exist at implement |
-| Desktop UX (v1.1.0) | Pass — keyboard, non-color-only status, observable saves, progressive disclosure tasked + evidenced at complete |
+| Modular boundaries | Pass — LocalStatus in `apps/desktop`; domain untouched |
+| Migration safety | Pass — no schema |
+| Test evidence | Pass — SC-U08 + regression |
+| Spec completeness | Pass when evidence updated at implement |
+| Desktop UX (v1.1.0) | Pass — tray/shortcut degrade honesty is Principle X / FR-U14 |
 
-**Post-design re-check**: Complexity limited to desktop presentation (`styles/`, `ui/`, `shell/`, page restyles). Domain and SQLite contracts unchanged. Track B (003 missing fields / soft-gate blind spot) explicitly out of scope — no Complexity Tracking row invents domain work. Minimalism MUST NOT hide conflict/error/save cues (Principle X / FR-U04/U06/U08). Gate for “done”: Desktop UX verification evidence (T058 / successor polish evidence).
+**Post-design re-check**: FR-U14 is presentation-only honesty over existing capability flags. Detect preview as **absence of Tauri** (`!window.__TAURI__` or equivalent runtime flag already used at boot). Do not fake tray/shortcut as available in Vite.
 
 ## Project Structure
 
@@ -64,60 +66,41 @@ specs/004-lead-command-ux/
 ├── research.md
 ├── data-model.md
 ├── quickstart.md
-├── tasks.md              # from /speckit-tasks (append polish via /speckit-tasks or /speckit-converge)
+├── tasks.md              # append FR-U14 tasks via /speckit-tasks or /speckit-converge
 ├── contracts/
 │   └── ui-shell.md
 └── checklists/
 ```
 
-### Source Code (touch set)
+### Source Code (touch set for FR-U14)
 
 ```text
-apps/desktop/
-  src/
-    styles/
-      tokens.css            # graphite/light + semantic status + density/space tokens
-      base.css              # quiet shell, focus rings, minimal list/row chrome, motion
-    ui/                     # Button, Field, Select, Banner, SaveIndicator, EmptyState, Row
-    shell/
-      AppShell.tsx          # slim brand/sidebar; status footer
-      Nav.tsx
-      CommandPalette.tsx    # quiet overlay; short open motion
-    features/…              # pages: one job per section; progressive disclosure
-    App.tsx
-    styles.css              # thin entry → import tokens/base
-  src-tauri/
-    tauri.conf.json         # default/min window sizes (FR-U13)
+apps/desktop/src/
+  features/status/LocalStatus.tsx   # canonical FR-U14 phrases
+  features/settings/SettingsPage.tsx  # optional short Tauri-only note (no FR-U14 duplicate)
+  App.tsx / lib/runtime.ts          # read-only unless capability flag plumbing gaps
 ```
 
-**Structure Decision**: Keep all presentation work inside `apps/desktop`. Do not add a `@los/ui` package in this feature (YAGNI). Domain, app-services, and persistence packages are **read-only** unless a bug blocks honest presentation of already-returned API fields.
+**Structure Decision**: Keep capability phrasing in LocalStatus. Reuse existing `trayAvailable`, `globalShortcutAvailable`, `globalShortcutRegistered`, `globalShortcutError` from workspace status.
 
 ## Complexity Tracking
 
-> No constitution violations requiring justification. Scope debt only:
-
 | Debt | Why tracked | Simpler alternative rejected |
 |------|-------------|------------------------------|
-| Spec `004` vs branch `005` | Sequential branch script saw existing `specs/004-*` | Renaming dir mid-draft risks breaking links; keep dir `004`, document branch |
-| Theme in localStorage not SQLite | Avoid migration for UI chrome | WorkspaceSettings column → persistence touch + backup note for chrome-only pref |
-| 003 Track B gaps remain open | Soft-gate UI hole / missing editors are domain/product gaps | Faking fields in 004 layout → violates FR-U12 |
-| Shell already shipped; polish is additive | Rebuild from scratch would regress verified IA | Incremental restyle of tokens/base/surfaces |
+| Spec `004` vs branch `005` | Sequential branch script | Keep dir `004`, document branch |
+| Theme in localStorage | Avoid migration | SQLite for chrome-only pref |
+| 003 Track B gaps | Domain follow-ups | Fake editors in 004 |
+| Bare “unavailable” in Vite today | Confuses preview users | Leave as-is → violates FR-U14 |
 
 ## Clarification → design mapping
 
 | Spec / user decision | Design impact |
 |----------------------|---------------|
-| No new UI framework | CSS variables + React components under `apps/desktop/src/ui` |
-| Nav remap | Primary: Today/Inbox/Planning/Team/Reviews/Settings. **Actions** = Inbox secondary. Team = Roster\|Applications. Reviews = Monthly\|Planning history |
-| Dual theme | `tokens.css` with `[data-theme="dark\|light"]`; default dark graphite; toggle in Settings |
-| Theme persistence | `localStorage` key `los.ui.theme` (R2 locked) |
-| Contrast (SC-U04) | Manual spot-check body/muted/status on Inbox+Planning × both themes → verification-evidence |
-| Closed period UX | Read-only presentation for frozen structure (non-focusable); notes/history per 003 |
-| Command palette | In-app filterable list; `Meta+K` / `Ctrl+K`; navigate (incl. Actions) + quick-capture |
-| 003 gaps | Planning shows existing fields + API totals/warnings; omit unimplemented editors |
-| Window sizes | Default ≥1200×800, minimum ≥1024×680 in `tauri.conf.json` + README |
-| Constitution 1.1.0 | Applied; **complete** gated on Desktop UX verification evidence |
-| **Modern minimalism (plan refresh)** | Quiet flat/near-flat surfaces; reduce `.card` / bordered-li stacking; slimmer sidebar; one primary CTA cluster per surface; progressive disclosure for secondary detail; 2–3 intentional motions; never hide banners/status for aesthetic minimalism (R8) |
+| … (prior 2026-10-19 rows unchanged) | See earlier plan history |
+| Modern minimalism (R8) | Landed in T059–T088 |
+| **FR-U14 preview vs OS (2026-10-20)** | LocalStatus cause classes + exact phrases (R9) |
+| **Canonical phrases (clarify A)** | Preview: `Tray: n/a (browser preview)` / `Shortcut: n/a (browser preview)`; Tauri shortcut fail: `Shortcut: unavailable (registration failed)` (+ error); Tauri tray: `Tray: unavailable (OS)` |
+| **Settings ownership (clarify B)** | LocalStatus owns FR-U14 phrases; Settings short Tauri-only note only |
 
 ## Phase 0 / Phase 1 outputs
 
@@ -130,4 +113,4 @@ apps/desktop/
 
 ## Next command
 
-Append implementable polish tasks with `/speckit-tasks` or `/speckit-converge` (existing T001–T058 marked done; do not reopen completed checkboxes—add new task IDs for the minimalism pass).
+`/speckit-tasks` or `/speckit-converge` to append implementable FR-U14 / SC-U08 tasks (do not reopen T001–T088). Then `/speckit-implement`.
