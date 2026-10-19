@@ -62,7 +62,7 @@ Applied by migration runner before workspace commands.
 | Backup | Byte-for-byte (or consistent SQLite backup API) copy of live `los.sqlite` |
 | Restore (quit) | Replace file while app quit; relaunch migrates if needed |
 | Restore (in-app) | Close DB → replace file → reopen/migrate → reload workspace state |
-| Newer schema than app | Refuse open/restore with clear error; do not partially apply |
+| Newer schema than app | Return `DB_SCHEMA_TOO_NEW`; on in-app restore, refuse **before** replacing live file; do not partially apply |
 
 ## Error codes (persistence open)
 

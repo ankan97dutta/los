@@ -4,16 +4,25 @@
 **Date**: 2026-10-19  
 **Status**: Phase 0 complete (clarifications resolved; no NEEDS CLARIFICATION remain)
 
-## R1. SQLite runtime split
+## R1. SQLite runtime split (composition — analyze I1)
 
-**Decision**: Shared SQL migrations under `packages/persistence/migrations/`. **Node/Vitest** uses `better-sqlite3`. **Tauri** uses `tauri-plugin-sql` (SQLite) against the same app-data file path and migrations.
+**Decision**: One persistence **port** (`DbSession` + repos). Shared `migrations/*.sql`.
 
-**Rationale**: Domain/app-services stay TypeScript-testable; packaged app gets a real file DB with OS app-data location. Matches 001 plan R2 without rewriting domain rules into Rust.
+| Environment | Driver | Who runs app-services |
+|-------------|--------|------------------------|
+| Vitest / Node | `better-sqlite3` via `node_sqlite.ts` | Same TS app-services + `sqlite_repos` |
+| Tauri-dev / packaged | `tauri-plugin-sql` via `tauriSqlAdapter.ts` on `$APP_DATA/los/los.sqlite` | Same TS app-services in webview after bootstrap |
+| Vite-only preview | No SQLite; labeled `MemoryStore` (or equivalent) | Preview only; not acceptance |
+
+Rust/plugin responsibilities: create/open DB file path, run/ensure migrations at startup, shortcut/OS, export/restore file replace (close connection). **Do not** reimplement domain rules in Rust.
+
+**Rationale**: Domain/app-services stay TypeScript-testable and identical on desktop; packaged app gets a real file DB. Matches 001 plan R2 and constitution VI.
 
 **Alternatives considered**:
-- **rusqlite-only in Rust**: Strong native control; forces reimplementing orchestration/commands in Rust or a thick bridge. Rejected for remediation scope.
-- **sql.js in webview + Tauri fs**: Single TS stack; weaker multi-connection/file locking story. Rejected vs plugin-sql.
-- **JSON file in app-data**: Simpler; fails constitution/plan SQLite + first-class transactions. Rejected.
+- **rusqlite-only in Rust**: Forces reimplementing orchestration in Rust. Rejected for remediation scope.
+- **sql.js in webview + Tauri fs**: Weaker file locking. Rejected vs plugin-sql.
+- **JSON file in app-data**: Fails constitution/plan SQLite + transactions. Rejected.
+- **Invoke every CRUD to Rust**: Duplicate business logic. Rejected in favor of shared TS + `DbSession`.
 
 ## R2. Migration runner
 
@@ -76,7 +85,7 @@
 | localStorage / JSON | Lost if skipped; corrupted if bad import | Auto-import only if absent SQLite + valid; notice; preserve sources |
 | Partial migrate | Unusable schema | Transactional migrate; refuse start; keep file |
 | In-app restore while open | File lock / half-open | Close connection before replace; reopen + migrate |
-| Newer-schema backup | Partial open | Refuse with clear error |
+| Newer-schema backup | Partial open | Refuse with `DB_SCHEMA_TOO_NEW`; automated test required (analyze C1) |
 
 ## Out of scope
 

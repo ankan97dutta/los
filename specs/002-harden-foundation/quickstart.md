@@ -33,7 +33,9 @@ pnpm --filter @los/app-services test
 pnpm lint                             # must pass (SC-H05)
 ```
 
-Expected: migrate+seed 4 apps; corrupt file checksum unchanged; daily rollback test; SQLite backup restore returns known inbox item.
+Expected: migrate+seed 4 apps; corrupt file checksum unchanged; daily rollback test; SQLite backup restore returns known inbox item; restore of newer-schema backup returns `DB_SCHEMA_TOO_NEW` without clobbering live DB.
+
+**Runtime note**: Vitest uses `better-sqlite3`; Tauri-dev uses `tauri-plugin-sql` + same migrations/repos (see plan Runtime Composition).
 
 ## Manual / recorded smokes (write `checklists/verification-evidence.md`)
 

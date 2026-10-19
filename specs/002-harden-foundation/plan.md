@@ -13,7 +13,7 @@ Remediate the foundation so constitution and 001 acceptance hold on the real des
 
 **Language/Version**: TypeScript 5.x (domain, persistence ports, UI, app-services); Rust stable (Tauri 2 shell)
 
-**Primary Dependencies**: Existing monorepo (Tauri 2, React 19, Vitest, pnpm). **SQLite**: shared SQL migrations; Node/Vitest via `better-sqlite3`; Tauri runtime via `tauri-plugin-sql` (SQLite) bound to the same schema files. Domain remains SQL-free.
+**Primary Dependencies**: Existing monorepo (Tauri 2, React 19, Vitest, pnpm). **SQLite**: shared SQL migrations; dual **drivers behind one persistence port** (see Runtime Composition). Domain remains SQL-free.
 
 **Storage**: `$APP_DATA/los/los.sqlite` (exact path documented in README; create `los/` under app data). Not localStorage for durable Tauri runs.
 
@@ -67,29 +67,33 @@ specs/002-harden-foundation/
 
 ```text
 packages/persistence/
-  migrations/                 # authoritative SQL (shared)
-  src/db.ts                   # open/migrate/transaction; corrupt-safe open
-  src/sqlite_repos.ts         # SQLite repo impl
+  migrations/                      # authoritative SQL (shared)
+  src/ports.ts                     # DbSession / withTransaction / migrate interfaces
+  src/node_sqlite.ts               # better-sqlite3 adapter (Vitest + Node)
+  src/sqlite_repos.ts              # repos over DbSession (driver-agnostic)
   src/legacy_import.ts
   src/backup.ts
   tests/
-packages/app-services/src/    # dailyUpsert in transaction; settings → shortcut side effects via runtime hooks
-apps/desktop/src/lib/         # Tauri invoke clients; preview vs tauri runtime split
-apps/desktop/src/features/    # Settings restore/export; Fortnight completed selections; LocalStatus; import notice
-apps/desktop/src-tauri/       # plugin-sql, path, migrate on startup, shortcut re-register, commands
-apps/desktop/README.md
-specs/001-foundation-workspace/tasks.md          # honesty reconcile
-specs/001-foundation-workspace/checklists/       # evidence correct
-specs/002-harden-foundation/checklists/          # verification-evidence.md
+apps/desktop/src/lib/
+  tauriSqlAdapter.ts               # DbSession via @tauri-apps/plugin-sql
+  api.ts / runtime.ts              # Tauri: app-services + tauri adapter; Vite: labeled preview MemoryStore
+apps/desktop/src-tauri/            # plugin-sql init, app-data path, migrate on startup, shortcuts, thin invokes
 ```
 
-**Structure Decision**: Keep 001 package boundaries; swap persistence implementation to SQLite; Tauri owns app-data file lifecycle; UI uses invoke in Tauri mode.
+**Structure Decision**: Keep 001 package boundaries. **Runtime Composition (analyze I1 remediation):**
+
+1. **Domain + app-services** stay pure TypeScript and call **repository ports** / `DbSession` only (no driver imports).
+2. **Shared** `migrations/*.sql` + `sqlite_repos` implement ports against `DbSession` (`exec` / `query` / `withTransaction`).
+3. **Node/Vitest**: `node_sqlite.ts` = `better-sqlite3` implementing `DbSession` (file under temp dir).
+4. **Tauri-dev/packaged**: Rust enables `tauri-plugin-sql` on `$APP_DATA/los/los.sqlite`; TypeScript `tauriSqlAdapter.ts` implements the same `DbSession`; UI/bootstrap call `db.bootstrap` then run app-services in the webview against that adapter.
+5. **Vite-only preview**: labeled non-durable `MemoryStore` (or equivalent)—**not** SQLite; must not claim SC-H01/FR-023.
+6. Thin Tauri **invoke** remains for OS concerns (path, shortcut re-register, file dialogs, restore close/reopen); workspace CRUD may stay in-process TS once `DbSession` is live (invoke only where the plugin requires setup).
 
 ## Complexity Tracking
 
 | Violation / debt | Why needed | Simpler alternative rejected |
 |------------------|------------|------------------------------|
-| Dual SQLite access (better-sqlite3 in Node + tauri-plugin-sql in app) | Vitest must run migrations/transactions without GUI; webview cannot use better-sqlite3 | All DB only in Rust → larger rewrite of app-services; sql.js-only → weaker desktop file semantics |
+| Dual SQLite drivers behind one `DbSession` port | Vitest needs Node SQLite; webview uses plugin-sql; app-services stay shared | All DB only in Rust → rewrite orchestration; single driver in webview only → no solid Node Vitest file DB |
 | Legacy auto-import | Prototype users have localStorage/JSON | Drop legacy data → silent loss of prototype captures |
 | In-app restore while running | Clarification B; FR-H05 | Quit-only restore → weaker UX/acceptance |
 
@@ -101,3 +105,11 @@ specs/002-harden-foundation/checklists/          # verification-evidence.md
 | Immediate shortcut re-register | Settings save → invoke `shortcuts.reregister` |
 | Dual restore | File docs + Settings import/restore command closing/reopening DB |
 | Vite non-durable | `createPreviewRuntime` labeled; SC-H01 only on Tauri |
+
+## Analyze remediation (2026-10-19)
+
+| Finding | Disposition |
+|---------|-------------|
+| I1 Dual SQLite composition | Resolved in Runtime Composition above + research R1 |
+| C1 `DB_SCHEMA_TOO_NEW` | Task + test required in tasks.md; refuse restore/open |
+| U1 T025 confirm-only | Replaced by wiring/assert task against transactional `dailyUpsert` on Tauri `DbSession` |

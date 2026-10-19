@@ -48,6 +48,8 @@ Errors: DB_OPEN_FAILED | DB_SCHEMA_TOO_NEW | DB_MIGRATE_FAILED | IO_ERROR
 
 Semantics: close connection → replace live SQLite → reopen + migrate → ready for commands. UI must reload state after success.
 
+If backup `schema_migrations` max version **greater than** app-supported max, return `DB_SCHEMA_TOO_NEW` **before** replacing the live file (live DB unchanged).
+
 ## Shortcuts
 
 ### `shortcuts.reregister`
