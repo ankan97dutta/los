@@ -1,9 +1,10 @@
 ---
-name: git
+name: "speckit-git"
 description: >-
-  Create git commits and GitHub pull requests using this project's safety protocol
-  and workflow. Use when the user asks to commit, create a commit, push, open a PR,
-  create a pull request, or otherwise work with git commits/PRs via gh.
+  Create git commits (Conventional Commits) and GitHub pull requests using this
+  project's safety protocol and workflow. Use when the user asks to commit, create
+  a commit, push, open a PR, create a pull request, or otherwise work with git
+  commits/PRs via gh.
 ---
 
 # Git Commits and Pull Requests
@@ -35,10 +36,13 @@ When the user asks you to create a new git commit, follow these steps carefully:
    - Run a git diff command to see both staged and unstaged changes that will be committed.
    - Run a git log command to see recent commit messages, so that you can follow this repository's commit message style.
 2. Analyze all staged changes (both previously staged and newly added) and draft a commit message:
-   - Summarize the nature of the changes (eg. new feature, enhancement to an existing feature, bug fix, refactoring, test, docs, etc.). Ensure the message accurately reflects the changes and their purpose (i.e. "add" means a wholly new feature, "update" means an enhancement to an existing feature, "fix" means a bug fix, etc.).
    - Do not commit files that likely contain secrets (.env, credentials.json, etc). Warn the user if they specifically request to commit those files
-   - Draft a concise (1-2 sentences) commit message that focuses on the "why" rather than the "what"
-   - Ensure it accurately reflects the changes and their purpose
+   - ALWAYS use [Conventional Commits](https://www.conventionalcommits.org/): `type(optional-scope): description`
+   - Choose `type` from: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+   - Description: imperative mood, lowercase, no trailing period, focus on the "why"; keep the subject ≤72 chars
+   - Optional body (blank line after subject): 1–2 short sentences when the why needs more context
+   - Use `BREAKING CHANGE:` in the footer (or `!` after type/scope) only when the change is breaking
+   - Match recent commit style from `git log` for scopes when the repo already uses them
 3. Run the following commands sequentially:
    - Add relevant untracked files to the staging area.
    - Commit the changes with the message.
@@ -56,7 +60,9 @@ When the user asks you to create a new git commit, follow these steps carefully:
 
 ```bash
 git commit -m "$(cat <<'EOF'
-Commit message here.
+feat(auth): add JWT login endpoint
+
+Validate tokens in middleware so protected routes reject expired sessions.
 
 EOF
 )"
