@@ -5,6 +5,7 @@ import { APP_MAX_SCHEMA_VERSION, DbError } from '@los/persistence';
 import { api } from '../../lib/api';
 import { exportDbJson, importDbJson } from '../../lib/runtime';
 import { Select } from '../../ui/Select';
+import { isTauriRuntime } from '../../lib/isTauri';
 import { readTheme, writeTheme, type UiTheme } from '../../ui/theme';
 
 type Props = { rt: WorkspaceRuntime; onRestored?: () => void };
@@ -12,7 +13,7 @@ type Props = { rt: WorkspaceRuntime; onRestored?: () => void };
 const WEEKDAYS: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
 function isTauri(): boolean {
-  return Boolean(window.__TAURI__);
+  return isTauriRuntime();
 }
 
 export function SettingsPage({ rt, onRestored }: Props) {

@@ -1,10 +1,12 @@
 /**
  * FR-U14 / SC-U08 LocalStatus capability phrases (research R9).
  *
- * Detection: **preview** when not running in Tauri (`!window.__TAURI__`).
+ * Detection: **preview** when not running in Tauri (`!isTauriRuntime()`).
  * Otherwise use workspace flags: trayAvailable, globalShortcutAvailable,
  * globalShortcutRegistered, globalShortcutError.
  */
+
+import { isTauriRuntime } from '../../lib/isTauri';
 
 export type CapabilityCause = 'preview' | 'os-unavailable' | 'registration-failed' | 'available';
 
@@ -16,9 +18,7 @@ export type CapabilityFlags = {
   globalShortcutError?: string;
 };
 
-export function isTauriRuntime(): boolean {
-  return Boolean((globalThis as { window?: Window }).window && (window as Window & { __TAURI__?: unknown }).__TAURI__);
-}
+export { isTauriRuntime };
 
 export function trayCause(flags: CapabilityFlags): CapabilityCause {
   if (!flags.inTauri) return 'preview';

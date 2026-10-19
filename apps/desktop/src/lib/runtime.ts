@@ -9,6 +9,7 @@ import {
   type DbSession,
   DbError,
 } from '@los/persistence';
+import { isTauriRuntime } from './isTauri';
 import { createTauriSqlSession } from './tauriSqlAdapter';
 
 const STORAGE_KEY = 'los-db-v1';
@@ -82,7 +83,7 @@ export function importDbJson(rt: WorkspaceRuntime, json: string): void {
 }
 
 function isTauri(): boolean {
-  return Boolean(typeof window !== 'undefined' && window.__TAURI__);
+  return isTauriRuntime();
 }
 
 /**

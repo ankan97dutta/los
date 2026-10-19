@@ -19,11 +19,13 @@ import {
 } from './shell/CommandPalette';
 import { SectionSubNav } from './shell/SectionSubNav';
 import { defaultChild, type PrimaryRouteId, type RouteId } from './shell/routes';
+import { isTauriRuntime } from './lib/isTauri';
 import { initTheme } from './ui/theme';
 
 declare global {
   interface Window {
     __TAURI__?: unknown;
+    __TAURI_INTERNALS__?: unknown;
     __LOS_CAPS__?: {
       trayAvailable?: boolean;
       globalShortcutAvailable?: boolean;
@@ -54,7 +56,7 @@ export function App() {
   useEffect(() => {
     let cancelled = false;
     const caps = window.__LOS_CAPS__ ?? {};
-    const inTauri = Boolean(window.__TAURI__);
+    const inTauri = isTauriRuntime();
     void bootWorkspaceRuntime({
       trayAvailable: caps.trayAvailable ?? inTauri,
       globalShortcutAvailable: caps.globalShortcutAvailable ?? inTauri,
