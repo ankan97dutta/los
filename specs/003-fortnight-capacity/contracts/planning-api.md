@@ -9,7 +9,12 @@ In-process app-services commands (same Result envelope as 001: `{ ok, data } | {
 ```ts
 Input:  { periodStart?: string } // default: current fortnight
 Output: {
-  period: { periodStart, periodEnd, status, tradeoffNotes, outcomeSummary, carryoverNotes, closedAt? },
+  period: {
+    periodStart, periodEnd, status,
+    tradeoffNotes, outcomeSummary, carryoverNotes,
+    warningsAcknowledgedAt?, closedAt?,
+    planConflicted: boolean  // true while overload/blocked/unknown commitment conflicts exist
+  },
   capacitySummary: {
     members: Array<{
       teamMemberId, displayName,
@@ -27,16 +32,35 @@ Output: {
 ```ts
 Input:  { periodStart, tradeoffNotes?, outcomeSummary?, carryoverNotes? }
 Output: { period }
-Errors: INVALID_PERIOD | PERIOD_CLOSED
+Errors: INVALID_PERIOD
+// Allowed while closed (notes only). Does not reopen or mutate plan structure.
 ```
 
 ### `planning.periodClose`
 
 ```ts
-Input:  { periodStart, outcomeSummary?, carryoverNotes?, acceptWarnings?: boolean }
-Output: { period, snapshotId }
-Errors: INVALID_PERIOD | ALREADY_CLOSED | CAPACITY_OVERLOAD | COMMIT_BLOCKED_ITEM | COMMIT_UNKNOWN_ESTIMATE
-// Overload/blocked/unknown on commitments require acceptWarnings=true to proceed
+Input:  {
+  periodStart,
+  outcomeSummary?,
+  carryoverNotes?,
+  acceptWarnings?: boolean,
+  carryForwardWorkItemIds?: string[]  // incomplete committed items only
+}
+Output: {
+  period,
+  snapshotId,
+  nextPeriodStart?,           // set when carry-forward ran
+  carriedForwardCount: number
+}
+Errors:
+  INVALID_PERIOD
+  | ALREADY_CLOSED            // idempotent success preferred; if error, must not wipe notes
+  | CAPACITY_OVERLOAD
+  | COMMIT_BLOCKED_ITEM
+  | COMMIT_UNKNOWN_ESTIMATE
+  | CARRY_FORWARD_INVALID     // id not incomplete commitment in this period
+// Soft gate: overload/blocked/unknown require acceptWarnings=true to proceed.
+// If carryForwardWorkItemIds non-empty and next period missing, create next open period.
 ```
 
 ## Roster & capacity
@@ -46,6 +70,7 @@ Errors: INVALID_PERIOD | ALREADY_CLOSED | CAPACITY_OVERLOAD | COMMIT_BLOCKED_ITE
 ```ts
 memberUpsert Input: { id?, displayName, active? }
 Errors: VALIDATION_ERROR
+// Global roster upsert allowed anytime; period capacity rows still PERIOD_CLOSED-gated.
 ```
 
 ### `planning.capacityUpsert`
@@ -77,8 +102,16 @@ Errors: VALIDATION_ERROR | PERIOD_CLOSED
 
 ```ts
 Input: { workItemId, teamMemberId: string | null, commitmentKind: 'none' | 'commitment' | 'stretch' }
-Output: { allocation, warnings }
-Errors: PERIOD_CLOSED | WORK_NOT_FOUND | MEMBER_NOT_FOUND
+Output: {
+  allocation,
+  warnings,
+  planConflicted: boolean
+}
+Errors:
+  PERIOD_CLOSED
+  | WORK_NOT_FOUND
+  | MEMBER_NOT_FOUND
+  | COMMIT_REQUIRES_ASSIGNEE   // commitmentKind=commitment with null teamMemberId
 ```
 
 ## History
@@ -91,11 +124,14 @@ Output: { period, snapshot }
 Errors: NOT_FOUND
 ```
 
-## Warning codes
+## Warning / error codes
 
 | Code | Meaning |
 |------|---------|
-| `CAPACITY_OVERLOAD` | Committed load &gt; net hours for a member or total |
+| `CAPACITY_OVERLOAD` | Committed load &gt; net hours for a member |
 | `COMMIT_BLOCKED_ITEM` | Commitment on blocked/waiting_external item |
 | `COMMIT_UNKNOWN_ESTIMATE` | Commitment on unestimated item |
+| `COMMIT_REQUIRES_ASSIGNEE` | Commitment without team member |
 | `MEMBER_INACTIVE` | Allocation to inactive member |
+| `PERIOD_CLOSED` | Structural edit on closed period |
+| `CARRY_FORWARD_INVALID` | Carry-forward id not eligible |

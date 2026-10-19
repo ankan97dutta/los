@@ -2,7 +2,8 @@
 
 **Feature**: `003-fortnight-capacity`  
 **Date**: 2026-10-19  
-**Status**: Phase 0 complete (no NEEDS CLARIFICATION remain)
+**Status**: Phase 0 complete (no NEEDS CLARIFICATION remain)  
+**Updated**: Clarify session 2026-10-19 (soft gate, freeze, carry-forward, assignee rule)
 
 ## R1. Demand entity vs PersonalAction
 
@@ -16,9 +17,9 @@
 
 ## R2. Capacity unit
 
-**Decision**: Hours (non-negative; domain allows multiples of 0.5).
+**Decision**: Hours (non-negative; domain allows multiples of 0.5). Gross capacity is a free-entry `availableHours` total (not a working-day calendar product in MVP).
 
-**Rationale**: Spec assumption; deterministic and explainable. Story points deferred.
+**Rationale**: Spec assumption; deterministic and explainable. Story points deferred. Working-day breakdown can be added later without changing the net formula.
 
 ## R3. Net capacity formula
 
@@ -27,46 +28,69 @@
 ```
 gross = available_hours
 deductions = leave_hours + reserved_commitment_hours + unplanned_buffer_hours
-net = max(0, gross - deductions)   # display also shows raw gross - deductions if negative for overload clarity
+raw_net = gross - deductions
+display_net = raw_net          # may be negative (overload / over-deduction)
+load_net = raw_net             # remaining = load_net - committed_load (may be negative)
 ```
 
-UI shows each term. If `gross - deductions < 0`, show negative remaining / overload on the member (do not invent capacity).
+UI shows each term. Do not invent capacity when deductions exceed gross.
 
-**Rationale**: FR-C03/C04; SC-C01.
+**Rationale**: FR-C03/C04; SC-C01; clarify edge case for zero/negative capacity.
 
 ## R4. Load totals
 
 **Decision**:
-- Committed load = sum of `estimate_hours` for items with `commitment_kind = commitment` and non-null estimate, allocated to the member (or period total).
+- Committed load (per member) = sum of `estimate_hours` for items with `commitment_kind = commitment`, non-null estimate, and `team_member_id = that member`.
 - Unestimated committed items counted separately; excluded from numeric load.
 - Stretch items excluded from committed load; may show informational stretch hours separately.
+- Unallocated items never contribute to committed load (cannot be commitments — R12).
 
-**Rationale**: FR-C06, FR-C09; stretch assumption in spec.
+**Rationale**: FR-C06, FR-C08, FR-C09; clarify session.
 
 ## R5. Period identity
 
-**Decision**: Key planning rows by `period_start` (and `period_end`) using existing `fortnightContaining` / settings weekday. Capacity planning coexists with existing `FortnightPlan` personal selections; shared period dates, separate tables.
+**Decision**: Key planning rows by `period_start` (and `period_end`) using existing `fortnightContaining` / settings weekday. Capacity planning coexists with existing `FortnightPlan` personal selections; shared period dates, separate tables. Next period after close = `fortnightContaining(addDays(periodEnd, 1), weekday)`.
 
-**Rationale**: FR-C01, FR-C15/C16.
+**Rationale**: FR-C01, FR-C15/C16, FR-C19.
 
 ## R6. History on close
 
-**Decision**: On explicit close, write a **commitment snapshot** (JSON or normalized snapshot tables) of committed/stretch items (ids, titles, estimates, assignees, kinds, statuses at close) plus outcome/carryover/reason fields. Live work updates do not mutate snapshot.
+**Decision**: On explicit close, in one transaction:
+1. Write **commitment snapshot** (structured payload) of commitments/stretch at close.
+2. Set period `status = closed` + review fields.
+3. Optionally duplicate selected incomplete **committed** items into the next open period (create period meta if missing).
+4. Live work updates and next-period edits MUST NOT mutate the snapshot.
 
-**Rationale**: FR-C12, SC-C04. Prefer snapshot table/rows for queryability; JSON blob acceptable if versioned and tested.
+Closed period plan structure is **read-only** (roster/capacity/work/allocations/kinds); outcome/carryover/trade-off notes remain editable. No reopen in MVP.
+
+**Rationale**: FR-C12, FR-C19, SC-C04, SC-C08.
 
 ## R7. Persistence
 
-**Decision**: New migration `002_capacity_planning.sql` (or next free number) on existing SQLite; repositories via `DbSession`; transactional saves for allocate+commit batch where multi-row.
+**Decision**: New migration `002_capacity_planning.sql` on existing SQLite; repositories via `DbSession`; transactional close (snapshot + status + optional carry-forward copies + optional next-period create).
 
 **Rationale**: Constitution VII; 002 Runtime Composition.
 
-## R8. Conflicts
+## R8. Conflicts (soft gate)
 
-**Decision**: Warnings are first-class in app-services results (`CAPACITY_OVERLOAD`, `COMMIT_BLOCKED_ITEM`, `COMMIT_UNKNOWN_ESTIMATE`). UI requires explicit confirm to proceed when warnings present; never auto-rebalance.
+**Decision**: Warnings are first-class (`CAPACITY_OVERLOAD`, `COMMIT_BLOCKED_ITEM`, `COMMIT_UNKNOWN_ESTIMATE`). Soft gate: lead may proceed with `acceptWarnings=true` / UI confirm; plan remains **conflicted** (`planConflicted: true` in period get) until underlying conflicts are removed. Never auto-rebalance or treat conflicted as clean.
 
-**Rationale**: FR-C10.
+**Rationale**: FR-C10, SC-C03; clarify Q1.
+
+## R9. Carry-forward copy
+
+**Decision**: On close, UI/API accepts optional `carryForwardWorkItemIds` (subset of incomplete committed items). Copies are **new** `CandidateWorkItem` rows in the next period with title, priority, estimate/unknown, applicationId, dependencyNotes; status defaults to `ready` (or preserve `blocked`/`waiting_external` if still blocked); allocation starts unallocated with `commitment_kind = none`; optional `carriedFromWorkItemId` for traceability. Stretch/neither not offered. If next period meta missing, auto-create open period.
+
+**Rationale**: FR-C19, SC-C08; clarify Q3/Q5.
+
+**Alternatives considered**: Notes-only (rejected by clarify); automatic copy of all incomplete (rejected).
+
+## R10. Commitment requires assignee
+
+**Decision**: `commitment_kind = commitment` is invalid when `team_member_id` is null. Error `COMMIT_REQUIRES_ASSIGNEE`. Unallocated may be `stretch` or `none` only.
+
+**Rationale**: FR-C08; clarify Q4.
 
 ## Out of scope (confirmed)
 
-- Jira import, auto-scheduling, multi-user sync, story points, CSP changes unrelated to feature
+- Jira import, auto-scheduling, multi-user sync, story points, reopen-closed, working-day calendar UI, CSP changes unrelated to feature
