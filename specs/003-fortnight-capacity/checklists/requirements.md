@@ -33,5 +33,5 @@
 
 - Validation iteration 1 (2026-10-19): Pass. Defaults documented in Assumptions (hours, local roster, period-scoped candidate work distinct from Personal Actions, explicit period close).
 - Baselines 001/002 and constitution referenced without rewriting them.
-- Ready for `/speckit-clarify` (optional) or `/speckit-plan`.
-- User also requested plan and tasks after review; those follow as separate Spec Kit commands once this checklist is accepted.
+- Clarify session 2026-10-19: 5/5 answers integrated (soft overload gate, freeze on close, optional carry-forward copy, commitment requires assignee, auto-create next period). Re-validated: 16/16 still passing.
+- Plan/tasks already exist for this feature; after clarify, refresh plan/tasks if carry-forward/assignee rules need task updates before `/speckit-implement`.

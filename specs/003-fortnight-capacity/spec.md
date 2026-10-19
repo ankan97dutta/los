@@ -10,6 +10,16 @@
 
 **Baselines**: Constitution; `specs/001-foundation-workspace/`; `specs/002-harden-foundation/` (durable SQLite). Do not weaken offline, integrity, or modularity constraints. Reuse Applications and fortnight period identity; do not replace Personal Actions or Inbox.
 
+## Clarifications
+
+### Session 2026-10-19
+
+- Q: When planned committed load exceeds a team member’s net capacity, should the lead be allowed to keep those items as commitments after an explicit acknowledgment, or should commitments be blocked until load fits capacity? → A: Soft gate — show overload warning; lead may keep overloaded commitments only after explicit acknowledgment; plan remains marked conflicted / not “clean.”
+- Q: After a planning period is closed, should capacity, allocations, and commitment selections become read-only, or remain fully editable? → A: Plan frozen — roster, capacity, work items, allocations, and commitment/stretch selections become read-only after close; outcome/carryover/trade-off notes remain editable.
+- Q: When incomplete commitments remain at period close, should carryover be notes-only or also offer to copy incomplete items into the next open period? → A: Optional copy — on close, the lead may choose which incomplete committed items to duplicate into the next open period (in addition to carryover notes).
+- Q: May the lead mark unallocated candidate work as a commitment, and if so how should that effort count toward load? → A: Not allowed — an item must be allocated to a team member before it can be marked commitment; unallocated may be stretch or neither.
+- Q: If the lead chooses to carry incomplete commitments forward but the next fortnight period does not exist yet, should LOS create that next open period during close, or require the lead to create/open it first? → A: Auto-create — if carry-forward items are selected and the next period is missing, LOS creates that open period and places copies there.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Set team capacity for a fortnight (Priority: P1)
@@ -56,10 +66,11 @@ The lead allocates candidate work to team members (or leaves it unallocated), ma
 **Acceptance Scenarios**:
 
 1. **Given** capacity and demand for a period, **When** the lead allocates work to members and selects commitments, **Then** the plan shows per-person load vs capacity, remaining capacity, and unallocated items.
-2. **Given** planned load exceeding a member’s net capacity, **When** the lead tries to mark those allocations as commitments, **Then** the product shows a capacity conflict warning and does not silently accept the overload as healthy.
+2. **Given** planned load exceeding a member’s net capacity, **When** the lead tries to mark those allocations as commitments, **Then** the product shows a capacity conflict warning and does not treat the plan as a clean commitment; the lead may proceed only after explicit acknowledgment, and the plan remains marked conflicted.
 3. **Given** a dependency or blocked item, **When** it is included as a commitment, **Then** the product requires an explicit acknowledgment of the risk (not a silent accept).
 4. **Given** stretch goals distinct from commitments, **When** the lead reviews the plan, **Then** stretch items are visually and persistently distinguished from committed work.
 5. **Given** an overloaded or conflicted plan, **When** the lead documents a trade-off note, **Then** the note is saved with the period and remains readable later.
+6. **Given** an unallocated candidate work item, **When** the lead tries to mark it as a commitment, **Then** the product rejects that selection until the item is allocated to a team member; stretch or neither remain allowed while unallocated.
 
 ---
 
@@ -73,9 +84,11 @@ When a fortnight ends (or the lead closes the plan), completed and incomplete co
 
 **Acceptance Scenarios**:
 
-1. **Given** a period with committed items some done and some not, **When** the lead closes the period with outcome and carryover notes, **Then** history shows what was committed, what finished, and carryover intent.
-2. **Given** a closed period, **When** a work item’s current status later changes, **Then** the historical plan still shows the commitment state as recorded for that period (no silent rewrite of history).
+1. **Given** a period with committed items some done and some not, **When** the lead closes the period with outcome and carryover notes, **Then** history shows what was committed, what finished, and carryover intent, and roster/capacity/work/allocations/commitment selections for that period become read-only.
+2. **Given** a closed period, **When** a work item’s live status elsewhere later changes, or the lead tries to edit frozen plan fields, **Then** the historical plan still shows the commitment state as recorded for that period and plan-structure edits are rejected; outcome/carryover/trade-off notes remain editable.
 3. **Given** a material change during the period (scope drop or swap), **When** the lead records a reason, **Then** that reason is available in the period review.
+4. **Given** incomplete committed items at close, **When** the lead selects a subset to carry forward, **Then** those items are duplicated into the next open planning period as new candidate work (editable there) while the closed period’s snapshot remains unchanged; skipping the copy leaves only carryover notes.
+5. **Given** carry-forward items selected and no next period row yet, **When** the lead closes, **Then** LOS creates the next open fortnight period and places the copies there in the same close action.
 
 ---
 
@@ -103,7 +116,11 @@ All capacity and planning workflows work offline on the durable local workspace.
 - Period with no Applications renamed yet: candidate work may still target an application slot by current name; renaming applications updates display without deleting planning links.
 - Concurrent edit: single-writer assumption from 002; fail safe rather than corrupt.
 - Closing an already-closed period: idempotent; does not wipe outcome notes.
+- Editing roster, capacity, candidate work, allocations, or commitment/stretch on a closed period: rejected with a clear error; outcome/carryover/trade-off notes may still be updated.
+- Optional carry-forward copy on close: only incomplete **committed** items are eligible; stretch/neither items are not auto-offered; copies are new period-scoped rows (not shared identity with the closed period’s items).
+- Missing next period on carry-forward: auto-created as an open period using the workspace fortnight calendar (start = day after closed period end).
 - Stretch-only period (no commitments): allowed; summary shows zero committed load.
+- Marking commitment without an assignee: rejected with a clear error; load totals never include unallocated “commitments.”
 
 ## Requirements *(mandatory)*
 
@@ -116,11 +133,12 @@ All capacity and planning workflows work offline on the durable local workspace.
 - **FR-C05**: LOS MUST allow candidate work items for a period with at least: title/description, priority, estimated effort (or explicitly unknown), optional actual effort, target application (one of the workspace applications or unassigned), status including ready / blocked / waiting-external / done / dropped, and dependency notes.
 - **FR-C06**: LOS MUST distinguish unknown estimate from zero estimate; unknown MUST NOT be treated as zero in load totals.
 - **FR-C07**: LOS MUST distinguish estimated effort from actual effort when both are recorded.
-- **FR-C08**: LOS MUST allow allocating candidate work to a team member or leaving it unallocated, and selecting items as commitment vs stretch for the period.
+- **FR-C08**: LOS MUST allow allocating candidate work to a team member or leaving it unallocated, and selecting items as commitment vs stretch for the period. An item MUST be allocated to a team member before it can be marked as a commitment; unallocated items MAY be stretch or neither only.
 - **FR-C09**: LOS MUST display for a period: total and per-member net capacity, planned committed load, remaining capacity, overload indicators, unallocated work, and unestimated-item counts.
-- **FR-C10**: LOS MUST warn on capacity overload and on committing blocked/waiting-external/unestimated items; LOS MUST NOT silently resolve conflicts or auto-promise work without explicit lead action.
+- **FR-C10**: LOS MUST warn on capacity overload and on committing blocked/waiting-external/unestimated items; LOS MUST NOT silently resolve conflicts or auto-promise work without explicit lead action. Overload and readiness warnings are a **soft gate**: the lead MAY keep the selection after explicit acknowledgment, and LOS MUST continue to mark the plan as conflicted / not clean until the underlying conflict is removed.
 - **FR-C11**: LOS MUST allow documenting trade-off notes for a period when the lead accepts risk or changes scope.
-- **FR-C12**: When a period is closed, LOS MUST preserve a readable historical view of commitments (including incomplete ones), carryover notes, and outcome summary; later status changes to live work MUST NOT erase that historical view.
+- **FR-C12**: When a period is closed, LOS MUST preserve a readable historical view of commitments (including incomplete ones), carryover notes, and outcome summary; later status changes to live work MUST NOT erase that historical view. After close, roster, capacity inputs, candidate work, allocations, and commitment/stretch selections for that period MUST be read-only; outcome, carryover, and trade-off notes MAY still be edited.
+- **FR-C19**: On period close, LOS MUST allow the lead to optionally select incomplete committed items to duplicate into the next open planning period as new candidate work items; the closed period’s historical snapshot MUST remain unchanged whether or not copies are created. Carryover notes remain available even when no items are copied. If carry-forward items are selected and the next period does not yet exist, LOS MUST create that next open period (using existing fortnight boundary rules) and place the copies there as part of the close action.
 - **FR-C13**: All capacity and planning data MUST persist in the durable local workspace (same relaunch durability expectations as foundation hardening) and MUST remain usable offline.
 - **FR-C14**: Capacity planning MUST NOT require Jira, Confluence, an LLM, an account, or a cloud backend.
 - **FR-C15**: LOS MUST reuse existing Application slots as the project/application targets for candidate work and MUST NOT introduce a parallel application catalog.
@@ -146,8 +164,9 @@ All capacity and planning workflows work offline on the durable local workspace.
 
 - **SC-C01**: Given fixed sample inputs, net capacity and load totals match the documented deterministic rules in 100% of automated calculation cases (including unknown ≠ zero).
 - **SC-C02**: After configuring capacity and commitments offline, quit and relaunch shows the same period data in 100% of verification trials (minimum 3).
-- **SC-C03**: In scripted overload scenarios, a capacity warning is shown before the lead can treat the overloaded set as a clean commitment, in 100% of cases.
+- **SC-C03**: In scripted overload scenarios, a capacity warning is shown and the plan is not treated as a clean commitment unless/until load fits; proceeding with overload requires explicit acknowledgment in 100% of cases, and the conflicted state remains visible after acknowledgment.
 - **SC-C04**: After closing a period, reopening history shows committed items that were incomplete at close, even if those items are later marked done in the live list, in 100% of scripted cases.
+- **SC-C08**: In a scripted close with incomplete commitments, selecting a subset to carry forward creates matching candidate items in the next open period while the closed history remains unchanged, in 100% of cases; declining copy still saves carryover notes. When the next period is missing, close still succeeds and creates that period for the copies.
 - **SC-C05**: A lead can complete a first-pass capacity + commitment plan for a fortnight (roster, ≥3 work items, allocations, commit selection) in under 15 minutes in a timed dry-run.
 - **SC-C06**: Keyboard-only path can add a member, add a work item, allocate it, and save without requiring a pointer, for the primary planning screen.
 - **SC-C07**: No Jira, Confluence, or LLM dependency is required to complete any acceptance scenario for this feature.
@@ -157,12 +176,14 @@ All capacity and planning workflows work offline on the durable local workspace.
 - Single local lead user models a team roster; this is not multi-user auth or shared editing.
 - Effort and capacity are measured in **hours** (non-negative numbers; whole or half hours allowed in implementation). Story points are out of scope for this feature.
 - Fortnight boundaries reuse the existing workspace fortnight start weekday setting and 14-day window.
-- Candidate work for capacity planning is a **period-scoped planning entity**, not a replacement for Personal Actions or Inbox items. Optional linking to a Personal Action may be added later; not required for MVP.
+- Candidate work for capacity planning is a **period-scoped planning entity**, not a replacement for Personal Actions or Inbox items. Optional linking to a Personal Action may be added later; not required for MVP. Carry-forward creates new rows in the next period rather than shared mutable identity across periods.
 - “Existing commitments” deducted from capacity are a numeric reserved-hours input for the period (not an automatic import from external calendars in this feature).
-- Closing a period is an explicit lead action (not solely calendar time passing), so history is intentional.
+- Closing a period is an explicit lead action (not solely calendar time passing), so history is intentional. Close freezes plan structure for that period; MVP does not include a “reopen” action. Carry-forward may auto-create the next open fortnight period when copies are selected.
 - Jira/vendor sync remains out of scope; dependency on another team is captured as status + notes only.
 - Soft maximum team size is left unbounded in product rules but expected to stay small (typical lead team); no enterprise resource-management features (skills matrices, Gantt, financial costing).
 - Stretch goals never count toward “committed load” totals; they may be shown separately against remaining capacity as informational only.
+- Committed load is always attributable to an assigned member; unallocated work cannot contribute to committed load.
+- Capacity overload and readiness conflicts use a soft gate: acknowledgment allows proceeding while the plan stays visibly conflicted until resolved.
 - Constitution and 001/002 baselines remain in force; migrations must be versioned; no silent data loss.
 
 ## Out of Scope
