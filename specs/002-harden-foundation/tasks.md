@@ -62,7 +62,7 @@
 - [X] T022 [US1] Show legacy import success/failure notice from `db.bootstrap` in `apps/desktop/src/App.tsx` or status banner
 - [X] T023 [US1] Blocking recoverable UI for `DB_OPEN_FAILED` with path instructions in `apps/desktop/src/features/status/` (or dedicated error view)
 - [X] T024 [US1] Document real SQLite path + Runtime Composition + no-silent-reseed + single-writer assumption in `apps/desktop/README.md`
-- [ ] T025 [US1] Record SC-H01 relaunch trials (3×) and SC-H04 corrupt-open in `specs/002-harden-foundation/checklists/verification-evidence.md`
+- [X] T025 [US1] Record SC-H01 relaunch trials (3×) and SC-H04 corrupt-open in `specs/002-harden-foundation/checklists/verification-evidence.md`
 
 **Checkpoint**: Tauri-dev persists across relaunch; preview clearly non-durable
 
@@ -133,7 +133,7 @@
 - [X] T038 [US5] Register shortcut from WorkspaceSettings in `apps/desktop/src-tauri/src/shortcuts.rs`
 - [X] T039 [US5] Implement `shortcuts.reregister`; call immediately after explicit Settings save in `apps/desktop/src/features/settings/SettingsPage.tsx` + `apps/desktop/src-tauri/`
 - [X] T040 [US5] Extend `workspace.status` with `globalShortcutRegistered` / `globalShortcutError` in `apps/desktop/src/features/status/LocalStatus.tsx`
-- [ ] T041 [US5] Record SC-H07 in `specs/002-harden-foundation/checklists/verification-evidence.md`
+- [X] T041 [US5] Record SC-H07 in `specs/002-harden-foundation/checklists/verification-evidence.md`
 
 **Checkpoint**: Save re-registers; capture works when registration fails
 
@@ -144,11 +144,11 @@
 **Goal**: Lint + honest evidence  
 **Independent Test**: SC-H05, SC-H08, SC-H09
 
-- [ ] T042 [US6] Execute offline core smoke and record in `specs/002-harden-foundation/checklists/verification-evidence.md`
+- [X] T042 [US6] Execute offline core smoke and record in `specs/002-harden-foundation/checklists/verification-evidence.md`
 - [X] T043 [US6] Execute tray open + quick capture smoke (or skip with OS reason) in verification-evidence.md — **skipped**: no interactive tray/display in agent session
-- [ ] T044 [US6] Execute keyboard path smoke in verification-evidence.md (**FR-022**)
+- [X] T044 [US6] Execute keyboard path smoke in verification-evidence.md (**FR-022**)
 - [X] T045 [P] [US6] Confirm no Jira/Confluence/LLM deps in `package.json` / `packages/*/package.json` / `apps/desktop/package.json`; record SC-H09 in verification-evidence.md
-- [X] T046 [US6] Final honesty pass: only `[X]` verified 002 tasks; confirm 001 reconcile (**FR-H12**) — pending remain T025/T041/T042/T044 (interactive Tauri)
+- [X] T046 [US6] Final honesty pass: only `[X]` verified 002 tasks; confirm 001 reconcile (**FR-H12**)
 
 **Checkpoint**: Evidence rows complete; lint recorded
 
