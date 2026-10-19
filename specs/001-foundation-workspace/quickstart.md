@@ -14,7 +14,7 @@
 
 ```bash
 # From repo root — exact package scripts to be added during implement
-pnpm install          # or npm/yarn per repo choice
+pnpm install
 pnpm --filter @los/domain test
 pnpm --filter @los/persistence test
 pnpm --filter desktop tauri dev
@@ -70,6 +70,14 @@ Must cover at least:
 
 8. **Local-only status (FR-015)**  
    - UI indicates local-only; no prompt requiring Jira/Confluence/LLM.
+
+9. **Keyboard path (FR-022)**  
+   - With pointer unused, Tab/Enter through: capture inbox item → open triage → open actions (smoke).
+
+10. **Backup / restore (FR-023)**  
+   - Note DB path from README.  
+   - Create a known inbox item; copy DB file aside; delete/change item; restore DB file; relaunch and confirm known item returns.  
+   - Or run `packages/persistence/tests/backup_restore.test.ts` / `scripts/smoke-backup-restore.sh`.
 
 ## Evidence to attach for “done”
 

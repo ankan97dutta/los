@@ -16,6 +16,8 @@ Deliver a local-first macOS desktop workspace where an engineering lead can capt
 
 **Primary Dependencies**: Tauri 2, React 19, Vite, Vitest, SQLite (via persistence adapter / Tauri SQL plugin or rusqlite bridge)
 
+**Package manager**: pnpm workspaces (single choice for monorepo scripts)
+
 **Storage**: Local SQLite database in OS app data directory; versioned SQL migrations on startup
 
 **Testing**: Vitest for domain + persistence-fakes; adapter tests against SQLite; manual/desktop smoke for tray & global shortcut (documented in quickstart)
@@ -42,10 +44,10 @@ Deliver a local-first macOS desktop workspace where an engineering lead can capt
 | Adapter isolation | Pass (N/A adapters) — no external integrations; future adapters out of tree |
 | Ownership clarity | Pass — all entities are LOS-owned personal data |
 | Modular boundaries | Pass — `packages/domain` pure TS; UI and DB are adapters |
-| Migration safety | Pass — versioned SQL migrations; seed apps in migration; backup note in quickstart |
+| Migration safety | Pass — versioned SQL migrations; seed apps; **FR-023** file-level backup/restore smoke in tasks/quickstart |
 | Test evidence | Pass — domain + period math + triage/next-action rules under Vitest |
-| Spec completeness | Pass — spec clarified; this plan + later tasks |
-| Desktop UX | Pass — tray, global shortcut when permitted, in-app capture, local-only status |
+| Spec completeness | Pass — spec clarified + analyze remediation (FR-022/023) |
+| Desktop UX | Pass — tray, global shortcut when permitted, in-app capture, **FR-022** keyboard paths, local-only status |
 
 **Post-design re-check**: Structure below preserves domain independence; contracts are in-process command ports (not remote APIs). No constitution violations. Complexity Tracking left empty.
 

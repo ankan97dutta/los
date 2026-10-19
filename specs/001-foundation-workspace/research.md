@@ -43,7 +43,7 @@
 
 ## R4. Daily next-actions → Personal Actions (idempotent autosave)
 
-**Decision**: Each next-action line has a stable `lineId` (UUID) created when the line is first non-empty. Autosave upserts Personal Actions keyed by `lineId`. Removing a line does **not** auto-delete the Personal Action (avoids surprising data loss); completing/editing actions happens in the actions list. Empty lines create nothing.
+**Decision**: Each next-action line has a stable `lineId` (UUID) created when the line is first non-empty. Autosave creates Personal Actions keyed by `lineId` on first non-empty save; later autosaves update the linked **open** action’s description to match the line. Removing or clearing a line does **not** auto-delete the Personal Action. Empty lines create nothing.
 
 **Rationale**: Prevents duplicate actions on repeated autosave; respects constitution “never silently discard user data.”
 
@@ -74,3 +74,15 @@
 **Decision**: On first DB init, insert four rows with names `Application 1`…`Application 4` and stable slot indexes `1..4`. Renames update display name only.
 
 **Rationale**: Clarified first-run behavior; simple seed migration.
+
+## R9. Backup / restore (minimal)
+
+**Decision**: Document the SQLite file path; support user-driven copy-out backup and file-replace restore; include an automated or scripted smoke that writes a known inbox item, copies DB aside, mutates/deletes, restores file, and asserts the item returns (FR-023).
+
+**Rationale**: Constitution requires tested backup/restore; cloud backup remains out of scope.
+
+## R10. Description length
+
+**Decision**: Hard limit **4000** characters for inbox and personal-action descriptions.
+
+**Rationale**: Removes “e.g. 4000” ambiguity for tests and validation.

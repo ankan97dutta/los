@@ -17,6 +17,7 @@
 - Q: How should daily reviews, fortnight plans, and monthly reviews persist user edits? → A: Autosave shortly after edits, with visible saved/unsaved status
 - Q: How should the four application slots appear the first time a lead opens LOS? → A: Pre-created as “Application 1”–“Application 4” (user renames anytime)
 - Q: Must quick capture be available via a global keyboard shortcut in this feature, or is tray/in-app entry enough? → A: Global shortcut required when the OS permits; tray + in-app always available
+- Q: (Analyze remediation) Backup/restore, keyboard paths, next-action edit rules, “newly captured”, max length, autosave reuse → A: FR-022/FR-023; newest-first inbox; 4000-char limit; next-action lineId rules locked; shared autosave for all review editors
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -31,7 +32,7 @@ An engineering lead opens LOS on their desktop and immediately captures an incom
 **Acceptance Scenarios**:
 
 1. **Given** LOS is not running, **When** the lead launches LOS, **Then** the workspace opens without requiring an account, cloud sign-in, or network connectivity.
-2. **Given** the lead is in the workspace, **When** they capture a new incoming request with a short description, **Then** the item appears in the inbox and is marked as newly captured.
+2. **Given** the lead is in the workspace, **When** they capture a new incoming request with a short description, **Then** the item appears at the top of the open inbox (newest-first); no separate unread badge is required.
 3. **Given** an inbox item was just captured, **When** the lead quits and relaunches LOS with network unavailable, **Then** the inbox item is still present unchanged.
 4. **Given** the lead attempts to capture with an empty description, **When** they submit, **Then** the capture is rejected with a clear message and no empty inbox item is created.
 
@@ -146,13 +147,13 @@ The lead uses a system-tray entry point to open LOS or trigger quick capture wit
 ### Edge Cases
 
 - Empty inbox, empty actions list, and empty review periods must render clear empty states (not errors).
-- Extremely long capture text is accepted up to a documented reasonable limit; beyond the limit, the user is told to shorten rather than silently truncating without notice.
+- Capture and action descriptions longer than **4000** characters are rejected with an actionable message; text is never silently truncated.
 - Quitting mid-edit: persisted content must not leave the workspace in a corrupt state; at worst the last successful autosave is restored. Unsaved/in-flight edits may be lost only if autosave has not yet completed, and the UI must have shown unsaved/saving state.
 - Clock/timezone changes: daily/fortnightly/monthly views resolve to a single consistent “current” period per open; navigating history remains by explicit period, not by ambiguous “now.”
 - Fortnight boundaries use fixed calendar fortnights aligned to a configured start weekday; the “current” fortnight does not roll forward merely because the clock advances within the same fortnight.
 - Linking an action to an application after renaming that application keeps the association to the same application slot.
 - Completing an action that was selected in the current fortnight keeps historical fortnight selection visible as completed/selected work, without resurrecting the action as open.
-- Re-saving a daily review must not blindly duplicate Personal Actions for unchanged next-action lines; only newly added next-action lines create new Personal Actions (edits/removals of lines follow a clear, non-corrupting rule documented in planning).
+- Re-saving a daily review must not duplicate Personal Actions for unchanged next-action lines. Rules: (1) each line has a stable `lineId`; (2) first non-empty autosave creates a Personal Action linked to that `lineId`; (3) later autosaves update the linked action’s description only while that action is still `open`; (4) clearing or removing a line does **not** delete the Personal Action.
 - Offline mode is the normal mode for this feature; no banner may require connecting to continue core workflows.
 - Duplicate rapid captures create separate inbox items (no silent merge) unless the user explicitly consolidates later (out of scope to auto-merge).
 
@@ -169,7 +170,7 @@ The lead uses a system-tray entry point to open LOS or trigger quick capture wit
 - **FR-007**: The workspace MUST provide exactly four application slots, pre-created on first launch as “Application 1” through “Application 4”, each with a user-editable display name.
 - **FR-008**: Users MUST be able to link a personal action to at most one of the four applications, or leave it unassigned.
 - **FR-009**: Users MUST be able to record daily review content for a given day covering important outcomes, blockers, follow-ups, and next actions as distinct sections.
-- **FR-019**: When a daily review is saved, each non-empty next-action line MUST create a new open Personal Action; important outcomes, blockers, and follow-ups MUST remain review-only text and MUST NOT auto-create Personal Actions.
+- **FR-019**: When a daily review autosaves, each non-empty next-action line MUST materialize via a stable `lineId`: create an open Personal Action on first save, update that action’s description on later saves only while it remains `open`, and never delete the action when the line is cleared or removed. Important outcomes, blockers, and follow-ups MUST remain review-only text and MUST NOT auto-create Personal Actions.
 - **FR-010**: Users MUST be able to open a fortnightly plan for the current fixed calendar fortnight (14-day periods aligned to a configured start weekday), select work (including existing personal actions), and record commitments.
 - **FR-018**: LOS MUST expose which weekday anchors fortnight boundaries and MUST keep that anchor stable once set for the installation (changing it is allowed only via an explicit user action, not implicitly).
 - **FR-011**: Users MUST be able to open a monthly review for the current month and record improvement priorities.
@@ -181,6 +182,8 @@ The lead uses a system-tray entry point to open LOS or trigger quick capture wit
 - **FR-016**: This feature MUST NOT require Jira, Confluence, or LLM capabilities; those integrations MUST remain unavailable or unused without blocking any requirement above.
 - **FR-017**: Invalid or empty required inputs MUST be rejected with actionable feedback; LOS MUST NOT silently discard user-entered review or plan content after a successful save acknowledgment.
 - **FR-020**: Daily reviews, fortnight plans, and monthly reviews MUST autosave shortly after edits and MUST show a visible saved, saving, or unsaved status so the user can tell whether persistence has completed.
+- **FR-022**: Primary in-app workflows (inbox capture, inbox list triage, personal actions, daily/fortnight/monthly editors) MUST be operable via keyboard (focusable controls and a documented path to reach capture without a pointing device). Global quick-capture shortcut remains as specified in FR-014.
+- **FR-023**: LOS MUST support a minimal local backup and restore of the workspace database file: the user can copy the DB file out as backup and replace it to restore, with documented location and a verified restore smoke path (no cloud backup required).
 
 ### Key Entities
 
@@ -197,7 +200,7 @@ The lead uses a system-tray entry point to open LOS or trigger quick capture wit
 
 - **SC-001**: A lead can launch LOS and capture a new inbox item in under 30 seconds from a cold start on a typical laptop, without network access.
 - **SC-002**: After quit and relaunch with network disabled, 100% of previously saved inbox items, personal actions, and review/plan records for this feature are still present and readable.
-- **SC-003**: In a guided first-use path, a lead can complete capture → triage to action → open today’s daily review and have all four daily sections autosaved in under 10 minutes without assistance beyond in-app labels.
+- **SC-003**: Using only in-app navigation labels (no external docs), a lead can complete capture → triage to action → open today’s daily review and have all four daily sections autosaved in under 10 minutes.
 - **SC-004**: 100% of P1–P6 acceptance scenarios pass in an offline test run (network disabled or equivalent).
 - **SC-005**: Quick capture via global shortcut (when permitted), tray (when available), or the main workspace creates an inbox item in under 15 seconds of active user time.
 - **SC-006**: At least 90% of first-time testers can rename the four applications and link an action to one of them without documentation beyond the UI.
@@ -211,10 +214,10 @@ The lead uses a system-tray entry point to open LOS or trigger quick capture wit
 - “Month” means calendar month in the user’s local timezone.
 - “Day” means calendar date in the user’s local timezone.
 - Dismissed inbox items need not be permanently recoverable in this feature (soft-delete/archive can be deferred); open and converted items must remain consistent.
-- Keyboard-friendly navigation is desirable and aligned with the constitution. A default global quick-capture shortcut is in scope; full arbitrary shortcut remapping UI may be minimal (change/disable) rather than a full keymap editor.
-- Target desktop OS for first delivery may be chosen in planning; acceptance for shortcuts/tray is “when the host supports them,” with in-app paths always required.
+- A default global quick-capture shortcut is in scope; full arbitrary shortcut remapping UI may be minimal (change/disable) rather than a full keymap editor. In-app keyboard operability is required by FR-022.
+- Target desktop OS for first delivery is macOS-first per plan; acceptance for shortcuts/tray is “when the host supports them,” with in-app paths always required.
 - Notifications beyond tray presence (e.g., OS push reminders) are out of scope.
 - Capacity calculations, dependency graphs, AI assistance, and external issue sync are out of scope.
-- Backup/export UX beyond ordinary local persistence may be specified later; this feature requires durable local persistence across restarts.
+- Cloud backup/sync is out of scope; minimal file-level backup/restore of the local DB is in scope (FR-023).
 - Daily-review next actions are a deliberate bridge into the Personal Actions list; outcomes/blockers/follow-ups are reflective notes, not action factories.
 - Inbox capture and personal-action create/edit also persist locally; review/plan screens specifically use short-delay autosave with status, rather than an explicit Save button as the primary path.

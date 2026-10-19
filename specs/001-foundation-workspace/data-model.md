@@ -26,7 +26,7 @@ All entities are **LOS-owned**, local, single-user. No external system provenanc
 | Field | Type | Rules |
 |-------|------|--------|
 | `id` | UUID | PK |
-| `description` | string | Required; trim; non-empty; max length (e.g. 4000) with explicit error if exceeded |
+| `description` | string | Required; trim; non-empty; **max length 4000** with explicit error if exceeded (never silent truncate) |
 | `status` | enum | `open` \| `converted` \| `dismissed` |
 | `capturedAt` | datetime | Set on create |
 | `updatedAt` | datetime | On triage |
@@ -44,7 +44,7 @@ All entities are **LOS-owned**, local, single-user. No external system provenanc
 | Field | Type | Rules |
 |-------|------|--------|
 | `id` | UUID | PK |
-| `description` | string | Required non-empty |
+| `description` | string | Required non-empty; **max length 4000** |
 | `status` | enum | `open` \| `done` |
 | `applicationId` | UUID? | FK Application or null (unassigned) |
 | `source` | enum | `manual` \| `inbox` \| `daily_next_action` |
@@ -76,7 +76,11 @@ All entities are **LOS-owned**, local, single-user. No external system provenanc
 | `text` | string | Empty allowed in UI buffer; empty does not create PersonalAction |
 | `personalActionId` | UUID? | Set after first successful materialization |
 
-**Rule**: On autosave, for each line with non-empty `text` and no `personalActionId`, create PersonalAction (`source=daily_next_action`, `sourceRef=lineId`) and link. Subsequent autosaves update the linked action’s description if still `open` (optional v1: update description to match line text). Do not delete actions when lines cleared.
+**Rule** (normative, matches FR-019):
+1. Each line has a stable `lineId`.
+2. On autosave, for each line with non-empty `text` and no `personalActionId`, create PersonalAction (`source=daily_next_action`, `sourceRef=lineId`) and link.
+3. Subsequent autosaves **must** update the linked action’s description when the action is still `open`.
+4. Clearing or removing a line **must not** delete the Personal Action.
 
 ### FortnightPlan
 
