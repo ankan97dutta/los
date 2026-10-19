@@ -147,7 +147,7 @@
 - [ ] T042 [US6] Execute offline core smoke and record in `specs/002-harden-foundation/checklists/verification-evidence.md`
 - [ ] T043 [US6] Execute tray open + quick capture smoke (or skip with OS reason) in verification-evidence.md
 - [ ] T044 [US6] Execute keyboard path smoke in verification-evidence.md (**FR-022**)
-- [ ] T045 [P] [US6] Confirm no Jira/Confluence/LLM deps; record SC-H09
+- [ ] T045 [P] [US6] Confirm no Jira/Confluence/LLM deps in `package.json` / `packages/*/package.json` / `apps/desktop/package.json`; record SC-H09 in verification-evidence.md
 - [ ] T046 [US6] Final honesty pass: only `[X]` verified 002 tasks; confirm 001 reconcile (**FR-H12**)
 
 **Checkpoint**: Evidence rows complete; lint recorded
