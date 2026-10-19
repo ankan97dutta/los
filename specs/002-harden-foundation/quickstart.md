@@ -52,7 +52,9 @@ Expected: migrate+seed 4 apps; corrupt file checksum unchanged; daily rollback t
 
 ## DB path
 
-Documented in `apps/desktop/README.md` after implement (app-data `los/los.sqlite`). Contracts: [desktop-bridge.md](./contracts/desktop-bridge.md).
+Documented in root `README.md` / `apps/desktop/README.md` after implement (app-data `los/los.sqlite`). Contracts: [desktop-bridge.md](./contracts/desktop-bridge.md).
+
+**Single-writer**: One app instance writes the DB. Do not run two writers against the same file. If open fails (lock/corrupt), the file is left unchanged (`DB_OPEN_FAILED`).
 
 ## Evidence rule
 

@@ -44,9 +44,9 @@ Rust/plugin responsibilities: create/open DB file path, run/ensure migrations at
 
 ## R5. Transactions for daily upsert
 
-**Decision**: `BEGIN` … materialize actions + save review … `COMMIT`; on error `ROLLBACK`. Test with injected failure after action insert.
+**Decision**: `BEGIN` … materialize actions + save review … `COMMIT`; on error `ROLLBACK`. Test with injected failure after action insert. **`withTransaction` is required on both Node and Tauri `DbSession` adapters** (analyze L1). App-services call the port only; Tauri must not omit transaction support.
 
-**Rationale**: FR-H03; SC-H03.
+**Rationale**: FR-H03; SC-H03; adapter parity with Runtime Composition.
 
 ## R6. Backup / restore (clarified)
 
@@ -78,6 +78,26 @@ Rust/plugin responsibilities: create/open DB file path, run/ensure migrations at
 
 **Rationale**: FR-H08; 001 edge case.
 
+## R11. Tauri `DbSession` completeness (analyze L1)
+
+**Decision**: `apps/desktop/src/lib/tauriSqlAdapter.ts` implements the full `DbSession` port from `packages/persistence/src/ports.ts`, including `withTransaction` (plugin-sql `execute` for BEGIN/COMMIT/ROLLBACK or equivalent). Daily upsert and migrate paths that rely on transactions work identically to Node.
+
+**Rationale**: Closing L1 gap where Node had T010 but Tauri adapter wording was migrate/repos-only.
+
+**Alternatives considered**:
+- **Transactions only in Rust invoke**: Duplicates orchestration; rejected.
+- **Rely on auto-commit per statement**: Fails FR-H03 / SC-H03 atomicity.
+
+## R12. Single-writer / concurrent open (analyze A1)
+
+**Decision**: Document single-user / single-writer per DB file in root README and quickstart. On bootstrap/open, if the file cannot be opened safely (locked/busy/invalid), return `DB_OPEN_FAILED` (or equivalent), preserve bytes, and show recoverable UI — do not delete or reseed. No multi-instance write coordination.
+
+**Rationale**: Spec Assumptions + Edge Cases; prefer fail-safe over corruption.
+
+**Alternatives considered**:
+- **WAL + multi-writer**: Out of scope for single-user desktop MVP.
+- **Silent ignore of lock**: Risks corruption. Rejected.
+
 ## Migration risks
 
 | Source | Risk | Mitigation |
@@ -86,6 +106,7 @@ Rust/plugin responsibilities: create/open DB file path, run/ensure migrations at
 | Partial migrate | Unusable schema | Transactional migrate; refuse start; keep file |
 | In-app restore while open | File lock / half-open | Close connection before replace; reopen + migrate |
 | Newer-schema backup | Partial open | Refuse with `DB_SCHEMA_TOO_NEW`; automated test required (analyze C1) |
+| Second process / lock | Corruption if forced | Fail-safe open (A1); document single-writer |
 
 ## Out of scope
 

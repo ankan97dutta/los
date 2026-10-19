@@ -16,7 +16,9 @@ Output: {
 Errors: DB_OPEN_FAILED | DB_MIGRATE_FAILED | LEGACY_IMPORT_FAILED (non-fatal import may still ok:true with imported:false)
 ```
 
-Called once at Tauri startup before other workspace commands. Corrupt existing file → `ok: false`, file preserved.
+Called once at Tauri startup before other workspace commands. Corrupt existing file → `ok: false`, file preserved. Locked/busy open that cannot proceed safely → `ok: false` with `DB_OPEN_FAILED` (or equivalent); file bytes unchanged (single-writer / fail-safe; analyze A1).
+
+After bootstrap, webview workspace code uses `DbSession` via `tauriSqlAdapter`, which **MUST** implement `withTransaction` with the same semantics as the Node adapter (analyze L1).
 
 ### `workspace.status` (extends 001)
 

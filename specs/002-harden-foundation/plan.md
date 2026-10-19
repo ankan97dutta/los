@@ -84,10 +84,11 @@ apps/desktop/src-tauri/            # plugin-sql init, app-data path, migrate on 
 
 1. **Domain + app-services** stay pure TypeScript and call **repository ports** / `DbSession` only (no driver imports).
 2. **Shared** `migrations/*.sql` + `sqlite_repos` implement ports against `DbSession` (`exec` / `query` / `withTransaction`).
-3. **Node/Vitest**: `node_sqlite.ts` = `better-sqlite3` implementing `DbSession` (file under temp dir).
-4. **Tauri-dev/packaged**: Rust enables `tauri-plugin-sql` on `$APP_DATA/los/los.sqlite`; TypeScript `tauriSqlAdapter.ts` implements the same `DbSession`; UI/bootstrap call `db.bootstrap` then run app-services in the webview against that adapter.
+3. **Node/Vitest**: `node_sqlite.ts` = `better-sqlite3` implementing `DbSession` (file under temp dir), including **`withTransaction`** (BEGIN/COMMIT/ROLLBACK).
+4. **Tauri-dev/packaged**: Rust enables `tauri-plugin-sql` on `$APP_DATA/los/los.sqlite`; TypeScript `tauriSqlAdapter.ts` implements the **full** `DbSession` including **`withTransaction`** (same semantics as Node — analyze L1); UI/bootstrap call `db.bootstrap` then run app-services in the webview against that adapter. A Tauri adapter that only exposes `exec`/`query` is incomplete.
 5. **Vite-only preview**: labeled non-durable `MemoryStore` (or equivalent)—**not** SQLite; must not claim SC-H01/FR-023.
 6. Thin Tauri **invoke** remains for OS concerns (path, shortcut re-register, file dialogs, restore close/reopen); workspace CRUD may stay in-process TS once `DbSession` is live (invoke only where the plugin requires setup).
+7. **Single-writer / concurrent open (analyze A1)**: Product assumption is one writer per DB file (spec Assumptions + Edge Cases). Document in README. On open/bootstrap, prefer **fail-safe** behavior (surface `DB_OPEN_FAILED` / lock error; leave file bytes unchanged) over risking corruption if a second process holds the file. No multi-writer sync in scope.
 
 ## Complexity Tracking
 
@@ -113,3 +114,5 @@ apps/desktop/src-tauri/            # plugin-sql init, app-data path, migrate on 
 | I1 Dual SQLite composition | Resolved in Runtime Composition above + research R1 |
 | C1 `DB_SCHEMA_TOO_NEW` | Task + test required in tasks.md; refuse restore/open |
 | U1 T025 confirm-only | Replaced by wiring/assert task against transactional `dailyUpsert` on Tauri `DbSession` |
+| L1 Tauri `withTransaction` | Runtime Composition §4 + research R5/R11; T018 must implement `withTransaction` on `tauriSqlAdapter`; T028 asserts US2 path |
+| A1 Concurrent single-writer | Runtime Composition §7 + research R12; README/quickstart document assumption; open/bootstrap fail-safe (T007/T019/T049) |
