@@ -1,6 +1,5 @@
--- Canonical schema for LOS local DB (target: SQLite).
--- Current runtime uses schema-versioned JSON via MemoryStore/file_store;
--- this SQL documents the relational shape and seed rules (T013–T015).
+-- Canonical schema for LOS local DB (SQLite). Applied by migrate.ts (version 1).
+-- Runner records schema_migrations; do not insert migration version here.
 
 CREATE TABLE IF NOT EXISTS schema_migrations (
   version INTEGER PRIMARY KEY,
@@ -20,6 +19,7 @@ CREATE TABLE IF NOT EXISTS inbox_items (
   description TEXT NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('open', 'converted', 'dismissed')),
   captured_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
   converted_action_id TEXT
 );
 
@@ -82,16 +82,12 @@ CREATE TABLE IF NOT EXISTS workspace_settings (
   updated_at TEXT NOT NULL
 );
 
--- Seed: exactly four Application rows
 INSERT OR IGNORE INTO applications (id, slot_index, name, created_at, updated_at) VALUES
   ('seed-app-1', 1, 'Application 1', datetime('now'), datetime('now')),
   ('seed-app-2', 2, 'Application 2', datetime('now'), datetime('now')),
   ('seed-app-3', 3, 'Application 3', datetime('now'), datetime('now')),
   ('seed-app-4', 4, 'Application 4', datetime('now'), datetime('now'));
 
--- Seed: singleton WorkspaceSettings
 INSERT OR IGNORE INTO workspace_settings (
   id, fortnight_start_weekday, global_shortcut_enabled, global_shortcut_accel, updated_at
 ) VALUES (1, 'mon', 1, 'CommandOrControl+Shift+L', datetime('now'));
-
-INSERT OR IGNORE INTO schema_migrations (version, applied_at) VALUES (1, datetime('now'));

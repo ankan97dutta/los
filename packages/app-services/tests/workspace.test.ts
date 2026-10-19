@@ -10,7 +10,10 @@ import {
 
 describe('workspace services', () => {
   it('capture triage daily next action', async () => {
-    const rt = { store: new MemoryStore() };
+    const rt = {
+      store: new MemoryStore(),
+      withTransaction: async <T>(fn: () => Promise<T>) => fn(),
+    };
     const cap = await inboxCapture(rt, 'Incoming');
     expect(cap.ok).toBe(true);
     if (!cap.ok) return;

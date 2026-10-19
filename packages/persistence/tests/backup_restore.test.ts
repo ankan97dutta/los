@@ -1,37 +1,48 @@
 import { describe, expect, it } from 'vitest';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { createInboxItem } from '@los/domain';
-import { backupDbFile, loadOrCreateStore, persistStore, restoreDbFile } from '../src/file_store.js';
-import { createRepos } from '../src/repos.js';
+import { join } from 'node:path';
+import { bootstrapNodeSqlite } from '../src/bootstrap.js';
+import { createSqliteRepos } from '../src/sqlite_repos.js';
+import { exportSqliteBackup, restoreSqliteBackup } from '../src/backup.js';
 
-describe('backup restore smoke', () => {
-  it('restores known inbox item from backup file', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'los-db-'));
-    const dbPath = join(dir, 'los-db.json');
-    const backupPath = join(dir, 'los-db.backup.json');
-    try {
-      const store = loadOrCreateStore(dbPath);
-      const repos = createRepos(store);
-      const now = '2026-10-19T12:00:00.000Z';
-      const item = createInboxItem('Known backup item', now);
-      expect(item.ok).toBe(true);
-      if (!item.ok) return;
-      await repos.inbox.save(item.data);
-      persistStore(dbPath, store);
-      backupDbFile(dbPath, backupPath);
+describe('sqlite backup_restore', () => {
+  it('seed inbox → backup → mutate → restore → item returns', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'los-bak-'));
+    const live = join(dir, 'los.sqlite');
+    const backup = join(dir, 'backup.sqlite');
 
-      store.data.inbox = [];
-      persistStore(dbPath, store);
-      expect((await createRepos(loadOrCreateStore(dbPath)).inbox.listOpen()).length).toBe(0);
+    const boot = await bootstrapNodeSqlite(live);
+    const repos = createSqliteRepos(boot.session);
+    const now = new Date().toISOString();
+    await repos.inbox.save({
+      id: 'inbox-keep',
+      description: 'Persist me',
+      status: 'open',
+      capturedAt: now,
+      updatedAt: now,
+    });
+    boot.session.close();
 
-      restoreDbFile(backupPath, dbPath);
-      const restored = loadOrCreateStore(dbPath);
-      const open = await createRepos(restored).inbox.listOpen();
-      expect(open.some((i) => i.description === 'Known backup item')).toBe(true);
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
+    exportSqliteBackup(live, backup);
+
+    const boot2 = await bootstrapNodeSqlite(live);
+    const repos2 = createSqliteRepos(boot2.session);
+    const now2 = new Date().toISOString();
+    await repos2.inbox.save({
+      id: 'inbox-keep',
+      description: 'Mutated away',
+      status: 'dismissed',
+      capturedAt: now2,
+      updatedAt: now2,
+    });
+    boot2.session.close();
+
+    restoreSqliteBackup(backup, live);
+
+    const boot3 = await bootstrapNodeSqlite(live);
+    const items = await createSqliteRepos(boot3.session).inbox.listOpen();
+    expect(items.some((i) => i.id === 'inbox-keep' && i.description === 'Persist me')).toBe(true);
+    boot3.session.close();
   });
 });

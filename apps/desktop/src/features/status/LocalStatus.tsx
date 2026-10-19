@@ -8,6 +8,8 @@ export function LocalStatus({ rt }: Props) {
   const [tray, setTray] = useState(false);
   const [shortcutAvail, setShortcutAvail] = useState(false);
   const [shortcutReg, setShortcutReg] = useState(false);
+  const [shortcutError, setShortcutError] = useState<string | undefined>();
+  const [dbPath, setDbPath] = useState<string | undefined>();
 
   useEffect(() => {
     void api.workspaceStatus(rt).then((r) => {
@@ -15,6 +17,8 @@ export function LocalStatus({ rt }: Props) {
       setTray(r.data.trayAvailable);
       setShortcutAvail(r.data.globalShortcutAvailable);
       setShortcutReg(r.data.globalShortcutRegistered);
+      setShortcutError(r.data.globalShortcutError);
+      setDbPath(r.data.dbPath);
     });
   }, [rt]);
 
@@ -27,7 +31,18 @@ export function LocalStatus({ rt }: Props) {
       <p className="muted" style={{ margin: 0, fontSize: '0.78rem' }}>
         Tray: {tray ? 'available' : 'unavailable'}
         <br />
-        Shortcut: {shortcutReg ? 'registered' : shortcutAvail ? 'available' : 'unavailable'}
+        Shortcut:{' '}
+        {shortcutReg
+          ? 'registered'
+          : shortcutAvail
+            ? `unavailable${shortcutError ? ` (${shortcutError})` : ''}`
+            : 'unavailable'}
+        {dbPath ? (
+          <>
+            <br />
+            DB: <code style={{ fontSize: '0.7rem' }}>{dbPath}</code>
+          </>
+        ) : null}
       </p>
     </div>
   );

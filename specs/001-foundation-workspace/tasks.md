@@ -45,14 +45,14 @@ Monorepo per plan.md: `apps/desktop/`, `packages/domain/`, `packages/persistence
 - [X] T010 [P] Implement `localToday` / month helpers in `packages/domain/src/periods/calendar.ts` (local timezone; `YYYY-MM-DD` / `YYYY-MM`)
 - [X] T011 [P] Add Vitest coverage for fortnight/month math with fixed clocks in `packages/domain/tests/periods.test.ts`
 - [X] T012 Define persistence port interfaces (repositories) in `packages/domain/src/ports/` matching entities in data-model.md
-- [X] T013 Implement SQLite migration runner + `packages/persistence/migrations/001_init.sql` creating tables for Application, InboxItem, PersonalAction, DailyReview, DailyNextActionLine, FortnightPlan, FortnightSelection, MonthlyReview, WorkspaceSettings
-- [X] T014 Seed exactly four Application rows (`slotIndex` 1..4, names `Application 1`..`Application 4`) in `packages/persistence/migrations/001_init.sql` (or `002_seed_applications.sql`)
-- [X] T015 Seed singleton WorkspaceSettings (`fortnightStartWeekday=mon`, shortcut defaults) in persistence migrations under `packages/persistence/migrations/`
-- [X] T016 Implement SQLite connection bootstrap (app data directory path) in `packages/persistence/src/db.ts` and wire from `apps/desktop/src-tauri/`
+- [ ] T013 Implement SQLite migration runner + `packages/persistence/migrations/001_init.sql` creating tables for Application, InboxItem, PersonalAction, DailyReview, DailyNextActionLine, FortnightPlan, FortnightSelection, MonthlyReview, WorkspaceSettings — **incomplete at 001; tracked in 002**
+- [ ] T014 Seed exactly four Application rows (`slotIndex` 1..4, names `Application 1`..`Application 4`) in `packages/persistence/migrations/001_init.sql` (or `002_seed_applications.sql`) — **SQL drafted; runner not applied at 001; tracked in 002**
+- [ ] T015 Seed singleton WorkspaceSettings (`fortnightStartWeekday=mon`, shortcut defaults) in persistence migrations under `packages/persistence/migrations/` — **SQL drafted; tracked in 002**
+- [ ] T016 Implement SQLite connection bootstrap (app data directory path) in `packages/persistence/src/db.ts` and wire from `apps/desktop/src-tauri/` — **001 used JSON/localStorage; SQLite bootstrap in 002**
 - [X] T017 [P] Implement in-memory fake repositories for domain tests in `packages/persistence/src/fakes/` (or `packages/domain/tests/fakes/`)
 - [X] T018 Implement `settings.get` / `settings.update` in `packages/app-services/src/settings.ts` per `specs/001-foundation-workspace/contracts/workspace-commands.md` and `workspace-queries.md` (explicit confirm path for weekday change left to UI later)
 - [X] T019 Implement `workspace.status` query returning `mode: "local_only"` and tray/shortcut capability flags in `packages/app-services/src/workspace_status.ts`
-- [X] T020 Expose Tauri invoke handlers for settings + workspace.status in `apps/desktop/src-tauri/src/lib.rs` (or commands module) and thin TS clients in `apps/desktop/src/lib/api.ts`
+- [ ] T020 Expose Tauri invoke handlers for settings + workspace.status in `apps/desktop/src-tauri/src/lib.rs` (or commands module) and thin TS clients in `apps/desktop/src/lib/api.ts` — **partial (`workspace_status` only); durable bridge in 002**
 - [X] T021 Add shell layout with Local-only status indicator and navigation placeholders in `apps/desktop/src/App.tsx` (no Jira/Confluence/LLM entry points)
 - [X] T022 [P] Document DB file location and migration-on-startup behavior in `apps/desktop/README.md`
 

@@ -20,19 +20,40 @@ import {
   validateName,
   type Weekday,
 } from '@los/domain';
-import { createRepos, MemoryStore } from '@los/persistence';
+import {
+  createRepos,
+  MemoryStore,
+  type WorkspaceRepos,
+} from '@los/persistence';
 
 export type WorkspaceRuntime = {
-  store: MemoryStore;
-  persist?: () => void;
+  /** Vite preview / tests — in-memory JSON shape */
+  store?: MemoryStore;
+  /** Durable SQLite repos (Tauri / Node) */
+  sqliteRepos?: WorkspaceRepos;
+  /** Required for FR-H03; MemoryStore path may pass through */
+  withTransaction?: <T>(fn: () => Promise<T>) => Promise<T>;
+  persist?: () => void | Promise<void>;
   now?: () => Date;
+  dbPath?: string;
+  dbReady?: boolean;
   trayAvailable?: boolean;
   globalShortcutAvailable?: boolean;
   globalShortcutRegistered?: boolean;
+  globalShortcutError?: string;
+  /** Close durable DbSession before in-app file replace restore */
+  closeDb?: () => Promise<void>;
 };
 
-function repos(rt: WorkspaceRuntime) {
+function repos(rt: WorkspaceRuntime): WorkspaceRepos {
+  if (rt.sqliteRepos) return rt.sqliteRepos;
+  if (!rt.store) throw new Error('WorkspaceRuntime requires store or sqliteRepos');
   return createRepos(rt.store);
+}
+
+async function runTx<T>(rt: WorkspaceRuntime, fn: () => Promise<T>): Promise<T> {
+  if (rt.withTransaction) return rt.withTransaction(fn);
+  return fn();
 }
 
 function nowIso(rt: WorkspaceRuntime): string {
@@ -40,7 +61,7 @@ function nowIso(rt: WorkspaceRuntime): string {
 }
 
 function afterWrite(rt: WorkspaceRuntime): void {
-  rt.persist?.();
+  void rt.persist?.();
 }
 
 function addDaysSafe(date: string, days: number): string {
@@ -195,30 +216,32 @@ export async function dailyUpsert(
   },
 ) {
   if (!isValidLocalDate(input.date)) return err('INVALID_DATE', 'Invalid date.');
-  const r = repos(rt);
-  const existing = await r.daily.getByDate(input.date);
-  const lines = ensureLineIds(input.nextActionLines ?? existing?.nextActionLines ?? []);
-  const actions = await r.actions.list({ status: 'all' });
-  const map = new Map(actions.map((a) => [a.id, a]));
-  const material = materializeNextActions(lines, map, nowIso(rt));
-  if (!material.ok) return material;
-  for (const a of material.data.createdActions) await r.actions.save(a);
-  for (const a of material.data.updatedActions) await r.actions.save(a);
+  return runTx(rt, async () => {
+    const r = repos(rt);
+    const existing = await r.daily.getByDate(input.date);
+    const lines = ensureLineIds(input.nextActionLines ?? existing?.nextActionLines ?? []);
+    const actions = await r.actions.list({ status: 'all' });
+    const map = new Map(actions.map((a) => [a.id, a]));
+    const material = materializeNextActions(lines, map, nowIso(rt));
+    if (!material.ok) return material;
+    for (const a of material.data.createdActions) await r.actions.save(a);
+    for (const a of material.data.updatedActions) await r.actions.save(a);
 
-  const review = {
-    id: existing?.id ?? newId(),
-    date: input.date,
-    outcomes: input.outcomes ?? existing?.outcomes ?? '',
-    blockers: input.blockers ?? existing?.blockers ?? '',
-    followUps: input.followUps ?? existing?.followUps ?? '',
-    nextActionLines: material.data.lines,
-    updatedAt: nowIso(rt),
-  };
-  await r.daily.save(review);
-  afterWrite(rt);
-  return ok({
-    review,
-    createdActionIds: material.data.createdActions.map((a) => a.id),
+    const review = {
+      id: existing?.id ?? newId(),
+      date: input.date,
+      outcomes: input.outcomes ?? existing?.outcomes ?? '',
+      blockers: input.blockers ?? existing?.blockers ?? '',
+      followUps: input.followUps ?? existing?.followUps ?? '',
+      nextActionLines: material.data.lines,
+      updatedAt: nowIso(rt),
+    };
+    await r.daily.save(review);
+    afterWrite(rt);
+    return ok({
+      review,
+      createdActionIds: material.data.createdActions.map((a) => a.id),
+    });
   });
 }
 
@@ -343,9 +366,12 @@ export async function settingsUpdate(
 export async function workspaceStatus(rt: WorkspaceRuntime) {
   return ok({
     mode: 'local_only' as const,
+    dbPath: rt.dbPath,
+    dbReady: rt.dbReady ?? Boolean(rt.sqliteRepos || rt.store),
     trayAvailable: rt.trayAvailable ?? false,
     globalShortcutAvailable: rt.globalShortcutAvailable ?? false,
     globalShortcutRegistered: rt.globalShortcutRegistered ?? false,
+    globalShortcutError: rt.globalShortcutError,
   });
 }
 

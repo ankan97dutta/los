@@ -16,6 +16,8 @@
     "@los/domain": "workspace:*",
     "@los/persistence": "workspace:*",
     "@tauri-apps/api": "^2.12.4",
+    "@tauri-apps/plugin-dialog": "^2.8.3",
+    "@tauri-apps/plugin-sql": "^2.6.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

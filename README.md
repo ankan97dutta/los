@@ -7,7 +7,7 @@ Local-first desktop workspace for engineering leads. Offline by default; no acco
 | Package | Role |
 |---------|------|
 | `packages/domain` | Pure TypeScript domain rules (no UI/DB) |
-| `packages/persistence` | Schema-versioned JSON store + repository adapters (`migrations/001_init.sql` documents the SQLite target shape) |
+| `packages/persistence` | SQLite migrations + `DbSession` adapters (`better-sqlite3` Node; shared repos) |
 | `packages/app-services` | Command/query orchestration |
 | `apps/desktop` | Tauri 2 + React UI (macOS-first) |
 
@@ -17,20 +17,23 @@ Local-first desktop workspace for engineering leads. Offline by default; no acco
 export PATH="$HOME/.local/bin:$PATH"   # if pnpm installed to ~/.local
 pnpm install
 pnpm test
-pnpm --filter @los/desktop dev        # Vite UI (localStorage DB key los-db-v1)
-pnpm --filter @los/desktop tauri:dev  # desktop shell (tray + global shortcut)
+pnpm lint
+pnpm --filter @los/desktop dev        # Vite preview (non-durable localStorage)
+pnpm --filter @los/desktop tauri:dev  # durable SQLite + tray + global shortcut
 ```
 
 ## Database location
 
 | Runtime | Path |
 |---------|------|
-| Vite / browser | `localStorage` key `los-db-v1` |
-| Node helpers / tests | `~/.local/share/los/los-db.json` (via `openDb`) |
-| Tauri (intended) | `$APP_DATA/los/los-db.json` |
+| Vite preview | `localStorage` key `los-db-v1` — **non-durable**; not SC-H01 |
+| Node / Vitest | temp or helper paths via `better-sqlite3` |
+| Tauri-dev / packaged | `$APP_DATA/los/los.sqlite` (macOS: under Application Support for the app id) |
 
-Backup: Settings → Export, or copy the JSON file while the app is quit. Restore: Settings → Import, or replace the file and relaunch. Automated smoke: `pnpm --filter @los/persistence test` (`backup_restore.test.ts`).
+**Single-writer**: one app instance per DB file. Do not run two writers against the same file. Locked/corrupt open fails with `DB_OPEN_FAILED` and leaves file bytes unchanged (no silent reseed).
+
+Backup: Settings → Export (SQLite copy), or copy `los.sqlite` while quit. Restore: Settings → Restore, or quit-and-replace the file then relaunch. Automated: `pnpm --filter @los/persistence test`.
 
 ## Spec Kit
 
-Active feature: `specs/001-foundation-workspace/` (see `spec.md`, `plan.md`, `tasks.md`).
+Active feature: `specs/002-harden-foundation/` (see `spec.md`, `plan.md`, `tasks.md`). Baseline: `specs/001-foundation-workspace/`.

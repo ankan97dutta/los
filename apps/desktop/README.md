@@ -1,36 +1,33 @@
 # LOS Desktop
 
-React + Vite UI with optional Tauri 2 shell (tray, global shortcut, main window).
+Tauri 2 + React UI (macOS-first).
 
-## Database location (FR-023)
+## Runtimes
 
-| Runtime | Location |
-|---------|----------|
-| Vite / webview without native FS bridge | Browser `localStorage` key **`los-db-v1`** |
-| Node / persistence helpers | `~/.local/share/los/los-db.json` |
-| Packaged Tauri (document for operators) | **`$APP_DATA/los/los-db.json`** (macOS: `~/Library/Application Support/com.los.desktop/los/los-db.json`) |
+| Mode | Command | Persistence |
+|------|---------|-------------|
+| Vite preview | `pnpm --filter @los/desktop dev` | **Non-durable** `localStorage` key `los-db-v1` (not SC-H01) |
+| Tauri-dev / packaged | `pnpm --filter @los/desktop tauri:dev` | **SQLite** `$APP_DATA/los/los.sqlite` via `tauri-plugin-sql` |
 
-Schema version is embedded in the JSON snapshot (`version: 1`). First launch seeds four applications and default workspace settings (also described in `packages/persistence/migrations/001_init.sql`).
+### App-data path
 
-### Backup
+- macOS: `~/Library/Application Support/com.los.desktop/los/los.sqlite` (exact bundle id from `tauri.conf.json`)
+- Create `los/` under the OS app-data directory on first bootstrap.
 
-1. Quit the app (or use Settings → Export DB).
-2. Copy `los-db.json` (or the exported JSON) to a safe location.
+### Single-writer
 
-### Restore
+One LOS instance writes the DB. Do not run two writers against the same file. Locked/corrupt open returns `DB_OPEN_FAILED` and **does not** delete or reseed the file.
 
-1. Quit the app.
-2. Replace the DB file with the backup **or** use Settings → Import / restore.
-3. Relaunch and confirm data (e.g. known inbox item).
+### Runtime composition
 
-Automated: `packages/persistence/tests/backup_restore.test.ts`.
+- Domain + app-services call repository ports / `DbSession` only.
+- Node/Vitest: `better-sqlite3` (`packages/persistence` Node adapter).
+- Tauri: `apps/desktop/src/lib/tauriSqlAdapter.ts` implements full `DbSession` including `withTransaction`.
+- Shared SQL: `packages/persistence/migrations/*.sql`.
 
-## Scripts
+### Backup / restore
 
-```bash
-pnpm --filter @los/desktop dev         # UI only
-pnpm --filter @los/desktop tauri:dev   # Tauri + Vite
-pnpm --filter @los/desktop build       # production web assets
-```
+1. **In-app**: Settings → Export DB / Restore SQLite (closes connection, replaces file, reloads).
+2. **Quit-and-replace**: Quit LOS, copy a backup over `los.sqlite`, relaunch (migrations run on open).
 
-Cold start opens the main window with no account or network requirement. Inbox capture remains available in-app when tray/shortcut registration fails.
+Newer-schema backups are refused with `DB_SCHEMA_TOO_NEW` before replacing the live file.

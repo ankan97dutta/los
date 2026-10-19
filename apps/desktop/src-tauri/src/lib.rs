@@ -1,21 +1,52 @@
+mod db;
 mod shortcuts;
 mod tray;
 
+use shortcuts::ShortcutStateMutex;
+use std::sync::Mutex;
 use tauri::{Emitter, Manager};
 
 #[tauri::command]
-fn workspace_status() -> serde_json::Value {
+fn workspace_status(app: tauri::AppHandle) -> serde_json::Value {
+    let (registered, error, accel) = app
+        .try_state::<ShortcutStateMutex>()
+        .and_then(|s| s.0.lock().ok().map(|g| (g.registered, g.error.clone(), g.accel.clone())))
+        .unwrap_or((false, None, String::new()));
+
+    let db_path = db::db_path(&app)
+        .map(|p| p.to_string_lossy().to_string())
+        .ok();
+
     serde_json::json!({
         "mode": "local_only",
-        "note": "Domain commands run in the webview via @los/app-services; Rust owns tray/shortcut/window."
+        "dbPath": db_path,
+        "dbReady": db_path.as_ref().map(|p| std::path::Path::new(p).exists()).unwrap_or(false),
+        "globalShortcutRegistered": registered,
+        "globalShortcutError": error,
+        "accel": accel,
+        "note": "Workspace CRUD runs in the webview via DbSession + app-services; Rust owns tray/shortcut/file replace."
     })
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_sql::Builder::default().build())
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![workspace_status])
+        .manage(ShortcutStateMutex(Mutex::new(shortcuts::ShortcutStateInner {
+            registered: false,
+            error: None,
+            accel: "CommandOrControl+Shift+L".into(),
+        })))
+        .invoke_handler(tauri::generate_handler![
+            workspace_status,
+            db::db_bootstrap,
+            db::db_export_backup,
+            db::db_restore_backup,
+            db::db_path_cmd,
+            shortcuts::shortcuts_reregister
+        ])
         .setup(|app| {
             if let Err(e) = tray::setup_tray(app.handle()) {
                 eprintln!("Tray unavailable: {e}");
@@ -27,7 +58,6 @@ pub fn run() {
             if let Err(e) = shortcuts::setup_shortcuts(app.handle()) {
                 eprintln!("{e}");
             }
-            // Cold start: show main window without account/network (T030)
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.show();
             }

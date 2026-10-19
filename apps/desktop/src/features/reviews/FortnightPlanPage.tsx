@@ -16,22 +16,31 @@ type Draft = {
 export function FortnightPlanPage({ rt }: Props) {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [openActions, setOpenActions] = useState<PersonalAction[]>([]);
+  const [selectedActions, setSelectedActions] = useState<PersonalAction[]>([]);
 
   const load = useCallback(
     async (periodStart?: string) => {
-      const [planRes, actionsRes] = await Promise.all([
+      const [planRes, openRes, allRes] = await Promise.all([
         api.fortnightGet(rt, periodStart),
         api.actionsList(rt, { status: 'open' }),
+        api.actionsList(rt, { status: 'all' }),
       ]);
       if (planRes.ok) {
+        const selectedIds = [...planRes.data.plan.selectedActionIds];
         setDraft({
           periodStart: planRes.data.period.start,
           periodEnd: planRes.data.period.end,
           commitments: planRes.data.plan.commitments,
-          selectedActionIds: [...planRes.data.plan.selectedActionIds],
+          selectedActionIds: selectedIds,
         });
+        if (allRes.ok) {
+          const byId = new Map(allRes.data.actions.map((a) => [a.id, a]));
+          setSelectedActions(
+            selectedIds.map((id) => byId.get(id)).filter((a): a is PersonalAction => Boolean(a)),
+          );
+        }
       }
-      if (actionsRes.ok) setOpenActions(actionsRes.data.actions);
+      if (openRes.ok) setOpenActions(openRes.data.actions);
     },
     [rt],
   );
@@ -109,6 +118,24 @@ export function FortnightPlanPage({ rt }: Props) {
           value={draft.commitments}
           onChange={(e) => setDraft({ ...draft, commitments: e.target.value })}
         />
+      </div>
+
+      <div className="stack">
+        <strong>Selected actions (includes completed)</strong>
+        {selectedActions.length === 0 ? (
+          <div className="empty">No selections yet.</div>
+        ) : (
+          <ul className="list">
+            {selectedActions.map((a) => (
+              <li key={a.id}>
+                <span>
+                  {a.description}{' '}
+                  <span className="muted">({a.status === 'done' ? 'done' : 'open'})</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="stack">
