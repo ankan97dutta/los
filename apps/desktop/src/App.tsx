@@ -26,6 +26,7 @@ import { isTauriRuntime } from './lib/isTauri';
 import { FocusOverlay, type FocusSeed } from './features/focus/FocusOverlay';
 import { FiredPhases, formatClock, remainingFor } from './features/focus/focusView';
 import { notifyFocusEnded } from './lib/focusNotify';
+import { syncTrayFocus } from './lib/trayFocus';
 import type { FocusSession } from '@los/domain';
 
 declare global {
@@ -81,6 +82,7 @@ export function App() {
       if (cancelled || !r.ok) return;
       const s = r.data.session;
       setActiveFocus(s);
+      void syncTrayFocus(s);
       if (!s) return;
       if (focusOpen) return; // overlay owns alerts while open
       if (s.status !== 'focusDone' && s.status !== 'breakDone') return;
@@ -208,14 +210,19 @@ export function App() {
     const digitRoute: Record<string, PrimaryRouteId> = {
       '1': 'today', '2': 'inbox', '3': 'planning', '4': 'team', '5': 'reviews', '6': 'settings',
     };
+    // Modal surfaces own the keyboard while they are open: global jump
+    // keys must not switch routes or stack dialogs behind them.
+    const modalOpen = focusOpen || shortcutsOpen || tourOpen;
     const onKey = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
       if (!meta) return;
       if (e.key.toLowerCase() === 'k') {
+        if (modalOpen) return;
         e.preventDefault();
         setPaletteOpen((o) => !o);
         return;
       }
+      if (modalOpen || paletteOpen) return;
       const target = digitRoute[e.key];
       if (target && !e.shiftKey && !e.altKey) {
         e.preventDefault();
@@ -223,6 +230,7 @@ export function App() {
       }
     };
     const onHelpKey = (e: KeyboardEvent) => {
+      if (modalOpen || paletteOpen) return;
       const target = e.target as HTMLElement | null;
       const typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable);
       if (e.key === '?' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
@@ -239,7 +247,7 @@ export function App() {
       window.removeEventListener('keydown', onHelpKey);
       window.removeEventListener('los:open-shortcuts', onOpenShortcuts);
     };
-  }, []);
+  }, [focusOpen, paletteOpen, shortcutsOpen, tourOpen]);
 
   function navigatePrimary(id: PrimaryRouteId) {
     setRoute(defaultChild(id));
@@ -384,6 +392,8 @@ export function App() {
     >
       <span className="focus-chip__dot" aria-hidden="true" />
       <span>{activeFocus.status === 'paused' ? 'Paused' : activeFocus.status === 'breakRunning' ? 'On a break' : activeFocus.status === 'focusDone' ? 'Focus block done' : activeFocus.status === 'breakDone' ? 'Break done' : 'Focusing'}</span>
+      <span aria-hidden="true">·</span>
+      <span>{activeFocus.technique === 'deep' ? 'Deep work' : activeFocus.technique === 'custom' ? 'Custom' : 'Pomodoro'}</span>
       <span className="focus-chip__time">{formatClock(remainingFor(activeFocus, new Date().toISOString()))}</span>
     </button>
   ) : null;

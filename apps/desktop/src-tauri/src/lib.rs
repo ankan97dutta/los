@@ -48,7 +48,8 @@ pub fn run() {
             db::db_restore_backup,
             db::db_reset_all,
             db::db_path_cmd,
-            shortcuts::shortcuts_reregister
+            shortcuts::shortcuts_reregister,
+            tray::tray_focus_update
         ])
         .setup(|app| {
             if let Err(e) = tray::setup_tray(app.handle()) {

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { trapTabKey } from '../ui/focusTrap';
 
 type Props = { open: boolean; onClose: () => void };
 
@@ -12,10 +13,12 @@ const ROWS: Array<[string, string]> = [
   ['C · K · X · R', 'Inbox item focused: Convert · Keep for later · Dismiss · Return to inbox'],
   ['Esc', 'Close palette, dialog, detail panel, or cancel an inline edit'],
   ['Tab / Shift+Tab', 'Move through every control in a predictable order'],
+  ['Space', 'While a focus timer runs: pause or resume it'],
 ];
 
 export function ShortcutsDialog({ open, onClose }: Props) {
   const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (open) closeRef.current?.focus();
   }, [open ]);
@@ -23,8 +26,9 @@ export function ShortcutsDialog({ open, onClose }: Props) {
   return (
     <div className="palette-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div
+        ref={panelRef}
         className="palette-panel" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts"
-        onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } }}
+        onKeyDown={(e) => { if (trapTabKey(e, panelRef.current)) return; if (e.key === 'Escape') { e.preventDefault(); onClose(); } }}
       >
         <div className="row" style={{ justifyContent: 'space-between' }}>
           <strong>Keyboard shortcuts</strong>

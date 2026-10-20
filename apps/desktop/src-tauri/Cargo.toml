@@ -1,7 +1,7 @@
 [package]
 name = "los"
 version = "0.1.0"
-description = "LOS — Lead OS local workspace"
+description = "LOS - Lead OS local workspace"
 authors = ["LOS"]
 edition = "2021"
 

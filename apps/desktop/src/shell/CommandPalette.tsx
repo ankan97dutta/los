@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { EmptyState } from '../ui/EmptyState';
+import { trapTabKey } from '../ui/focusTrap';
 import type { RouteId } from './routes';
 
 export type PaletteAction = {
@@ -22,6 +23,7 @@ export function CommandPalette({ open, actions, onClose, onRun }: Props) {
   const [query, setQuery] = useState('');
   const [index, setIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -40,8 +42,10 @@ export function CommandPalette({ open, actions, onClose, onRun }: Props) {
   return (
     <div className="palette-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div
+        ref={panelRef}
         className="palette-panel" role="dialog" aria-modal="true" aria-label="Command palette"
         onKeyDown={(e) => {
+          if (trapTabKey(e, panelRef.current)) return;
           if (e.key === 'Escape') { e.preventDefault(); onClose(); }
           else if (e.key === 'ArrowDown') { e.preventDefault(); setIndex((i) => Math.min(i + 1, Math.max(filtered.length - 1, 0))); }
           else if (e.key === 'ArrowUp') { e.preventDefault(); setIndex((i) => Math.max(i - 1, 0)); }
