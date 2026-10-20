@@ -23,7 +23,10 @@ import { ShortcutsDialog } from './shell/ShortcutsDialog';
 import { Tour, markTourSeen, tourSeen } from './shell/Tour';
 import { defaultChild, type PrimaryRouteId, type RouteId } from './shell/routes';
 import { isTauriRuntime } from './lib/isTauri';
-import { initTheme } from './ui/theme';
+import { FocusOverlay, type FocusSeed } from './features/focus/FocusOverlay';
+import { FiredPhases, formatClock, remainingFor } from './features/focus/focusView';
+import { notifyFocusEnded } from './lib/focusNotify';
+import type { FocusSession } from '@los/domain';
 
 declare global {
   interface Window {
@@ -54,10 +57,49 @@ export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  const [focusOpen, setFocusOpen] = useState(false);
+  const [focusSeed, setFocusSeed] = useState<FocusSeed | undefined>(undefined);
+  const [activeFocus, setActiveFocus] = useState<FocusSession | null>(null);
+  const firedRef = useRef(new FiredPhases());
 
   useEffect(() => {
-    initTheme();
+    const onOpenFocus = (e: Event) => {
+      const detail = (e as CustomEvent<FocusSeed | undefined>).detail;
+      setFocusSeed(detail);
+      setFocusOpen(true);
+    };
+    window.addEventListener('los:open-focus', onOpenFocus);
+    return () => window.removeEventListener('los:open-focus', onOpenFocus);
   }, []);
+
+  // App-level watcher: reconcile, live chip, single-fire end alert when overlay closed.
+  useEffect(() => {
+    if (!rt) return;
+    let cancelled = false;
+    const tick = async () => {
+      const r = await api.focusGetActive(rt);
+      if (cancelled || !r.ok) return;
+      const s = r.data.session;
+      setActiveFocus(s);
+      if (!s) return;
+      if (focusOpen) return; // overlay owns alerts while open
+      if (s.status !== 'focusDone' && s.status !== 'breakDone') return;
+      if (!firedRef.current.shouldFire(s.id, s.status)) return;
+      firedRef.current.mark(s.id, s.status);
+      const sr = await api.settingsGet(rt);
+      const st = sr.ok ? sr.data.settings : null;
+      if (!st?.focusNotificationsEnabled) return;
+      void notifyFocusEnded({
+        phase: s.status === 'focusDone' ? 'focus' : 'break',
+        taskLabel: s.taskLabel,
+        includeTask: Boolean(st.focusNotificationsIncludeTask),
+        enabled: true,
+      });
+    };
+    void tick();
+    const id = setInterval(() => { void tick(); }, 1000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [rt, focusOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -232,6 +274,11 @@ export function App() {
       setTourOpen(true);
       return;
     }
+    if (action.run === 'focus') {
+      setFocusSeed(undefined);
+      setFocusOpen(true);
+      return;
+    }
     if (action.route) setRoute(action.route);
   }
 
@@ -316,7 +363,7 @@ export function App() {
         onSection={(id) => setRoute(id)}
       />
     );
-  } else if (route === 'reviews-monthly' || route === 'reviews-history' || route === 'reviews-calendar') {
+  } else if (route === 'reviews-monthly' || route === 'reviews-history' || route === 'reviews-calendar' || route === 'reviews-reports') {
     content = (
       <ReviewsPage
         rt={rt}
@@ -328,6 +375,19 @@ export function App() {
     content = <SettingsPage rt={rt} onRestored={() => setReloadKey((k) => k + 1)} />;
   }
 
+  const focusChip = activeFocus ? (
+    <button
+      type="button"
+      className="focus-chip"
+      onClick={() => { setFocusSeed(undefined); setFocusOpen(true); }}
+      aria-label={`Reopen focus timer. ${activeFocus.taskLabel}, ${formatClock(remainingFor(activeFocus, new Date().toISOString()))} left`}
+    >
+      <span className="focus-chip__dot" aria-hidden="true" />
+      <span>{activeFocus.status === 'paused' ? 'Paused' : activeFocus.status === 'breakRunning' ? 'On a break' : activeFocus.status === 'focusDone' ? 'Focus block done' : activeFocus.status === 'breakDone' ? 'Break done' : 'Focusing'}</span>
+      <span className="focus-chip__time">{formatClock(remainingFor(activeFocus, new Date().toISOString()))}</span>
+    </button>
+  ) : null;
+
   return (
     <>
       <AppShell
@@ -338,9 +398,16 @@ export function App() {
         onCommandPalette={() => setPaletteOpen(true)}
         onQuickCapture={() => setRoute('quick')}
         notices={noticesNode}
+        focusChip={focusChip}
       >
         {content}
       </AppShell>
+      <FocusOverlay
+        rt={rt}
+        open={focusOpen}
+        seed={focusSeed ?? null}
+        onClose={() => setFocusOpen(false)}
+      />
       <CommandPalette
         open={paletteOpen}
         actions={DEFAULT_PALETTE_ACTIONS}

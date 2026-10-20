@@ -178,6 +178,13 @@ export function ActionsPage({ rt }: Props) {
                     onClick={() => { setEditingId(action.id); setEditText(action.description); }}
                   >Edit</button>
                 ) : null}
+                {action.status !== 'done' ? (
+                  <button
+                    type="button"
+                    className="icon-btn"
+                    onClick={() => window.dispatchEvent(new CustomEvent('los:open-focus', { detail: { taskKind: 'action', taskRef: action.id, taskLabel: action.description } }))}
+                  >Focus</button>
+                ) : null}
                 <Select
                   aria-label={`Thread for ${action.description}`}
                   size="sm"

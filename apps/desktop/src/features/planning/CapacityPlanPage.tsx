@@ -452,6 +452,7 @@ export function CapacityPlanPage({ rt }: Props) {
                 </div>
                 <div className="row">
                   <Button variant="primary" onClick={() => void saveDetail()}>Save changes</Button>
+                  <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('los:open-focus', { detail: { taskKind: 'workItem', taskRef: selectedWork.id, taskLabel: selectedWork.title } }))}>Focus on this</button>
                   <SaveIndicator status={detailSave} />
                 </div>
                 {pendingAck ? (

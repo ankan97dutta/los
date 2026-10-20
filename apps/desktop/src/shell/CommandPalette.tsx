@@ -5,9 +5,9 @@ import type { RouteId } from './routes';
 export type PaletteAction = {
   id: string;
   label: string;
-  group: 'Navigate' | 'Capture';
+  group: 'Navigate' | 'Capture' | 'Focus';
   hint?: string;
-  run: 'navigate' | 'quick-capture' | 'shortcuts' | 'tour';
+  run: 'navigate' | 'quick-capture' | 'shortcuts' | 'tour' | 'focus';
   route?: RouteId;
 };
 
@@ -35,7 +35,7 @@ export function CommandPalette({ open, actions, onClose, onRun }: Props) {
   useEffect(() => { setIndex(0); }, [query]);
   if (!open) return null;
 
-  const groups: Array<PaletteAction['group']> = ['Navigate', 'Capture'];
+  const groups: Array<PaletteAction['group']> = ['Navigate', 'Capture', 'Focus'];
 
   return (
     <div className="palette-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -93,6 +93,8 @@ export const DEFAULT_PALETTE_ACTIONS: PaletteAction[] = [
   { id: 'nav-planning', label: 'Go to Planning / Capacity', group: 'Navigate', hint: '⌘3', run: 'navigate', route: 'planning-capacity' },
   { id: 'nav-team', label: 'Go to Team', group: 'Navigate', hint: '⌘4', run: 'navigate', route: 'team-roster' },
   { id: 'nav-reviews', label: 'Go to Reviews & history', group: 'Navigate', hint: '⌘5', run: 'navigate', route: 'reviews-monthly' },
+  { id: 'nav-reports', label: 'Go to Reports', group: 'Navigate', run: 'navigate', route: 'reviews-reports' },
+  { id: 'focus-start', label: 'Start focus session', group: 'Focus', run: 'focus' },
   { id: 'nav-settings', label: 'Go to Settings', group: 'Navigate', hint: '⌘6', run: 'navigate', route: 'settings' },
   { id: 'quick', label: 'Quick Capture', group: 'Capture', run: 'quick-capture' },
   { id: 'shortcuts', label: 'Keyboard shortcuts', group: 'Capture', hint: '?', run: 'shortcuts' },

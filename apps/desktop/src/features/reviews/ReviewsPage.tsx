@@ -3,8 +3,9 @@ import { SectionSubNav } from '../../shell/SectionSubNav';
 import { MonthlyReviewPage } from './MonthlyReviewPage';
 import { PlanningHistoryPanel } from './PlanningHistoryPanel';
 import { ReviewsCalendar } from './ReviewsCalendar';
+import { ReportsPanel } from './ReportsPanel';
 
-export type ReviewsSection = 'reviews-monthly' | 'reviews-history' | 'reviews-calendar';
+export type ReviewsSection = 'reviews-monthly' | 'reviews-history' | 'reviews-calendar' | 'reviews-reports';
 
 type Props = {
   rt: WorkspaceRuntime;
@@ -25,6 +26,7 @@ export function ReviewsPage({ rt, section, onSection }: Props) {
           { id: 'reviews-calendar', label: 'Calendar' },
           { id: 'reviews-monthly', label: 'Monthly' },
           { id: 'reviews-history', label: 'Planning history' },
+          { id: 'reviews-reports', label: 'Reports' },
         ]}
         activeId={section}
         onSelect={(id) => onSection(id as ReviewsSection)}
@@ -33,6 +35,8 @@ export function ReviewsPage({ rt, section, onSection }: Props) {
         <ReviewsCalendar rt={rt} />
       ) : section === 'reviews-monthly' ? (
         <MonthlyReviewPage rt={rt} />
+      ) : section === 'reviews-reports' ? (
+        <ReportsPanel rt={rt} />
       ) : (
         <PlanningHistoryPanel rt={rt} />
       )}

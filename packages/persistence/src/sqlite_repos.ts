@@ -17,6 +17,9 @@ import type {
 } from '@los/domain';
 import type { DbSession } from './ports.js';
 import { createPlanningRepos, type PlanningRepos } from './planning_repos.js';
+import { createSqliteFocusRepo } from './focus_repo.js';
+import { createSqliteReportsRepo } from './reports_repo.js';
+import type { FocusRepository, ReportsRepository } from '@los/domain';
 
 export type WorkspaceRepos = {
   inbox: InboxRepository;
@@ -27,11 +30,15 @@ export type WorkspaceRepos = {
   monthly: MonthlyRepository;
   settings: SettingsRepository;
   planning: PlanningRepos;
+  focus: FocusRepository;
+  reports: ReportsRepository;
 };
 
 export function createSqliteRepos(db: DbSession): WorkspaceRepos {
   return {
     planning: createPlanningRepos(db),
+    focus: createSqliteFocusRepo(db),
+    reports: createSqliteReportsRepo(db),
     inbox: {
       async listOpen() {
         const rows = await db.query<{
@@ -122,7 +129,7 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
     },
     actions: {
       async list(filter) {
-        let sql = `SELECT id, description, status, source, source_ref, application_id, created_at, updated_at
+        let sql = `SELECT id, description, status, source, source_ref, application_id, created_at, updated_at, completed_at
                    FROM personal_actions WHERE 1=1`;
         const params: Array<string | null> = [];
         if (filter?.status && filter.status !== 'all') {
@@ -143,6 +150,7 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
           application_id: string | null;
           created_at: string;
           updated_at: string;
+          completed_at: string | null;
         }>(sql, params);
         return rows.map((r) => ({
           id: r.id,
@@ -153,6 +161,7 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
           applicationId: r.application_id,
           createdAt: r.created_at,
           updatedAt: r.updated_at,
+          completedAt: r.completed_at ?? undefined,
         }));
       },
       async getById(id) {
@@ -165,8 +174,9 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
           application_id: string | null;
           created_at: string;
           updated_at: string;
+          completed_at: string | null;
         }>(
-          `SELECT id, description, status, source, source_ref, application_id, created_at, updated_at
+          `SELECT id, description, status, source, source_ref, application_id, created_at, updated_at, completed_at
            FROM personal_actions WHERE id = ?`,
           [id],
         );
@@ -181,13 +191,14 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
           applicationId: r.application_id,
           createdAt: r.created_at,
           updatedAt: r.updated_at,
+          completedAt: r.completed_at ?? undefined,
         };
       },
       async save(action: PersonalAction) {
         await db.exec(
           `INSERT INTO personal_actions
-             (id, description, status, source, source_ref, application_id, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+             (id, description, status, source, source_ref, application_id, created_at, updated_at, completed_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(id) DO UPDATE SET
              description = excluded.description,
              status = excluded.status,
@@ -195,7 +206,8 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
              source_ref = excluded.source_ref,
              application_id = excluded.application_id,
              created_at = excluded.created_at,
-             updated_at = excluded.updated_at`,
+             updated_at = excluded.updated_at,
+             completed_at = excluded.completed_at`,
           [
             action.id,
             action.description,
@@ -205,6 +217,7 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
             action.applicationId ?? null,
             action.createdAt,
             action.updatedAt,
+            action.completedAt ?? null,
           ],
         );
       },
@@ -299,6 +312,18 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
           })),
           updatedAt: rev.updated_at,
         };
+      },
+      async listBetween(startDate: string, endDate: string) {
+        const rows = await db.query<{ date: string }>(
+          `SELECT date FROM daily_reviews WHERE date >= ? AND date <= ? ORDER BY date`,
+          [startDate, endDate],
+        );
+        const out: DailyReview[] = [];
+        for (const r of rows) {
+          const rev = await this.getByDate(r.date);
+          if (rev) out.push(rev);
+        }
+        return out;
       },
       async save(review: DailyReview) {
         await db.exec(
@@ -416,9 +441,16 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
           fortnight_start_weekday: string;
           global_shortcut_enabled: number;
           global_shortcut_accel: string;
+          focus_technique: string | null;
+          focus_custom_focus_minutes: number | null;
+          focus_custom_break_minutes: number | null;
+          focus_long_break_minutes: number | null;
+          focus_sound_enabled: number | null;
+          focus_notifications_enabled: number | null;
+          focus_notifications_include_task: number | null;
           updated_at: string;
         }>(
-          `SELECT fortnight_start_weekday, global_shortcut_enabled, global_shortcut_accel, updated_at
+          `SELECT fortnight_start_weekday, global_shortcut_enabled, global_shortcut_accel, focus_technique, focus_custom_focus_minutes, focus_custom_break_minutes, focus_long_break_minutes, focus_sound_enabled, focus_notifications_enabled, focus_notifications_include_task, updated_at
            FROM workspace_settings WHERE id = 1`,
         );
         const r = rows[0];
@@ -429,6 +461,13 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
           fortnightStartWeekday: r.fortnight_start_weekday as Weekday,
           globalShortcutEnabled: Boolean(r.global_shortcut_enabled),
           globalShortcutAccel: r.global_shortcut_accel,
+          focusTechnique: r.focus_technique ?? 'pomodoro',
+          focusCustomFocusMinutes: r.focus_custom_focus_minutes ?? 25,
+          focusCustomBreakMinutes: r.focus_custom_break_minutes ?? 5,
+          focusLongBreakMinutes: r.focus_long_break_minutes ?? 20,
+          focusSoundEnabled: r.focus_sound_enabled == null ? true : Boolean(r.focus_sound_enabled),
+          focusNotificationsEnabled: r.focus_notifications_enabled == null ? true : Boolean(r.focus_notifications_enabled),
+          focusNotificationsIncludeTask: Boolean(r.focus_notifications_include_task),
           updatedAt: r.updated_at,
         };
       },
@@ -438,12 +477,26 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
              fortnight_start_weekday = ?,
              global_shortcut_enabled = ?,
              global_shortcut_accel = ?,
+             focus_technique = ?,
+             focus_custom_focus_minutes = ?,
+             focus_custom_break_minutes = ?,
+             focus_long_break_minutes = ?,
+             focus_sound_enabled = ?,
+             focus_notifications_enabled = ?,
+             focus_notifications_include_task = ?,
              updated_at = ?
            WHERE id = 1`,
           [
             settings.fortnightStartWeekday,
             settings.globalShortcutEnabled ? 1 : 0,
             settings.globalShortcutAccel,
+            settings.focusTechnique ?? 'pomodoro',
+            settings.focusCustomFocusMinutes ?? 25,
+            settings.focusCustomBreakMinutes ?? 5,
+            settings.focusLongBreakMinutes ?? 20,
+            settings.focusSoundEnabled === false ? 0 : 1,
+            settings.focusNotificationsEnabled === false ? 0 : 1,
+            settings.focusNotificationsIncludeTask ? 1 : 0,
             settings.updatedAt,
           ],
         );

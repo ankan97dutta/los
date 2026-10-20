@@ -8,3 +8,5 @@ export * from './periods/calendar.js';
 export * from './periods/fortnight.js';
 export * from './capacity.js';
 export * from './planning.js';
+export * from './focus.js';
+export * from './reports.js';

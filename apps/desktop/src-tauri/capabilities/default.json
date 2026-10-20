@@ -13,6 +13,7 @@
     "sql:allow-select",
     "sql:allow-close",
     "sql:allow-load",
-    "dialog:default"
+    "dialog:default",
+    "notification:default"
   ]
 }

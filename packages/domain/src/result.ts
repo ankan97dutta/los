@@ -19,7 +19,8 @@ export type ErrorCode =
   | 'CAPACITY_OVERLOAD'
   | 'COMMIT_BLOCKED_ITEM'
   | 'COMMIT_UNKNOWN_ESTIMATE'
-  | 'CARRY_FORWARD_INVALID';
+  | 'CARRY_FORWARD_INVALID'
+  | 'FOCUS_ALREADY_ACTIVE';
 
 export type AppError = { code: ErrorCode; message: string };
 

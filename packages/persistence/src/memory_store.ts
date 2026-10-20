@@ -12,6 +12,9 @@ import type {
   TeamMember,
   WorkAllocation,
   WorkspaceSettings,
+  FocusSession,
+  ReportDraft,
+  ReportSection,
 } from '@los/domain';
 import { newId } from '@los/domain';
 
@@ -30,6 +33,9 @@ export type LosDbSnapshot = {
   candidateWork: CandidateWorkItem[];
   workAllocations: WorkAllocation[];
   commitmentSnapshots: CommitmentSnapshot[];
+  focusSessions: FocusSession[];
+  reportDrafts: ReportDraft[];
+  reportSections: ReportSection[];
 };
 
 const SCHEMA_VERSION = 2;
@@ -49,6 +55,13 @@ export function defaultSettings(nowIso: string): WorkspaceSettings {
     fortnightStartWeekday: 'mon',
     globalShortcutEnabled: true,
     globalShortcutAccel: 'CommandOrControl+Shift+L',
+    focusTechnique: 'pomodoro',
+    focusCustomFocusMinutes: 25,
+    focusCustomBreakMinutes: 5,
+    focusLongBreakMinutes: 20,
+    focusSoundEnabled: true,
+    focusNotificationsEnabled: true,
+    focusNotificationsIncludeTask: false,
     updatedAt: nowIso,
   };
 }
@@ -69,6 +82,9 @@ export function createEmptySnapshot(nowIso: string = new Date().toISOString()): 
     candidateWork: [],
     workAllocations: [],
     commitmentSnapshots: [],
+    focusSessions: [],
+    reportDrafts: [],
+    reportSections: [],
   };
 }
 
@@ -84,6 +100,9 @@ function normalizeSnapshot(data: LosDbSnapshot): LosDbSnapshot {
     candidateWork: data.candidateWork ?? [],
     workAllocations: data.workAllocations ?? [],
     commitmentSnapshots: data.commitmentSnapshots ?? [],
+    focusSessions: data.focusSessions ?? [],
+    reportDrafts: data.reportDrafts ?? [],
+    reportSections: data.reportSections ?? [],
   };
 }
 

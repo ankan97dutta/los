@@ -30,7 +30,7 @@ import {
 } from '@los/persistence';
 
 export type WorkspaceRuntime = {
-  /** Vite preview / tests — in-memory JSON shape */
+  /** Vite preview and tests: in-memory JSON shape */
   store?: MemoryStore;
   /** Durable SQLite repos (Tauri / Node) */
   sqliteRepos?: WorkspaceRepos;
@@ -50,7 +50,7 @@ export type WorkspaceRuntime = {
   resetAll?: () => Promise<void>;
 };
 
-function repos(rt: WorkspaceRuntime): WorkspaceRepos {
+export function repos(rt: WorkspaceRuntime): WorkspaceRepos {
   if (rt.sqliteRepos) return rt.sqliteRepos;
   if (!rt.store) throw new Error('WorkspaceRuntime requires store or sqliteRepos');
   return createRepos(rt.store);
@@ -61,11 +61,11 @@ async function runTx<T>(rt: WorkspaceRuntime, fn: () => Promise<T>): Promise<T> 
   return fn();
 }
 
-function nowIso(rt: WorkspaceRuntime): string {
+export function nowIso(rt: WorkspaceRuntime): string {
   return (rt.now?.() ?? new Date()).toISOString();
 }
 
-function afterWrite(rt: WorkspaceRuntime): void {
+export function afterWrite(rt: WorkspaceRuntime): void {
   void rt.persist?.();
 }
 
@@ -385,6 +385,13 @@ export async function settingsUpdate(
     fortnightStartWeekday: Weekday;
     globalShortcutEnabled: boolean;
     globalShortcutAccel: string;
+    focusTechnique: string;
+    focusCustomFocusMinutes: number;
+    focusCustomBreakMinutes: number;
+    focusLongBreakMinutes: number;
+    focusSoundEnabled: boolean;
+    focusNotificationsEnabled: boolean;
+    focusNotificationsIncludeTask: boolean;
   }>,
 ) {
   const r = repos(rt);
