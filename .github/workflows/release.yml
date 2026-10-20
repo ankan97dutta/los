@@ -11,6 +11,14 @@ name: Release builds
 # node-test-only dependency of @los/persistence) needs a native toolchain
 # that the Windows runner image does not provide; the desktop build does
 # not need it.
+#
+# Version truth is the git tag: each job rewrites the version field of
+# tauri.conf.json in its checkout from the tag before building, so the
+# installer file names and the in-app version always match the release,
+# even if the committed tauri.conf.json was not bumped. The VERSION file
+# at the repo root is still bumped by the release process and is checked
+# against the tag; a mismatch fails the build instead of shipping a
+# mislabelled installer.
 on:
   push:
     tags:
@@ -43,6 +51,24 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - name: Sync app version from the release tag
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Release tag '$RELEASE_TAG' is not a v-prefixed semver tag" >&2
+            exit 1
+          fi
+          if [ -f VERSION ]; then
+            FILE_VERSION="$(tr -d '[:space:]' < VERSION)"
+            if [ "$FILE_VERSION" != "$VERSION" ]; then
+              echo "VERSION file says $FILE_VERSION but the release tag is $RELEASE_TAG; bump VERSION or fix the tag" >&2
+              exit 1
+            fi
+          fi
+          APP_VERSION="$VERSION" node -e "const fs=require('fs');const p='apps/desktop/src-tauri/tauri.conf.json';const c=JSON.parse(fs.readFileSync(p,'utf8'));c.version=process.env.APP_VERSION;fs.writeFileSync(p,JSON.stringify(c,null,2)+'\n');console.log('tauri.conf.json version set to '+c.version);"
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin,x86_64-apple-darwin
@@ -70,6 +96,24 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      - name: Sync app version from the release tag
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          VERSION="${RELEASE_TAG#v}"
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Release tag '$RELEASE_TAG' is not a v-prefixed semver tag" >&2
+            exit 1
+          fi
+          if [ -f VERSION ]; then
+            FILE_VERSION="$(tr -d '[:space:]' < VERSION)"
+            if [ "$FILE_VERSION" != "$VERSION" ]; then
+              echo "VERSION file says $FILE_VERSION but the release tag is $RELEASE_TAG; bump VERSION or fix the tag" >&2
+              exit 1
+            fi
+          fi
+          APP_VERSION="$VERSION" node -e "const fs=require('fs');const p='apps/desktop/src-tauri/tauri.conf.json';const c=JSON.parse(fs.readFileSync(p,'utf8'));c.version=process.env.APP_VERSION;fs.writeFileSync(p,JSON.stringify(c,null,2)+'\n');console.log('tauri.conf.json version set to '+c.version);"
       - uses: dtolnay/rust-toolchain@stable
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
