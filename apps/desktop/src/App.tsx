@@ -1,5 +1,6 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { WorkspaceRuntime } from '@los/app-services';
+import { api } from './lib/api';
 import { bootWorkspaceRuntime, type BootNotice } from './lib/runtime';
 import { InboxPage } from './features/inbox/InboxPage';
 import { QuickCapture } from './features/inbox/QuickCapture';
@@ -104,6 +105,48 @@ export function App() {
       window.removeEventListener('los:quick-capture', onQuick);
     };
   }, []);
+
+  // T102: honor persisted shortcut settings at startup. Rust setup()
+  // registers a hardcoded default before the DB is readable, so after
+  // boot we re-register with the saved WorkspaceSettings values.
+  const shortcutAppliedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!rt || !isTauriRuntime()) return;
+    const key = `${rt.dbPath ?? ''}#${reloadKey}`;
+    if (shortcutAppliedFor.current === key) return;
+    shortcutAppliedFor.current = key;
+    let cancelled = false;
+    void (async () => {
+      const r = await api.settingsGet(rt);
+      if (!r.ok || cancelled) return;
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        const result = await invoke<{ registered: boolean; error?: string | null }>(
+          'shortcuts_reregister',
+          {
+            enabled: r.data.settings.globalShortcutEnabled,
+            accel: r.data.settings.globalShortcutAccel,
+          },
+        );
+        if (cancelled) return;
+        setRt((prev) =>
+          prev
+            ? {
+                ...prev,
+                globalShortcutAvailable: true,
+                globalShortcutRegistered: result.registered,
+                globalShortcutError: result.error ?? undefined,
+              }
+            : prev,
+        );
+      } catch {
+        // Registration failure is surfaced via LocalStatus; capture stays usable.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [rt, reloadKey]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

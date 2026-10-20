@@ -21,6 +21,7 @@ fn workspace_status(app: tauri::AppHandle) -> serde_json::Value {
         "mode": "local_only",
         "dbPath": db_path,
         "dbReady": db_path.as_ref().map(|p| std::path::Path::new(p).exists()).unwrap_or(false),
+        "globalShortcutAvailable": true,
         "globalShortcutRegistered": registered,
         "globalShortcutError": error,
         "accel": accel,

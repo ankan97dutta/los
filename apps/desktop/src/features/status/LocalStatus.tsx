@@ -14,15 +14,40 @@ export function LocalStatus({ rt }: Props) {
   const inTauri = isTauriRuntime();
 
   useEffect(() => {
-    void api.workspaceStatus(rt).then((r) => {
-      if (!r.ok) return;
+    let cancelled = false;
+    void (async () => {
+      const r = await api.workspaceStatus(rt);
+      if (!r.ok || cancelled) return;
       setTray(r.data.trayAvailable);
       setShortcutAvail(r.data.globalShortcutAvailable);
       setShortcutReg(r.data.globalShortcutRegistered);
       setShortcutError(r.data.globalShortcutError);
       setDbPath(r.data.dbPath);
-    });
-  }, [rt]);
+
+      // T101: in Tauri, the runtime object is a boot snapshot — ask Rust
+      // for the live registration state so a successful registration
+      // does not keep rendering as "registration failed".
+      if (inTauri) {
+        try {
+          const { invoke } = await import('@tauri-apps/api/core');
+          const status = await invoke<{
+            globalShortcutAvailable?: boolean;
+            globalShortcutRegistered?: boolean;
+            globalShortcutError?: string | null;
+          }>('workspace_status');
+          if (cancelled) return;
+          setShortcutAvail(status.globalShortcutAvailable ?? true);
+          setShortcutReg(status.globalShortcutRegistered ?? false);
+          setShortcutError(status.globalShortcutError ?? undefined);
+        } catch {
+          // Keep runtime snapshot on failure.
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [rt, inTauri]);
 
   const lines = capabilityLines({
     inTauri,

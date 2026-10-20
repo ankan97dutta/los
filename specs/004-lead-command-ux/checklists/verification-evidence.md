@@ -50,6 +50,20 @@
 | `pnpm lint` + desktop build | PASS | Recorded with T097 run |
 | FR-U14 complete-gate | PASS | T098 |
 
+## Convergence: shortcut registration fix (T099–T103, 2026-10-20)
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| Root cause | CONFIRMED | `shortcuts.rs` called `on_shortcut()` (which already registers the hotkey) **and** `.register()` again — the second registration always failed (`RegisterEventHotKey failed for KeyL`), flipping state to `registered=false`. Plus `parse_accel` substring matching turned `Cmd+Shift+L` into `Cmd+Ctrl+Shift+L`, and frontend status was a frozen boot snapshot. |
+| T099 double-registration removed | PASS | `on_shortcut` success now sets `registered=true`, cleared error |
+| T100 token-based parsing | PASS | `cargo test shortcuts`: 5/5 (CommandOrControl / Cmd / Ctrl / alias / rejects) |
+| T101 live Rust status | PASS | Boot seeds from `workspace_status`; `LocalStatus` re-invokes `workspace_status` in Tauri |
+| T102 persisted settings at startup | PASS | Post-boot re-register with saved accel/enabled from `WorkspaceSettings` |
+| `tauri:dev` startup log | PASS | Single clean instance: `Running target/debug/los` with **no** `Global shortcut registration failed` line (previously appeared immediately) |
+| Global hotkey opens Quick Capture | MANUAL | Agent could not synthesize `Cmd+Shift+L` (macOS Accessibility permission blocks `osascript`). Verify manually in the running app. |
+| In-app capture when shortcut fails | PASS | Unchanged 002 path; Inbox capture does not depend on OS shortcut |
+| `pnpm lint` + desktop build | PASS | lint OK; vite build OK |
+
 ## Modern minimalism polish (T059–T088, 2026-10-19)
 
 | Check | Result | Notes |

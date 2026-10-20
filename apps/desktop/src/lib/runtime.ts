@@ -145,6 +145,22 @@ export async function createTauriRuntime(caps?: {
 
     const sqliteRepos = createSqliteRepos(session);
     let closed = false;
+
+    // Seed shortcut state from the actual Rust state (T101) — the
+    // boot-time `los:caps` setup event can be missed by the webview.
+    let shortcutRegistered = caps?.globalShortcutRegistered ?? false;
+    let shortcutError = caps?.globalShortcutError;
+    try {
+      const status = await invoke<{
+        globalShortcutRegistered?: boolean;
+        globalShortcutError?: string | null;
+      }>('workspace_status');
+      shortcutRegistered = status.globalShortcutRegistered ?? shortcutRegistered;
+      shortcutError = status.globalShortcutError ?? shortcutError;
+    } catch {
+      // Keep boot caps; LocalStatus will retry workspace_status on mount.
+    }
+
     const rt: WorkspaceRuntime = {
       sqliteRepos,
       withTransaction: (fn) => session!.withTransaction(fn),
@@ -152,8 +168,8 @@ export async function createTauriRuntime(caps?: {
       dbReady: true,
       trayAvailable: caps?.trayAvailable ?? true,
       globalShortcutAvailable: caps?.globalShortcutAvailable ?? true,
-      globalShortcutRegistered: caps?.globalShortcutRegistered ?? false,
-      globalShortcutError: caps?.globalShortcutError,
+      globalShortcutRegistered: shortcutRegistered,
+      globalShortcutError: shortcutError,
       closeDb: async () => {
         if (!closed) {
           closed = true;

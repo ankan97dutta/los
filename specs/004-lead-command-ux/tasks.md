@@ -9,7 +9,7 @@
 
 **Tests**: Scripted UI verification + domain regression (`pnpm test`); SC-U04 contrast spot-check; SC-U08 Vite LocalStatus phrase check. No TDD suite required.
 
-**Status**: Phases 1–20 complete (T001–T098). FR-U14 / SC-U08 capability phrases landed.
+**Status**: Phases 1–21 complete (T001–T103). Shortcut registration convergence landed.
 
 ## Format: `[ID] [P?] [Story?] Description`
 
@@ -408,3 +408,13 @@ Phase 18 + Phase 19 (T089–T093) — Vite preview honesty (SC-U08).
 - Do not reopen T001–T088 checkboxes; only mark T089+ as completed with evidence  
 - Format: all tasks use `- [ ] Tnnn [P?] [USn?] …` with file paths (open) or `- [x]` (done)  
 - Next: `/speckit-git-commit` then optional PR to develop for FR-U14
+
+---
+
+## Phase 21: Convergence
+
+- [x] T099 Fix double global-shortcut registration in `apps/desktop/src-tauri/src/shortcuts.rs`: `on_shortcut(...)` already registers the hotkey, so remove the redundant second `.register(shortcut)` call and treat a successful `on_shortcut` as `registered=true` with cleared error, so `los:caps` and `ShortcutStateMutex` no longer report a spurious failure per FR-U14 (contradicts)
+- [x] T100 Fix accelerator modifier parsing in `apps/desktop/src-tauri/src/shortcuts.rs` `parse_accel`: parse `+`-separated tokens instead of substring matching so `CommandOrControl+Shift+L` yields exactly one of SUPER (macOS) or CONTROL plus SHIFT — not SUPER+CONTROL+SHIFT — and add unit tests covering `CommandOrControl+Shift+L`, `Cmd+Shift+L`, and `Ctrl+Shift+L` per FR-U14 (partial)
+- [x] T101 Make LocalStatus reflect actual Rust shortcut state in `apps/desktop/src/lib/runtime.ts`, `apps/desktop/src/App.tsx`, and `apps/desktop/src/features/status/LocalStatus.tsx`: invoke the Rust `workspace_status` command at boot (and refresh it when Settings re-registers) instead of relying only on the boot-time `window.__LOS_CAPS__` snapshot and the replay-less `los:caps` setup event, so a successful registration shows `Shortcut: registered` per SC-U08 (partial)
+- [x] T102 Honor persisted shortcut settings at startup in `apps/desktop/src-tauri/src/lib.rs` and `apps/desktop/src-tauri/src/shortcuts.rs`: apply the saved `WorkspaceSettings` accelerator and enabled flag after workspace boot (Rust-side or via a post-boot TS `shortcuts_reregister` call) instead of always registering the hardcoded `CommandOrControl+Shift+L` as enabled, per 002 FR-H09 / FR-U14 (partial)
+- [x] T103 Verify end-to-end in `tauri:dev` and record evidence in `specs/004-lead-command-ux/checklists/verification-evidence.md`: global shortcut opens Quick Capture, LocalStatus shows `Shortcut: registered`, changing the accelerator in Settings re-registers successfully, and in-app Inbox capture still works if registration is forced to fail per SC-U08 (partial)
