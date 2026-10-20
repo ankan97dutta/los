@@ -102,7 +102,7 @@ export function ActionsPage({ rt }: Props) {
         </Select>
         <Select
           id="app-filter"
-          label="Application"
+          label="Thread"
           value={appFilter}
           onChange={(e) => setAppFilter(e.target.value)}
         >
@@ -143,7 +143,7 @@ export function ActionsPage({ rt }: Props) {
                     {action.status} · {action.source}
                     {action.applicationId
                       ? ` · ${apps.find((a) => a.id === action.applicationId)?.name ?? 'linked'}`
-                      : ' · unlinked'}
+                      : ' · no thread'}
                   </p>
                 </>
               )}
@@ -167,11 +167,11 @@ export function ActionsPage({ rt }: Props) {
                   </button>
                 )}
                 <select
-                  aria-label={`Link application for ${action.description}`}
+                  aria-label={`Link thread for ${action.description}`}
                   value={action.applicationId ?? ''}
                   onChange={(e) => void linkApp(action.id, e.target.value || null)}
                 >
-                  <option value="">No application</option>
+                  <option value="">No thread</option>
                   {apps.map((a) => (
                     <option key={a.id} value={a.id}>
                       {a.name}

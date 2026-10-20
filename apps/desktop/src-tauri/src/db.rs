@@ -104,3 +104,25 @@ pub fn db_restore_backup(
 pub fn db_path_cmd(app: tauri::AppHandle) -> Result<String, String> {
     Ok(db_path(&app)?.to_string_lossy().to_string())
 }
+
+/// Delete the live DB (plus WAL/SHM sidecars) so the next boot creates a
+/// fresh workspace. Caller MUST close plugin-sql first. Most reliable reset:
+/// cannot be blocked by a locked table or dangling transaction.
+#[tauri::command]
+pub fn db_reset_all(app: tauri::AppHandle) -> Result<serde_json::Value, String> {
+    let live = db_path(&app)?;
+    for suffix in ["", "-wal", "-shm", "-journal"] {
+        let path = if suffix.is_empty() {
+            live.clone()
+        } else {
+            PathBuf::from(format!("{}{}", live.to_string_lossy(), suffix))
+        };
+        if path.exists() {
+            fs::remove_file(&path).map_err(|e| format!("remove {}: {e}", path.display()))?;
+        }
+    }
+    Ok(serde_json::json!({
+        "dbPath": live.to_string_lossy(),
+        "sqliteUrl": sqlite_url(&live)
+    }))
+}

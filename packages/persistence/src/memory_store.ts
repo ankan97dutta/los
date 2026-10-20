@@ -38,7 +38,7 @@ export function seedApplications(nowIso: string): Application[] {
   return ([1, 2, 3, 4] as const).map((slotIndex) => ({
     id: newId(),
     slotIndex,
-    name: `Application ${slotIndex}`,
+    name: `Thread ${slotIndex}`,
     createdAt: nowIso,
     updatedAt: nowIso,
   }));

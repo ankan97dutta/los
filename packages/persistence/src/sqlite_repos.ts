@@ -222,7 +222,7 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
         );
         return rows.map((r) => ({
           id: r.id,
-          slotIndex: r.slot_index as 1 | 2 | 3 | 4,
+          slotIndex: r.slot_index,
           name: r.name,
           createdAt: r.created_at,
           updatedAt: r.updated_at,
@@ -242,7 +242,7 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
         if (!r) return null;
         return {
           id: r.id,
-          slotIndex: r.slot_index as 1 | 2 | 3 | 4,
+          slotIndex: r.slot_index,
           name: r.name,
           createdAt: r.created_at,
           updatedAt: r.updated_at,
@@ -250,9 +250,14 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
       },
       async save(app: Application) {
         await db.exec(
-          `UPDATE applications SET name = ?, updated_at = ? WHERE id = ?`,
-          [app.name, app.updatedAt, app.id],
+          `INSERT INTO applications (id, slot_index, name, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET name = excluded.name, updated_at = excluded.updated_at`,
+          [app.id, app.slotIndex, app.name, app.createdAt, app.updatedAt],
         );
+      },
+      async remove(id: string) {
+        await db.exec(`DELETE FROM applications WHERE id = ?`, [id]);
       },
     },
     daily: {

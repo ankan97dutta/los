@@ -80,6 +80,10 @@ export function createRepos(store: MemoryStore): {
       async save(app: Application) {
         const idx = store.data.applications.findIndex((a) => a.id === app.id);
         if (idx >= 0) store.data.applications[idx] = app;
+        else store.data.applications.push(app);
+      },
+      async remove(id: string) {
+        store.data.applications = store.data.applications.filter((a) => a.id !== id);
       },
     },
     daily: {

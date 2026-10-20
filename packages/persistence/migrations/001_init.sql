@@ -83,10 +83,10 @@ CREATE TABLE IF NOT EXISTS workspace_settings (
 );
 
 INSERT OR IGNORE INTO applications (id, slot_index, name, created_at, updated_at) VALUES
-  ('seed-app-1', 1, 'Application 1', datetime('now'), datetime('now')),
-  ('seed-app-2', 2, 'Application 2', datetime('now'), datetime('now')),
-  ('seed-app-3', 3, 'Application 3', datetime('now'), datetime('now')),
-  ('seed-app-4', 4, 'Application 4', datetime('now'), datetime('now'));
+  ('seed-app-1', 1, 'Thread 1', datetime('now'), datetime('now')),
+  ('seed-app-2', 2, 'Thread 2', datetime('now'), datetime('now')),
+  ('seed-app-3', 3, 'Thread 3', datetime('now'), datetime('now')),
+  ('seed-app-4', 4, 'Thread 4', datetime('now'), datetime('now'));
 
 INSERT OR IGNORE INTO workspace_settings (
   id, fortnight_start_weekday, global_shortcut_enabled, global_shortcut_accel, updated_at

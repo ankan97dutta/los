@@ -85,10 +85,10 @@ CREATE TABLE IF NOT EXISTS workspace_settings (
 );
 
 INSERT OR IGNORE INTO applications (id, slot_index, name, created_at, updated_at) VALUES
-  ('seed-app-1', 1, 'Application 1', datetime('now'), datetime('now')),
-  ('seed-app-2', 2, 'Application 2', datetime('now'), datetime('now')),
-  ('seed-app-3', 3, 'Application 3', datetime('now'), datetime('now')),
-  ('seed-app-4', 4, 'Application 4', datetime('now'), datetime('now'));
+  ('seed-app-1', 1, 'Thread 1', datetime('now'), datetime('now')),
+  ('seed-app-2', 2, 'Thread 2', datetime('now'), datetime('now')),
+  ('seed-app-3', 3, 'Thread 3', datetime('now'), datetime('now')),
+  ('seed-app-4', 4, 'Thread 4', datetime('now'), datetime('now'));
 
 INSERT OR IGNORE INTO workspace_settings (
   id, fortnight_start_weekday, global_shortcut_enabled, global_shortcut_accel, updated_at
@@ -190,5 +190,21 @@ SELECT id, description, status, captured_at, updated_at, converted_action_id FRO
 
 DROP TABLE inbox_items;
 ALTER TABLE inbox_items_v3 RENAME TO inbox_items;
+` },
+  { version: 4 as const, sql: `-- Threads (formerly Applications) are no longer limited to four slots (version 4). Keep in sync with migrations/004_threads.sql
+
+CREATE TABLE applications_v4 (
+  id TEXT PRIMARY KEY,
+  slot_index INTEGER NOT NULL UNIQUE CHECK (slot_index >= 1),
+  name TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+INSERT INTO applications_v4 (id, slot_index, name, created_at, updated_at)
+SELECT id, slot_index, name, created_at, updated_at FROM applications;
+
+DROP TABLE applications;
+ALTER TABLE applications_v4 RENAME TO applications;
 ` },
 ];

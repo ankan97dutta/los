@@ -28,6 +28,9 @@ export const api = {
   applicationsList: (rt: WorkspaceRuntime) => svc.applicationsList(rt),
   applicationsRename: (rt: WorkspaceRuntime, id: string, name: string) =>
     svc.applicationsRename(rt, id, name),
+  applicationsCreate: (rt: WorkspaceRuntime, name: string) => svc.applicationsCreate(rt, name),
+  applicationsRemove: (rt: WorkspaceRuntime, id: string) => svc.applicationsRemove(rt, id),
+  planningMemberRemove: (rt: WorkspaceRuntime, id: string) => svc.planningMemberRemove(rt, id),
   dailyGet: (rt: WorkspaceRuntime, date: string) => svc.dailyGet(rt, date),
   dailyUpsert: (
     rt: WorkspaceRuntime,

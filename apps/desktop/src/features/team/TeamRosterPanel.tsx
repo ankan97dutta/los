@@ -16,6 +16,7 @@ export function TeamRosterPanel({ rt }: Props) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [announcement, setAnnouncement] = useState('');
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const r = await api.planningMembersList(rt);
@@ -48,9 +49,17 @@ export function TeamRosterPanel({ rt }: Props) {
     await load();
   }
 
+  async function remove(member: TeamMember) {
+    const r = await api.planningMemberRemove(rt, member.id);
+    if (!r.ok) { setError(r.error.message); setRemovingId(null); return; }
+    setError(null); setRemovingId(null);
+    setAnnouncement(`${member.displayName} removed from the roster.`);
+    await load();
+  }
+
   return (
     <div className="stack">
-      <p className="muted">Add, rename, or deactivate roster members. Deactivation keeps history and existing allocations; it only blocks new allocations. Per-period hours are edited under Planning.</p>
+      <p className="muted">Add, rename, deactivate, or remove roster members. Deactivation keeps history and existing allocations; it only blocks new allocations. Per-period hours are edited under Planning.</p>
       <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
       {error ? <Banner tone="error">{error}</Banner> : null}
       <form className="row" onSubmit={(e) => { e.preventDefault(); void add(); }}>
@@ -72,6 +81,15 @@ export function TeamRosterPanel({ rt }: Props) {
                   <Button variant="primary" type="submit">Save</Button>
                   <Button onClick={() => setEditingId(null)}>Cancel <kbd aria-hidden="true">Esc</kbd></Button>
                 </form>
+              ) : removingId === m.id ? (
+                <div className="panel" role="group" aria-label={`Confirm removing ${m.displayName}`}
+                  onKeyDown={(e) => { if (e.key === 'Escape') setRemovingId(null); }}>
+                  <p style={{ marginTop: 0 }}>Remove <strong>{m.displayName}</strong> from the roster? Members assigned to work are protected — unassign them in Planning first, or deactivate instead.</p>
+                  <div className="row">
+                    <Button autoFocus onClick={() => setRemovingId(null)}>Cancel</Button>
+                    <Button className="danger" onClick={() => void remove(m)}>Remove member</Button>
+                  </div>
+                </div>
               ) : (
                 <div className="row" style={{ justifyContent: 'space-between' }}>
                   <span><strong style={m.active ? undefined : { color: 'var(--muted)' }}>{m.displayName}</strong>
@@ -79,10 +97,11 @@ export function TeamRosterPanel({ rt }: Props) {
                   <span className="row">
                     <Button onClick={() => { setEditingId(m.id); setEditName(m.displayName); }}>Rename</Button>
                     {m.active ? (
-                      <Button className="danger" onClick={() => void setActive(m, false)}>Deactivate</Button>
+                      <Button onClick={() => void setActive(m, false)}>Deactivate</Button>
                     ) : (
                       <Button onClick={() => void setActive(m, true)}>Reactivate</Button>
                     )}
+                    <Button className="danger" onClick={() => setRemovingId(m.id)}>Remove</Button>
                   </span>
                 </div>
               )}

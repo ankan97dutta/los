@@ -30,7 +30,7 @@ export async function resetWorkspaceData(session: DbSession, nowIso: string): Pr
     for (const slot of [1, 2, 3, 4]) {
       await session.exec(
         `INSERT INTO applications (id, slot_index, name, created_at, updated_at) VALUES (?, ?, ?, ?, ?)`,
-        [`seed-app-${slot}`, slot, `Application ${slot}`, nowIso, nowIso],
+        [`seed-app-${slot}`, slot, `Thread ${slot}`, nowIso, nowIso],
       );
     }
     await session.exec(

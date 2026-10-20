@@ -7,7 +7,7 @@ export type PaletteAction = {
   label: string;
   group: 'Navigate' | 'Capture';
   hint?: string;
-  run: 'navigate' | 'quick-capture' | 'shortcuts';
+  run: 'navigate' | 'quick-capture' | 'shortcuts' | 'tour';
   route?: RouteId;
 };
 
@@ -96,4 +96,5 @@ export const DEFAULT_PALETTE_ACTIONS: PaletteAction[] = [
   { id: 'nav-settings', label: 'Go to Settings', group: 'Navigate', hint: '⌘6', run: 'navigate', route: 'settings' },
   { id: 'quick', label: 'Quick Capture', group: 'Capture', run: 'quick-capture' },
   { id: 'shortcuts', label: 'Keyboard shortcuts', group: 'Capture', hint: '?', run: 'shortcuts' },
+  { id: 'tour', label: 'Start UI tour', group: 'Capture', run: 'tour' },
 ];

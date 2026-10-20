@@ -8,10 +8,10 @@ describe('applications seed', () => {
     const apps = await repos.applications.list();
     expect(apps).toHaveLength(4);
     expect(apps.map((a) => a.name)).toEqual([
-      'Application 1',
-      'Application 2',
-      'Application 3',
-      'Application 4',
+      'Thread 1',
+      'Thread 2',
+      'Thread 3',
+      'Thread 4',
     ]);
     const renamed = { ...apps[0], name: 'Platform', updatedAt: new Date().toISOString() };
     await repos.applications.save(renamed);

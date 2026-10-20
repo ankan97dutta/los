@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { bootstrapNodeSqlite } from '@los/persistence/node';
 import { createSqliteRepos } from '@los/persistence';
@@ -17,7 +17,9 @@ import {
 
 /** Same path Tauri `db_bootstrap` uses (macOS). */
 function tauriAppDataDbPath(): string {
-  return join(homedir(), 'Library/Application Support/com.los.desktop/los/los.sqlite');
+  // NEVER the real app-data DB: these smokes create/close periods and would
+  // pollute (and lock) the developer's live workspace. Use an isolated temp DB.
+  return join(tmpdir(), 'los-smoke', 'los.sqlite');
 }
 
 function makeRt(

@@ -41,7 +41,7 @@ export const ROUTE_TITLES: Record<string, { title: string; context: string }> = 
   'planning-capacity': { title: 'Planning', context: 'Weekly capacity & commitments' },
   'planning-fortnight': { title: 'Planning', context: 'Personal fortnight plan' },
   'team-roster': { title: 'Team', context: 'Roster & capacity members' },
-  'team-apps': { title: 'Team', context: 'Applications' },
+  'team-apps': { title: 'Team', context: 'Threads' },
   'reviews-monthly': { title: 'Reviews & history', context: 'Monthly review' },
   'reviews-history': { title: 'Reviews & history', context: 'Closed planning periods' },
   settings: { title: 'Settings', context: 'Local workspace preferences' },

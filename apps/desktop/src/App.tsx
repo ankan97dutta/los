@@ -20,6 +20,7 @@ import {
 } from './shell/CommandPalette';
 import { SectionSubNav } from './shell/SectionSubNav';
 import { ShortcutsDialog } from './shell/ShortcutsDialog';
+import { Tour, markTourSeen, tourSeen } from './shell/Tour';
 import { defaultChild, type PrimaryRouteId, type RouteId } from './shell/routes';
 import { isTauriRuntime } from './lib/isTauri';
 import { initTheme } from './ui/theme';
@@ -52,6 +53,7 @@ export function App() {
   const [reloadKey, setReloadKey] = useState(0);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
 
   useEffect(() => {
     initTheme();
@@ -201,6 +203,21 @@ export function App() {
     setRoute(defaultChild(id));
   }
 
+  // First run: offer the tour once (dismissing marks it seen).
+  const tourOffered = useRef(false);
+  useEffect(() => {
+    if (rt && !tourOffered.current) {
+      tourOffered.current = true;
+      if (!tourSeen()) setTourOpen(true);
+    }
+  }, [rt]);
+
+  useEffect(() => {
+    const onStartTour = () => setTourOpen(true);
+    window.addEventListener('los:start-tour', onStartTour);
+    return () => window.removeEventListener('los:start-tour', onStartTour);
+  }, []);
+
   function runPalette(action: PaletteAction) {
     setPaletteOpen(false);
     if (action.run === 'quick-capture') {
@@ -209,6 +226,10 @@ export function App() {
     }
     if (action.run === 'shortcuts') {
       setShortcutsOpen(true);
+      return;
+    }
+    if (action.run === 'tour') {
+      setTourOpen(true);
       return;
     }
     if (action.route) setRoute(action.route);
@@ -327,6 +348,11 @@ export function App() {
         onRun={runPalette}
       />
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <Tour
+        open={tourOpen}
+        onNavigate={(r) => setRoute(r)}
+        onClose={() => { markTourSeen(); setTourOpen(false); }}
+      />
     </>
   );
 }

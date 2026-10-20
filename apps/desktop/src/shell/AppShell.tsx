@@ -3,6 +3,8 @@ import type { WorkspaceRuntime } from '@los/app-services';
 import { LocalStatus } from '../features/status/LocalStatus';
 import { Nav } from './Nav';
 import { ROUTE_TITLES, type PrimaryRouteId, type RouteId } from './routes';
+import logoDarkBg from '../assets/los-wordmark-light.png';
+import logoLightBg from '../assets/los-wordmark-dark.png';
 
 type Props = {
   rt: WorkspaceRuntime;
@@ -21,14 +23,14 @@ export function AppShell({ rt, route, inboxCount, onNavigatePrimary, onCommandPa
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand-row">
-          <span className="brand-mark" aria-hidden="true">LOS</span>
-          <div>
-            <div className="brand">LOS</div>
-            <p className="brand-tag">Lead Operating System</p>
-          </div>
+          <img className="brand-logo brand-logo-on-dark" src={logoDarkBg} alt="LOS" height={22} />
+          <img className="brand-logo brand-logo-on-light" src={logoLightBg} alt="LOS" height={22} />
           <span className="local-pill" title="Data stored on this device">Local</span>
         </div>
-        <Nav route={route} inboxCount={inboxCount} onNavigate={onNavigatePrimary} onCommandPalette={onCommandPalette} />
+        <p className="brand-tag" style={{ padding: '0 0.3rem' }}>Lead Operating System</p>
+        <div data-tour="nav">
+          <Nav route={route} inboxCount={inboxCount} onNavigate={onNavigatePrimary} onCommandPalette={onCommandPalette} />
+        </div>
         <div className="sidebar-status">
           <p className="muted" style={{ margin: '0 0 0.3rem', fontSize: '0.78rem' }}>
             <span className="ok-dot" aria-hidden="true">●</span> Private workspace
@@ -43,10 +45,10 @@ export function AppShell({ rt, route, inboxCount, onNavigatePrimary, onCommandPa
           <span style={{ fontSize: '0.95rem', fontWeight: 600 }} aria-hidden="true">{meta.title}</span>
           {meta.context ? <span className="header-context">{meta.context}</span> : null}
           <div className="header-actions">
-            <button type="button" className="ghost" onClick={onCommandPalette} aria-label="Open command palette">
+            <button type="button" className="ghost" data-tour="palette" onClick={onCommandPalette} aria-label="Open command palette">
               Search / commands <kbd aria-hidden="true">⌘K</kbd>
             </button>
-            <button type="button" className="primary" onClick={onQuickCapture}>+ Quick capture</button>
+            <button type="button" className="primary" data-tour="quick-capture" onClick={onQuickCapture}>+ Quick capture</button>
           </div>
         </header>
         <main className="main-inner">

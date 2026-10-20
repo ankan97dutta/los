@@ -110,6 +110,24 @@ export function SettingsPage({ rt, onRestored }: Props) {
       }
     }
     setResetting(true);
+    if (isTauri()) {
+      // File-based reset: close the DB, delete it, and let the next boot
+      // recreate a fresh workspace. Immune to locked tables/transactions.
+      try {
+        const { invoke } = await import('@tauri-apps/api/core');
+        await rt.closeDb?.();
+        await invoke('db_reset_all');
+      } catch (e) {
+        setResetting(false);
+        setError(e instanceof Error ? e.message : 'Reset failed');
+        return;
+      }
+      setResetting(false);
+      setShowReset(false);
+      setMessage('All workspace data was reset. Threads and settings are back to defaults.');
+      onRestored?.();
+      return;
+    }
     const r = await api.workspaceResetAll(rt);
     setResetting(false);
     if (!r.ok) {
@@ -117,7 +135,7 @@ export function SettingsPage({ rt, onRestored }: Props) {
       return;
     }
     setShowReset(false);
-    setMessage('All workspace data was reset. Applications and settings are back to defaults.');
+    setMessage('All workspace data was reset. Threads and settings are back to defaults.');
     onRestored?.();
   }
 
@@ -241,6 +259,9 @@ export function SettingsPage({ rt, onRestored }: Props) {
         <div className="row">
           <button type="button" onClick={() => window.dispatchEvent(new Event('los:open-shortcuts'))}>
             View all shortcuts <kbd aria-hidden="true">?</kbd>
+          </button>
+          <button type="button" onClick={() => window.dispatchEvent(new Event('los:start-tour'))}>
+            Replay UI tour
           </button>
         </div>
       </div>

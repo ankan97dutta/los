@@ -45,6 +45,7 @@ pub fn run() {
             db::db_bootstrap,
             db::db_export_backup,
             db::db_restore_backup,
+            db::db_reset_all,
             db::db_path_cmd,
             shortcuts::shortcuts_reregister
         ])

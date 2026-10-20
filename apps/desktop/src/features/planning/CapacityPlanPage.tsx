@@ -325,7 +325,7 @@ export function CapacityPlanPage({ rt }: Props) {
               <Select id="new-work-priority" label="Priority" value={workPriority} onChange={(e) => setWorkPriority(e.target.value as WorkPriority)}>{PRIORITIES.map((p) => <option key={p} value={p}>{p.toUpperCase()}</option>)}</Select>
               <label className="field"><span className="field-label">Estimate (h)</span><input type="number" step={0.5} min={0} disabled={workUnknown} value={workEstimate} onChange={(e) => setWorkEstimate(e.target.value)} style={{ width: '6rem' }} /></label>
               <label className="row"><input type="checkbox" checked={workUnknown} onChange={(e) => setWorkUnknown(e.target.checked)} /> Unknown</label>
-              <Select id="new-work-app" label="Application" value={workApp} onChange={(e) => setWorkApp(e.target.value)}><option value="">Unassigned</option>{apps.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</Select>
+              <Select id="new-work-app" label="Thread" value={workApp} onChange={(e) => setWorkApp(e.target.value)}><option value="">Unassigned</option>{apps.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</Select>
               <Button variant="primary" onClick={() => void addWork()}>Add work</Button>
             </div>
           ) : null}
@@ -410,7 +410,7 @@ export function CapacityPlanPage({ rt }: Props) {
                 <div><dt className="muted">Title</dt><dd style={{ margin: 0 }}>{selectedWork.title}</dd></div>
                 <div><dt className="muted">Priority / status</dt><dd style={{ margin: 0 }}>{selectedWork.priority.toUpperCase()} · {selectedWork.status.replace('_', ' ')}</dd></div>
                 <div><dt className="muted">Estimate / actual</dt><dd style={{ margin: 0 }}>{estimateLabel(selectedWork)} / {actualLabel(selectedWork.actualHours)}</dd></div>
-                <div><dt className="muted">Application</dt><dd style={{ margin: 0 }}>{appName(selectedWork.applicationId)}</dd></div>
+                <div><dt className="muted">Thread</dt><dd style={{ margin: 0 }}>{appName(selectedWork.applicationId)}</dd></div>
                 <div><dt className="muted">Dependency notes</dt><dd style={{ margin: 0 }}>{selectedWork.dependencyNotes || '—'}</dd></div>
                 <div><dt className="muted">Assignee / kind</dt><dd style={{ margin: 0 }}>{memberName(allocByWork.get(selectedWork.id)?.teamMemberId ?? null)} · {commitmentLabel(allocByWork.get(selectedWork.id)?.commitmentKind ?? 'none')}</dd></div>
               </dl>
@@ -427,7 +427,7 @@ export function CapacityPlanPage({ rt }: Props) {
                   <label className="row"><input type="checkbox" checked={draft.unknown} onChange={(e) => setDraft({ ...draft, unknown: e.target.checked })} /> Unknown estimate</label>
                   <label className="field"><span className="field-label">Actual (h)</span><input type="number" step={0.5} min={0} value={draft.actual} onChange={(e) => setDraft({ ...draft, actual: e.target.value })} placeholder="—" style={{ width: '6rem' }} /></label>
                 </div>
-                <Select id="detail-app" label="Application / project" value={draft.applicationId} onChange={(e) => setDraft({ ...draft, applicationId: e.target.value })}><option value="">Unassigned</option>{apps.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</Select>
+                <Select id="detail-app" label="Thread / project" value={draft.applicationId} onChange={(e) => setDraft({ ...draft, applicationId: e.target.value })}><option value="">Unassigned</option>{apps.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</Select>
                 <label className="field"><span className="field-label">Dependency notes</span><textarea rows={2} value={draft.dependencyNotes} onChange={(e) => setDraft({ ...draft, dependencyNotes: e.target.value })} placeholder="Waiting on… / blocked by…" /></label>
                 <Select id="detail-assignee" label="Assignee" value={draft.assignee} onChange={(e) => setDraft({ ...draft, assignee: e.target.value })}><option value="">Unallocated</option>{members.map((m) => <option key={m.id} value={m.id}>{m.displayName}</option>)}</Select>
                 <div>

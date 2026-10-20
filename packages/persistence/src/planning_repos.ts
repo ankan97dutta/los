@@ -66,6 +66,9 @@ export function createPlanningRepos(db: DbSession): PlanningRepos {
           updatedAt: r.updated_at,
         };
       },
+      async remove(id: string) {
+        await db.exec(`DELETE FROM team_members WHERE id = ?`, [id]);
+      },
       async save(member: TeamMember) {
         await db.exec(
           `INSERT INTO team_members (id, display_name, active, created_at, updated_at)
@@ -202,6 +205,9 @@ export function createPlanningRepos(db: DbSession): PlanningRepos {
           updatedAt: r.updated_at,
         };
       },
+      async removeByMember(teamMemberId: string) {
+        await db.exec(`DELETE FROM period_member_capacity WHERE team_member_id = ?`, [teamMemberId]);
+      },
       async save(row: PeriodMemberCapacity) {
         await db.exec(
           `INSERT INTO period_member_capacity (
@@ -250,6 +256,16 @@ export function createPlanningRepos(db: DbSession): PlanningRepos {
                   personal_action_id, created_at, updated_at
            FROM candidate_work_items WHERE period_start = ? ORDER BY created_at`,
           [periodStart],
+        );
+        return rows.map(mapWork);
+      },
+      async listByApplication(applicationId: string) {
+        const rows = await db.query<Parameters<typeof mapWork>[0]>(
+          `SELECT id, period_start, title, priority, estimate_hours, estimate_unknown, actual_hours,
+                  application_id, status, dependency_notes, carried_from_work_item_id,
+                  personal_action_id, created_at, updated_at
+           FROM candidate_work_items WHERE application_id = ? ORDER BY created_at`,
+          [applicationId],
         );
         return rows.map(mapWork);
       },
@@ -353,6 +369,26 @@ export function createPlanningRepos(db: DbSession): PlanningRepos {
           `SELECT id, work_item_id, team_member_id, commitment_kind, updated_at
            FROM work_allocations WHERE work_item_id IN (${placeholders})`,
           workItemIds,
+        );
+        return rows.map((r) => ({
+          id: r.id,
+          workItemId: r.work_item_id,
+          teamMemberId: r.team_member_id,
+          commitmentKind: r.commitment_kind,
+          updatedAt: r.updated_at,
+        }));
+      },
+      async listByMember(teamMemberId: string) {
+        const rows = await db.query<{
+          id: string;
+          work_item_id: string;
+          team_member_id: string | null;
+          commitment_kind: CommitmentKind;
+          updated_at: string;
+        }>(
+          `SELECT id, work_item_id, team_member_id, commitment_kind, updated_at
+           FROM work_allocations WHERE team_member_id = ?`,
+          [teamMemberId],
         );
         return rows.map((r) => ({
           id: r.id,

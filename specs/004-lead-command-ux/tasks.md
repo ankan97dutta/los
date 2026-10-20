@@ -446,3 +446,13 @@ trade-off/outcome/carryover notes ARE service-supported (`planningWorkUpsert`,
 - [x] T114 Settings Reset all data with optional export-first, inline keyboard confirmation; persistence `resetWorkspaceData` + Tauri/preview wiring
 - [x] T115 Team roster rename/activate/deactivate; Applications rename/reset-name with Esc-cancel inline edits
 - [x] T116 Keyboard: `?` shortcuts dialog, arrow keys in sidebar/tabs/work & workload rows, Esc closes detail panel with focus return, no `window.confirm` left (inline acks), Settings keyboard section
+
+## Phase 24 — Fix saves/reset, Threads + roster removal, tour, tray + LOS logo (2026-10-20 batch 2)
+
+- [x] T112 Diagnose save/reset failures: cleaned smoke-test pollution from the real app-data DB (backup /tmp/los-real-backup-before-clean.sqlite); pointed app-data smoke tests at an isolated temp DB; serialized Tauri SQL adapter through a single queue with BEGIN IMMEDIATE so transactions can never interleave into a dangling write transaction ("database is locked")
+- [x] T113 Reset all data in Tauri is now file-based: close DB, delete los.sqlite (+wal/shm/journal) via `db_reset_all`, reboot creates a fresh migrated+seeded DB; preview still uses the table-wipe service reset
+- [x] T114 Rename Applications → Threads (all user-facing copy); threads can be added beyond four and removed when unused (service refuses when linked to actions/planning work); migration v4 lifts the 4-slot cap; seed names Thread 1–4
+- [x] T115 Roster members can be removed when unused (refused when allocations exist; deactivate remains the history-preserving option), with inline confirm panels — zero window.confirm remain
+- [x] T116 Guided UI tour: 9 steps across nav, capture, palette, Today, Inbox, Planning, Threads, Settings; highlight + card, Back/Next/Skip/Esc, first-run auto-open, replay from palette/Settings; plus visible toast feedback and optimistic Inbox triage with rollback
+- [x] T117 LOS wordmark (attached image) applied: sidebar light/dark logos, macOS tray now sets an explicit icon (was missing → invisible), app bundle icons generated (indigo rounded square, white wordmark)
+- [x] T118 Added app-services tests for thread create/remove (+linked refusal) and member remove (+allocated refusal); full suites green, desktop build + cargo check pass, live dev DB migrated to schema v4

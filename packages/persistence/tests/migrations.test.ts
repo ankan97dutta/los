@@ -10,14 +10,14 @@ describe('migrations', () => {
     const dir = mkdtempSync(join(tmpdir(), 'los-mig-'));
     const dbPath = join(dir, 'los.sqlite');
     const boot = await bootstrapNodeSqlite(dbPath);
-    expect(boot.migratedTo).toBe(3);
+    expect(boot.migratedTo).toBe(4);
     const apps = await createSqliteRepos(boot.session).applications.list();
     expect(apps).toHaveLength(4);
     expect(apps.map((a) => a.name)).toEqual([
-      'Application 1',
-      'Application 2',
-      'Application 3',
-      'Application 4',
+      'Thread 1',
+      'Thread 2',
+      'Thread 3',
+      'Thread 4',
     ]);
     expect(apps.map((a) => a.slotIndex)).toEqual([1, 2, 3, 4]);
     const settings = await createSqliteRepos(boot.session).settings.get();

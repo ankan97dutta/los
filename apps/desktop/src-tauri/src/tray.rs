@@ -10,7 +10,14 @@ pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
     let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&open, &quick, &quit])?;
 
-    let _tray = TrayIconBuilder::new()
+    // Explicit icon: TrayIconBuilder without .icon() renders no visible
+    // menu-bar item on macOS. Template mode lets macOS recolor the
+    // monochrome LOS wordmark for light/dark menu bars.
+    let mut builder = TrayIconBuilder::new();
+    if let Some(icon) = app.default_window_icon() {
+        builder = builder.icon(icon.clone());
+    }
+    let _tray = builder
         .menu(&menu)
         .tooltip("LOS — Lead OS")
         .on_menu_event(|app, event| match event.id.as_ref() {

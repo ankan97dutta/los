@@ -32,6 +32,12 @@ export function InboxPage({ rt, onConverted }: Props) {
 
   useEffect(() => { void refresh(); }, [refresh]);
 
+  useEffect(() => {
+    if (!announcement) return;
+    const t = window.setTimeout(() => setAnnouncement(''), 3200);
+    return () => window.clearTimeout(t);
+  }, [announcement]);
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
@@ -44,8 +50,26 @@ export function InboxPage({ rt, onConverted }: Props) {
 
   async function triage(item: InboxItem, disposition: Disposition) {
     setError(null);
+    // Optimistic: move the item immediately, roll back if persistence fails.
+    const prevItems = items;
+    const prevKept = kept;
+    if (disposition === 'keep') {
+      setItems((list) => list.filter((i) => i.id !== item.id));
+      setKept((list) => [{ ...item, status: 'kept' }, ...list]);
+    } else if (disposition === 'reopen') {
+      setKept((list) => list.filter((i) => i.id !== item.id));
+      setItems((list) => [{ ...item, status: 'open' }, ...list]);
+    } else {
+      setItems((list) => list.filter((i) => i.id !== item.id));
+      setKept((list) => list.filter((i) => i.id !== item.id));
+    }
     const r = await api.inboxTriage(rt, item.id, disposition);
-    if (!r.ok) { setError(r.error.message); return; }
+    if (!r.ok) {
+      setItems(prevItems);
+      setKept(prevKept);
+      setError(`${r.error.message} (change rolled back)`);
+      return;
+    }
     setAnnouncement(`“${item.description}” — ${DISPOSITION_LABEL[disposition]}.`);
     await refresh();
     if (disposition === 'convert') onConverted?.();
@@ -94,6 +118,7 @@ export function InboxPage({ rt, onConverted }: Props) {
       <h1>Inbox</h1>
       <p className="lede">Capture first, classify later. Focus an item and press <kbd>C</kbd> convert · <kbd>K</kbd> keep for later · <kbd>X</kbd> dismiss — or Tab to its buttons.</p>
       <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
+      {announcement ? <div className="toast" role="presentation">{announcement}</div> : null}
 
       <form className="stack" onSubmit={onSubmit}>
         <TextAreaField

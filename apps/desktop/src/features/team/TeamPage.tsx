@@ -13,12 +13,12 @@ export function TeamPage({ rt, section, onSection }: Props) {
   return (
     <section className="stack">
       <h1>Team</h1>
-      <p className="lede">Local roster and application slots.</p>
+      <p className="lede">Local roster and threads.</p>
       <SectionSubNav
         label="Team sections"
         items={[
           { id: 'team-roster', label: 'Roster' },
-          { id: 'team-apps', label: 'Applications' },
+          { id: 'team-apps', label: 'Threads' },
         ]}
         activeId={section}
         onSelect={(id) => onSection(id as 'team-roster' | 'team-apps')}

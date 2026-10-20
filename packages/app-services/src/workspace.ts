@@ -192,6 +192,36 @@ export async function applicationsList(rt: WorkspaceRuntime) {
   return ok({ applications: await repos(rt).applications.list() });
 }
 
+export async function applicationsCreate(rt: WorkspaceRuntime, name: string) {
+  const r = repos(rt);
+  const v = validateName(name);
+  if (!v.ok) return v;
+  const existing = await r.applications.list();
+  const slotIndex = existing.reduce((m, a) => Math.max(m, a.slotIndex), 0) + 1;
+  const now = nowIso(rt);
+  const app = { id: newId(), slotIndex, name: v.data, createdAt: now, updatedAt: now };
+  await r.applications.save(app);
+  afterWrite(rt);
+  return ok({ application: app });
+}
+
+export async function applicationsRemove(rt: WorkspaceRuntime, id: string) {
+  const r = repos(rt);
+  const app = await r.applications.getById(id);
+  if (!app) return err('NOT_FOUND', 'Thread not found.');
+  const actions = await r.actions.list({ status: 'all', applicationId: id });
+  if (actions.length > 0) {
+    return err('VALIDATION_ERROR', `Thread is linked to ${actions.length} personal action(s). Unlink them first, or rename the thread instead.`);
+  }
+  const work = await r.planning.candidateWork.listByApplication(id);
+  if (work.length > 0) {
+    return err('VALIDATION_ERROR', `Thread is linked to ${work.length} planning work item(s). Reassign them in Planning first, or rename the thread instead.`);
+  }
+  await r.applications.remove(id);
+  afterWrite(rt);
+  return ok({ removedId: id });
+}
+
 export async function applicationsRename(rt: WorkspaceRuntime, id: string, name: string) {
   const r = repos(rt);
   const app = await r.applications.getById(id);

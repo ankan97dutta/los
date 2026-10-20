@@ -13,7 +13,8 @@ import type {
 
 export type Application = {
   id: string;
-  slotIndex: 1 | 2 | 3 | 4;
+  /** User-facing name for this entity is "Thread" (renamed from Application). */
+  slotIndex: number;
   name: string;
   createdAt: string;
   updatedAt: string;
@@ -61,6 +62,7 @@ export interface ApplicationsRepository {
   list(): Promise<Application[]>;
   getById(id: string): Promise<Application | null>;
   save(app: Application): Promise<void>;
+  remove(id: string): Promise<void>;
 }
 
 export interface DailyRepository {
@@ -87,6 +89,7 @@ export interface TeamMembersRepository {
   list(): Promise<TeamMember[]>;
   getById(id: string): Promise<TeamMember | null>;
   save(member: TeamMember): Promise<void>;
+  remove(id: string): Promise<void>;
 }
 
 export interface PlanningPeriodsRepository {
@@ -98,10 +101,12 @@ export interface PeriodCapacityRepository {
   listByPeriod(periodStart: string): Promise<PeriodMemberCapacity[]>;
   get(periodStart: string, teamMemberId: string): Promise<PeriodMemberCapacity | null>;
   save(row: PeriodMemberCapacity): Promise<void>;
+  removeByMember(teamMemberId: string): Promise<void>;
 }
 
 export interface CandidateWorkRepository {
   listByPeriod(periodStart: string): Promise<CandidateWorkItem[]>;
+  listByApplication(applicationId: string): Promise<CandidateWorkItem[]>;
   getById(id: string): Promise<CandidateWorkItem | null>;
   save(item: CandidateWorkItem): Promise<void>;
 }
@@ -109,6 +114,7 @@ export interface CandidateWorkRepository {
 export interface WorkAllocationRepository {
   getByWorkItemId(workItemId: string): Promise<WorkAllocation | null>;
   listByPeriodWorkIds(workItemIds: string[]): Promise<WorkAllocation[]>;
+  listByMember(teamMemberId: string): Promise<WorkAllocation[]>;
   save(allocation: WorkAllocation): Promise<void>;
 }
 

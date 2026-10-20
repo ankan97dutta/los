@@ -25,6 +25,9 @@ export function createMemoryPlanningRepos(store: MemoryStore): PlanningRepos {
         if (idx >= 0) store.data.teamMembers[idx] = member;
         else store.data.teamMembers.push(member);
       },
+      async remove(id: string) {
+        store.data.teamMembers = store.data.teamMembers.filter((m) => m.id !== id);
+      },
     },
     planningPeriods: {
       async get(periodStart) {
@@ -54,12 +57,20 @@ export function createMemoryPlanningRepos(store: MemoryStore): PlanningRepos {
         if (idx >= 0) store.data.periodCapacities[idx] = row;
         else store.data.periodCapacities.push(row);
       },
+      async removeByMember(teamMemberId: string) {
+        store.data.periodCapacities = store.data.periodCapacities.filter(
+          (c) => c.teamMemberId !== teamMemberId,
+        );
+      },
     },
     candidateWork: {
       async listByPeriod(periodStart) {
         return store.data.candidateWork
           .filter((w) => w.periodStart === periodStart)
           .sort((a, b) => (a.createdAt < b.createdAt ? -1 : 1));
+      },
+      async listByApplication(applicationId: string) {
+        return store.data.candidateWork.filter((w) => w.applicationId === applicationId);
       },
       async getById(id) {
         return store.data.candidateWork.find((w) => w.id === id) ?? null;
@@ -77,6 +88,9 @@ export function createMemoryPlanningRepos(store: MemoryStore): PlanningRepos {
       async listByPeriodWorkIds(workItemIds) {
         const set = new Set(workItemIds);
         return store.data.workAllocations.filter((a) => set.has(a.workItemId));
+      },
+      async listByMember(teamMemberId: string) {
+        return store.data.workAllocations.filter((a) => a.teamMemberId === teamMemberId);
       },
       async save(allocation: WorkAllocation) {
         const idx = store.data.workAllocations.findIndex((a) => a.workItemId === allocation.workItemId);

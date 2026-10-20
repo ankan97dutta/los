@@ -125,3 +125,15 @@ wired in the detail panel because the service already supported them. Formal
 | Team/Applications | PASS (code) | Roster rename/deactivate/reactivate; Applications rename/reset-name; Esc cancels |
 | Keyboard | PASS | Live: `?` opens focused Shortcuts dialog, Esc closes; arrows in nav/tabs/rows; zero `window.confirm` in desktop src |
 | Regression | PASS | `pnpm test` all green (domain 31, persistence 12, app-services 20, desktop 4); `pnpm lint` 0 errors; desktop build + `cargo check` PASS |
+
+## 2026-10-20 (Phase 24 — saves/reset, Threads, tour, tray, logo)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Full tests | PASS | domain 31, persistence 12, app-services 23 (incl. new thread/member remove tests), desktop 4 |
+| Desktop build + lint + cargo check | PASS | `pnpm --filter @los/desktop build`, lint 0 errors, `cargo check` clean |
+| Live DB migration | PASS | Running dev app migrated the real app-data DB to schema version 4; threads table readable |
+| Smoke-test isolation | PASS | App-data smoke tests now use `tmpdir()/los-smoke/los.sqlite`; real DB cleaned of smoke artifacts (backup at /tmp/los-real-backup-before-clean.sqlite) |
+| Tauri saves end-to-end (click → restart → persists) | PARTIAL | Service layer verified against a DB copy; live click-through requires the user's desktop session — verify with one capture after relaunch |
+| Tray icon visible in menu bar | PARTIAL | Root cause fixed (no `.icon()` was set); visual confirmation needs the user's menu bar |
+

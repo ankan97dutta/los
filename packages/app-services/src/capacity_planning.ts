@@ -155,6 +155,22 @@ export async function planningMemberUpsert(
   return ok({ member: created.data });
 }
 
+export async function planningMemberRemove(rt: WorkspaceRuntime, id: string) {
+  const member = await repos(rt).planning.teamMembers.getById(id);
+  if (!member) return err('MEMBER_NOT_FOUND', 'Team member not found.');
+  const allocations = await repos(rt).planning.workAllocations.listByMember(id);
+  if (allocations.length > 0) {
+    return err(
+      'VALIDATION_ERROR',
+      `${member.displayName} is assigned to ${allocations.length} work item(s). Unassign them in Planning first, or deactivate the member instead.`,
+    );
+  }
+  await repos(rt).planning.periodCapacity.removeByMember(id);
+  await repos(rt).planning.teamMembers.remove(id);
+  persist(rt);
+  return ok({ removedId: id });
+}
+
 export async function planningCapacityUpsert(
   rt: WorkspaceRuntime,
   input: {
