@@ -21,6 +21,11 @@ on:
         description: 'Existing release tag to attach installers to (for example v0.1.0)'
         required: true
         type: string
+      code_ref:
+        description: 'Branch or commit to build from (defaults to main; the tag only names the release)'
+        required: false
+        default: main
+        type: string
 
 permissions:
   contents: write
@@ -32,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ inputs.code_ref || inputs.tag || github.ref }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -60,7 +65,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ inputs.code_ref || inputs.tag || github.ref }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
