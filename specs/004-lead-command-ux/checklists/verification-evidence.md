@@ -147,3 +147,12 @@ wired in the detail panel because the service already supported them. Formal
 | No native dropdowns | PASS | Grep for `<select`/`<option` returns zero; only the semantic input inside the custom Checkbox remains |
 | Browser checks | PASS | Calendar renders markers and day detail, custom dropdown opens as a listbox with options, roster grid aligned (screenshots taken in preview) |
 | Smoke-test flake | PASS (fixed) | The two app-data smoke files now use separate temp DB paths instead of sharing one |
+
+## 2026-10-20 (Phase 26 — consistent controls, list redesigns, reviews colour)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Full tests | PASS | domain 31, persistence 12, app-services 23, desktop 4 |
+| Lint / build | PASS | `pnpm lint` clean, desktop build pass |
+| Browser checks | PASS | Today brief cards + pill date nav, Planning stat cards, Threads colour avatar rows, calendar legend with colour swatches, Monthly editor + prompt panel, History empty state (screenshots in preview) |
+| Consistency | PASS | All text inputs/textareas share the control-input system with Select/Checkbox; lists across Inbox, Actions, Fortnight, Threads, Planning, and History share the item-list pattern |

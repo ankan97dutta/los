@@ -10,13 +10,14 @@ export function Field({
   id,
   label,
   hint,
+  className,
   ...rest
 }: Common & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
-      <input id={id} {...rest} />
-      {hint ? <p className="muted">{hint}</p> : null}
+      <input id={id} className={['control-input', className].filter(Boolean).join(' ')} {...rest} />
+      {hint ? <p className="muted control-hint">{hint}</p> : null}
     </div>
   );
 }
@@ -26,13 +27,14 @@ export function TextAreaField({
   label,
   hint,
   children,
+  className,
   ...rest
 }: Common & TextareaHTMLAttributes<HTMLTextAreaElement> & { children?: ReactNode }) {
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
-      <textarea id={id} {...rest} />
-      {hint ? <p className="muted">{hint}</p> : null}
+      <textarea id={id} className={['control-input control-textarea', className].filter(Boolean).join(' ')} {...rest} />
+      {hint ? <p className="muted control-hint">{hint}</p> : null}
       {children}
     </div>
   );

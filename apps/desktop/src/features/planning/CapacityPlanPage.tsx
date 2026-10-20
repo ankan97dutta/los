@@ -22,6 +22,10 @@ type WorkItem = PeriodOk['work'][number];
 const PRIORITIES: WorkPriority[] = ['p0', 'p1', 'p2', 'p3'];
 const STATUSES: WorkStatus[] = ['ready', 'blocked', 'waiting_external', 'done', 'dropped'];
 
+function prettyDate(iso: string): string {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
 export function CapacityPlanPage({ rt }: Props) {
   const [data, setData] = useState<PeriodOk | null>(null);
   const [members, setMembers] = useState<TeamMember[]>([]);
@@ -226,23 +230,26 @@ export function CapacityPlanPage({ rt }: Props) {
   return (
     <section className="stack">
       <header className="period-header">
-        <h1 style={{ fontSize: '1.15rem' }}>Weekly planning</h1>
-        <span className="muted num">{data.period.periodStart} → {data.period.periodEnd}</span>
+        <div>
+          <h1 style={{ fontSize: '1.15rem', margin: 0 }}>Weekly planning</h1>
+          <span className="muted num">{prettyDate(data.period.periodStart)} to {prettyDate(data.period.periodEnd)}</span>
+        </div>
         <StatusCue kind={closed ? 'muted' : 'ok'} label={closed ? 'Closed, so the plan is frozen' : 'Open'} />
         {data.period.planConflicted ? <StatusCue kind="conflicted" label="Conflicted" /> : <StatusCue kind="ok" label="Clean" />}
-        <span style={{ marginLeft: 'auto' }} className="row">
-          <Button onClick={() => { const p = api.previousWeek({ periodStart: data.period.periodStart, periodEnd: data.period.periodEnd }); setSelectedWorkId(null); void load(p.periodStart); }}>← Prev week</Button>
-          <Button onClick={() => { const n = api.nextWeek({ periodStart: data.period.periodStart, periodEnd: data.period.periodEnd }); setSelectedWorkId(null); void load(n.periodStart); }}>Next week →</Button>
+        <span style={{ marginLeft: 'auto' }} className="date-nav" aria-label="Change week">
+          <button type="button" onClick={() => { const p = api.previousWeek({ periodStart: data.period.periodStart, periodEnd: data.period.periodEnd }); setSelectedWorkId(null); void load(p.periodStart); }}>← Prev</button>
+          <span className="date-nav-label num">{data.period.periodStart}</span>
+          <button type="button" onClick={() => { const n = api.nextWeek({ periodStart: data.period.periodStart, periodEnd: data.period.periodEnd }); setSelectedWorkId(null); void load(n.periodStart); }}>Next →</button>
         </span>
       </header>
       <p className="lede" style={{ marginBottom: 0 }}>What your team can actually take on this week, what you have promised, and where it might go wrong. Warnings sit next to the work they are about, and we never move anyone's work without telling you.</p>
 
-      <div className="summary-strip" aria-label="Capacity summary">
-        <div className="summary-stat"><span className="stat-label">Net capacity</span><span className="stat-value">{formatHours(totals.netHours)}</span></div>
-        <div className="summary-stat"><span className="stat-label">Committed</span><span className="stat-value">{formatHours(totals.committedLoadHours)}</span></div>
-        <div className="summary-stat"><span className="stat-label">Remaining</span><span className="stat-value" style={totals.remainingHours < 0 ? { color: 'var(--status-danger)' } : undefined}>{formatHours(totals.remainingHours)}</span>{totals.remainingHours < 0 ? <span className="stat-sub" style={{ color: 'var(--status-danger)' }}>Over committed</span> : null}</div>
-        <div className="summary-stat"><span className="stat-label">Unallocated</span><span className="stat-value">{totals.unallocatedCount}</span><span className="stat-sub">work items</span></div>
-        <div className="summary-stat"><span className="stat-label">Unestimated</span><span className="stat-value">{totals.unestimatedCommitCount}</span><span className="stat-sub">commitments</span></div>
+      <div className="stat-cards" aria-label="Capacity summary">
+        <div className="stat-card"><span className="stat-label">Hours available</span><div className="stat-value">{formatHours(totals.netHours)}</div><span className="stat-sub">after leave and buffers</span></div>
+        <div className="stat-card"><span className="stat-label">Promised</span><div className="stat-value">{formatHours(totals.committedLoadHours)}</div><span className="stat-sub">committed work</span></div>
+        <div className="stat-card"><span className="stat-label">Still free</span><div className="stat-value" style={totals.remainingHours < 0 ? { color: 'var(--status-danger)' } : totals.remainingHours === 0 ? { color: 'var(--status-warning)' } : { color: 'var(--status-ok)' }}>{formatHours(totals.remainingHours)}</div><span className="stat-sub">{totals.remainingHours < 0 ? 'over promised, ease up' : totals.remainingHours === 0 ? 'fully booked' : 'room for more'}</span></div>
+        <div className="stat-card"><span className="stat-label">Nobody on it yet</span><div className="stat-value">{totals.unallocatedCount}</div><span className="stat-sub">pieces of work</span></div>
+        <div className="stat-card"><span className="stat-label">Not estimated</span><div className="stat-value" style={totals.unestimatedCommitCount > 0 ? { color: 'var(--status-conflicted)' } : undefined}>{totals.unestimatedCommitCount}</div><span className="stat-sub">promises without hours</span></div>
       </div>
 
       {error ? <Banner tone="error">{error}</Banner> : null}
@@ -264,10 +271,12 @@ export function CapacityPlanPage({ rt }: Props) {
 
       <div className={`planning-layout ${selectedWork ? 'has-detail' : ''}`}>
         <div>
-          <h2>Team workload</h2>
+          <div className="list-head"><h2>How loaded is everyone?</h2><span className="count-chip num">{data.capacitySummary.members.length}</span></div>
           {data.capacitySummary.members.length === 0 ? (
             <EmptyState title="Nobody has hours set yet" actionHint={closed ? 'Nobody had hours set for this week.' : 'Add someone from your team below to get started.'} />
-          ) : data.capacitySummary.members.map((m) => {
+          ) : (
+          <div className="workload-list">
+          {data.capacitySummary.members.map((m) => {
             const state = workloadState(m);
             return (
               <button key={m.teamMemberId} type="button" className={`workload-row ${selectedMemberId === m.teamMemberId ? 'is-selected' : ''}`} onClick={() => selectMemberWorkload(m.teamMemberId)} onKeyDown={(e) => onRowArrowKey(e, '.workload-row')} aria-label={`${m.displayName}: ${workloadLabel(m)}`}>
@@ -280,60 +289,61 @@ export function CapacityPlanPage({ rt }: Props) {
               </button>
             );
           })}
+          </div>
+          )}
 
           <details style={{ marginTop: 'var(--space-3)' }}>
             <summary style={{ cursor: 'pointer', fontWeight: 550 }}>Capacity inputs</summary>
             <p className="muted">Net = Available − Leave − Reserved commitments − Unplanned buffer. Edit a figure, then leave the field to save.</p>
             {!closed ? (
-              <div className="row">
-                <label>New member <input value={newMember} onChange={(e) => setNewMember(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void addMember(); }} /></label>
-                <Button variant="primary" onClick={() => void addMember()}>Add member</Button>
-              </div>
+              <form className="roster-add" style={{ marginBottom: 'var(--space-3)' }} onSubmit={(e) => { e.preventDefault(); void addMember(); }}>
+                <label className="field"><span className="field-label">Add someone to this week</span><input className="control-input" value={newMember} placeholder="Display name" onChange={(e) => setNewMember(e.target.value)} /></label>
+                <Button variant="primary" type="submit" disabled={!newMember.trim()}>Add member</Button>
+              </form>
             ) : null}
-            <table className="table">
-              <thead><tr><th>Member</th><th>Available</th><th>Leave</th><th>Reserved</th><th>Buffer</th><th>Net</th><th>Load</th><th>Remain</th></tr></thead>
-              <tbody>
-                {data.capacitySummary.members.map((m) => (
-                  <tr key={m.teamMemberId} style={selectedMemberId === m.teamMemberId ? { background: 'var(--bg-selected)' } : undefined}>
-                    <td>{m.displayName}</td>
-                    {(['availableHours', 'leaveHours', 'reservedCommitmentHours', 'unplannedBufferHours'] as const).map((field) => (
-                      <td key={field}>
-                        {closed ? <span className="readonly-field" aria-label={`${m.displayName} ${field} (read-only)`}>{m[field]}</span> : (
-                          <input type="number" step={0.5} min={0} defaultValue={m[field]} aria-label={`${m.displayName} ${field}`} onBlur={(e) => {
-                            const v = Number(e.target.value);
-                            void saveCapacity(m.teamMemberId, {
-                              availableHours: field === 'availableHours' ? v : m.availableHours,
-                              leaveHours: field === 'leaveHours' ? v : m.leaveHours,
-                              reservedCommitmentHours: field === 'reservedCommitmentHours' ? v : m.reservedCommitmentHours,
-                              unplannedBufferHours: field === 'unplannedBufferHours' ? v : m.unplannedBufferHours,
-                            });
-                          }} />
-                        )}
-                      </td>
-                    ))}
-                    <td>{m.netHours}</td><td>{m.committedLoadHours}</td>
-                    <td style={m.remainingHours < 0 ? { color: 'var(--status-danger)', fontWeight: 600 } : undefined}>{m.remainingHours}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="capacity-grid-wrap">
+              <div className="capacity-head" aria-hidden="true"><span>Person</span><span className="num-cell">Available</span><span className="num-cell">Leave</span><span className="num-cell">Reserved</span><span className="num-cell">Buffer</span><span className="num-cell">Net</span><span className="num-cell">Load</span><span className="num-cell">Free</span></div>
+              {data.capacitySummary.members.map((m) => (
+                <div key={m.teamMemberId} className="capacity-row" style={selectedMemberId === m.teamMemberId ? { background: 'var(--bg-selected)' } : undefined}>
+                  <span className="roster-person"><span className="avatar" aria-hidden="true">{m.displayName.split(/\s+/).filter(Boolean).slice(0, 2).map((x) => x[0]?.toUpperCase()).join('')}</span><strong>{m.displayName}</strong></span>
+                  {(['availableHours', 'leaveHours', 'reservedCommitmentHours', 'unplannedBufferHours'] as const).map((field) => (
+                    <span key={field}>
+                      {closed ? <span className="readonly-field num" aria-label={`${m.displayName} ${field} (read only)`}>{m[field]}h</span> : (
+                        <input className="control-input num" type="number" step={0.5} min={0} defaultValue={m[field]} aria-label={`${m.displayName} ${field}`} onBlur={(e) => {
+                          const v = Number(e.target.value);
+                          void saveCapacity(m.teamMemberId, {
+                            availableHours: field === 'availableHours' ? v : m.availableHours,
+                            leaveHours: field === 'leaveHours' ? v : m.leaveHours,
+                            reservedCommitmentHours: field === 'reservedCommitmentHours' ? v : m.reservedCommitmentHours,
+                            unplannedBufferHours: field === 'unplannedBufferHours' ? v : m.unplannedBufferHours,
+                          });
+                        }} />
+                      )}
+                    </span>
+                  ))}
+                  <span className="num-cell">{m.netHours}h</span>
+                  <span className="num-cell">{m.committedLoadHours}h</span>
+                  <span className="num-cell" style={m.remainingHours < 0 ? { color: 'var(--status-danger)', fontWeight: 600 } : undefined}>{m.remainingHours}h</span>
+                </div>
+              ))}
+            </div>
           </details>
 
-          <h2>Planned work</h2>
+          <div className="list-head" style={{ marginTop: 'var(--space-5)' }}><h2>What is on the list?</h2><span className="count-chip num">{data.work.length}</span><span className="muted">Click any row to edit it on the side.</span></div>
           {!closed ? (
-            <div className="row" style={{ alignItems: 'flex-end', marginBottom: 'var(--space-2)' }}>
-              <label className="field" style={{ flex: '1 1 12rem' }}><span className="field-label">Title</span><input value={workTitle} onChange={(e) => setWorkTitle(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void addWork(); }} placeholder="Work item title" /></label>
+            <div className="create-bar" style={{ marginBottom: 'var(--space-3)' }}>
+              <label className="field grow"><span className="field-label">What needs doing?</span><input className="control-input" value={workTitle} onChange={(e) => setWorkTitle(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void addWork(); }} placeholder="For example: fix the login timeout" /></label>
               <Select id="new-work-priority" label="Priority" value={workPriority} onValueChange={(v) => setWorkPriority(v as WorkPriority)} options={PRIORITIES.map((p) => ({ value: p, label: p.toUpperCase() }))} />
-              <label className="field"><span className="field-label">Estimate (h)</span><input type="number" step={0.5} min={0} disabled={workUnknown} value={workEstimate} onChange={(e) => setWorkEstimate(e.target.value)} style={{ width: '6rem' }} /></label>
+              <label className="field"><span className="field-label">Estimate (hours)</span><input className="control-input" type="number" step={0.5} min={0} disabled={workUnknown} value={workEstimate} onChange={(e) => setWorkEstimate(e.target.value)} style={{ width: '6rem' }} /></label>
               <Checkbox checked={workUnknown} onChange={setWorkUnknown}>Not sure yet</Checkbox>
               <Select id="new-work-app" label="Thread" value={workApp} onValueChange={setWorkApp} options={[{ value: '', label: 'No thread yet' }, ...apps.map((a) => ({ value: a.id, label: a.name }))]} />
-              <Button variant="primary" onClick={() => void addWork()}>Add work</Button>
+              <Button variant="primary" onClick={() => void addWork()} disabled={!workTitle.trim()}>Add work</Button>
             </div>
           ) : null}
           {data.work.length === 0 ? (
             <EmptyState title="No work on the list yet" actionHint={closed ? 'No work was recorded for this closed period.' : 'Add a work title above, then open it to add the details.'} />
           ) : (
-            <div aria-label="Planned work">
+            <div className="planned-list" aria-label="Planned work">
               {data.work.map((w) => {
                 const a = allocByWork.get(w.id);
                 const kind = a?.commitmentKind ?? 'none';
@@ -359,11 +369,11 @@ export function CapacityPlanPage({ rt }: Props) {
             </div>
           )}
 
-          <h2>Close & review</h2>
-          <div className="stack">
-            <label className="field"><span className="field-label">Trade-off notes: risks you accepted, scope that changed, and why</span><textarea rows={2} value={tradeoff} onChange={(e) => setTradeoff(e.target.value)} /></label>
-            <label className="field"><span className="field-label">Outcome summary: what actually got delivered</span><textarea rows={2} value={outcome} onChange={(e) => setOutcome(e.target.value)} /></label>
-            <label className="field"><span className="field-label">Carryover notes: what moves to next week, and why</span><textarea rows={2} value={carryover} onChange={(e) => setCarryover(e.target.value)} /></label>
+          <div className="list-head" style={{ marginTop: 'var(--space-5)' }}><h2>Wrap up the week</h2></div>
+          <div className="section-card stack">
+            <label className="field"><span className="field-label">Trade-offs: risks you accepted, scope that changed, and why</span><textarea className="control-input control-textarea" rows={2} value={tradeoff} onChange={(e) => setTradeoff(e.target.value)} placeholder="What did you say yes to, and what did it cost?" /></label>
+            <label className="field"><span className="field-label">What got delivered</span><textarea className="control-input control-textarea" rows={2} value={outcome} onChange={(e) => setOutcome(e.target.value)} placeholder="What actually shipped or landed?" /></label>
+            <label className="field"><span className="field-label">What moves to next week, and why</span><textarea className="control-input control-textarea" rows={2} value={carryover} onChange={(e) => setCarryover(e.target.value)} placeholder="Anything unfinished, and the honest reason." /></label>
             <div className="row">
               <Button onClick={() => void saveNotes()}>Save notes</Button>
               <SaveIndicator status={notesSave} />

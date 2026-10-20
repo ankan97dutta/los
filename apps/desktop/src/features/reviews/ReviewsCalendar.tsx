@@ -159,6 +159,15 @@ export function ReviewsCalendar({ rt }: Props) {
       </div>
       {error ? <Banner tone="error">{error}</Banner> : null}
 
+      <div className="calendar-legend" aria-label="What the colours mean">
+        <span><span className="legend-swatch swatch-brief" aria-hidden="true" />You wrote a brief</span>
+        <span><span className="legend-swatch swatch-blocked" aria-hidden="true" />Blockers noted</span>
+        <span><span className="legend-swatch swatch-closed" aria-hidden="true" />Week closed</span>
+        <span><span className="legend-swatch swatch-conflicted" aria-hidden="true" />Week closed with warnings</span>
+        <span><span className="legend-swatch swatch-monthly" aria-hidden="true" />Monthly review written</span>
+        <span><span className="legend-swatch swatch-open" aria-hidden="true" />Week still open</span>
+      </div>
+
       <div className="calendar-layout">
         <div className="calendar" aria-busy={loading || undefined}>
           <div className="calendar-grid" role="grid" aria-label={`Calendar for ${monthTitle}`}>
@@ -175,13 +184,14 @@ export function ReviewsCalendar({ rt }: Props) {
                   role="gridcell"
                   aria-pressed={selected === date}
                   aria-label={`${prettyDay(date)}${info ? ', has a daily brief' : ''}${period?.status === 'closed' ? ', week closed' : ''}`}
-                  className={`calendar-cell ${inMonth ? '' : 'is-outside'} ${date === today ? 'is-today' : ''} ${selected === date ? 'is-selected' : ''}`}
+                  className={`calendar-cell ${inMonth ? '' : 'is-outside'} ${date === today ? 'is-today' : ''} ${selected === date ? 'is-selected' : ''} ${info ? 'has-brief' : ''} ${info?.blocked ? 'has-blocked' : ''} ${period?.status === 'closed' ? 'is-closed-week' : ''}`}
                   onClick={() => setSelected(date)}
                 >
                   <span className="calendar-day num">{Number(date.slice(8, 10))}</span>
                   <span className="calendar-markers">
                     {info ? <span className="marker marker-brief">Brief</span> : null}
-                    {info?.blocked ? <span className="marker marker-conflicted">Blocked</span> : null}
+                    {info?.blocked ? <span className="marker marker-blocked">Blocked</span> : null}
+                    {date.endsWith('-01') && monthlyText.trim() ? <span className="marker marker-monthly">Monthly review</span> : null}
                     {isWeekStart && period?.status === 'closed' ? <span className="marker marker-closed">Week closed</span> : null}
                     {isWeekStart && period?.conflicted ? <span className="marker marker-conflicted">Conflicted</span> : null}
                     {isWeekStart && period && period.status !== 'closed' ? <span className="marker">Week open</span> : null}
@@ -196,7 +206,8 @@ export function ReviewsCalendar({ rt }: Props) {
           <h2 style={{ marginTop: 0 }}>{prettyDay(selected)}</h2>
           {selectedDay ? (
             <div className="stack" style={{ gap: 'var(--space-2)' }}>
-              <StatusCue kind="ok" label="Daily brief written" />
+              <span className="chip is-open"><span className="dot" style={{ background: 'var(--accent)' }} aria-hidden="true" />Daily brief written</span>
+              {selectedDay.blocked ? <span className="chip"><span className="dot" style={{ background: 'var(--status-danger)' }} aria-hidden="true" />Blockers were noted</span> : null}
               <p style={{ margin: 0 }}>{selectedDay.snippet}</p>
               <p className="muted" style={{ margin: 0 }}>
                 {selectedDay.nextCount} next {selectedDay.nextCount === 1 ? 'action' : 'actions'}
@@ -226,7 +237,7 @@ export function ReviewsCalendar({ rt }: Props) {
         </aside>
       </div>
       <p className="muted" style={{ margin: 0 }}>
-        Pick any day to see what you wrote. Brief means a daily brief, Week closed means that planning week was closed and frozen.
+        Pick any day to see what you wrote. The colours match the legend above, so a quick glance tells you which days you showed up and which weeks you closed.
       </p>
     </div>
   );
