@@ -34,6 +34,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_sql::Builder::default().build())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .manage(ShortcutStateMutex(Mutex::new(shortcuts::ShortcutStateInner {
             registered: false,
@@ -47,7 +48,8 @@ pub fn run() {
             db::db_restore_backup,
             db::db_reset_all,
             db::db_path_cmd,
-            shortcuts::shortcuts_reregister
+            shortcuts::shortcuts_reregister,
+            tray::tray_focus_update
         ])
         .setup(|app| {
             if let Err(e) = tray::setup_tray(app.handle()) {

@@ -134,6 +134,7 @@ export function InboxPage({ rt, onConverted }: Props) {
           Get it down first, sort it out later. Click any item, then press <kbd>C</kbd> to make it an action, <kbd>K</kbd> to park it, or <kbd>X</kbd> to dismiss it. You can also Tab to the buttons.
         </p>
       </div>
+      <p className="lede" aria-live="polite">{items.length} waiting for a decision{items.length ? `. Next up: ${items[0].description}` : '. Nothing is waiting on you.'}</p>
       <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
       {announcement ? <div className="toast" role="presentation">{announcement}</div> : null}
 
@@ -170,6 +171,8 @@ export function InboxPage({ rt, onConverted }: Props) {
         )}
       </div>
 
+      <details>
+        <summary style={{ cursor: 'pointer', fontWeight: 550 }}>Kept for later</summary>
       <div>
         <div className="list-head">
           <h2>Kept for later</h2>
@@ -182,6 +185,7 @@ export function InboxPage({ rt, onConverted }: Props) {
           <ul className="item-list">{kept.map(renderItem)}</ul>
         )}
       </div>
+      </details>
     </section>
   );
 }

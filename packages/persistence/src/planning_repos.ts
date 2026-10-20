@@ -119,6 +119,23 @@ export function createPlanningRepos(db: DbSession): PlanningRepos {
           updatedAt: r.updated_at,
         };
       },
+      async listBetween(startDate: string, endDate: string) {
+        const rows = await db.query<{
+          period_start: string; period_end: string; status: PeriodStatus; tradeoff_notes: string;
+          outcome_summary: string; carryover_notes: string; warnings_acknowledged_at: string | null;
+          closed_at: string | null; updated_at: string;
+        }>(
+          `SELECT period_start, period_end, status, tradeoff_notes, outcome_summary, carryover_notes,
+                  warnings_acknowledged_at, closed_at, updated_at
+           FROM planning_periods WHERE period_start <= ? AND period_end >= ? ORDER BY period_start`,
+          [endDate, startDate],
+        );
+        return rows.map((r) => ({
+          periodStart: r.period_start, periodEnd: r.period_end, status: r.status,
+          tradeoffNotes: r.tradeoff_notes, outcomeSummary: r.outcome_summary, carryoverNotes: r.carryover_notes,
+          warningsAcknowledgedAt: r.warnings_acknowledged_at, closedAt: r.closed_at, updatedAt: r.updated_at,
+        }));
+      },
       async save(period: PlanningPeriodMeta) {
         await db.exec(
           `INSERT INTO planning_periods (

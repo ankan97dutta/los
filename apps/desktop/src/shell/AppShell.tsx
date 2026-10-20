@@ -14,10 +14,11 @@ type Props = {
   onCommandPalette: () => void;
   onQuickCapture: () => void;
   notices?: ReactNode;
+  focusChip?: ReactNode;
   children: ReactNode;
 };
 
-export function AppShell({ rt, route, inboxCount, onNavigatePrimary, onCommandPalette, onQuickCapture, notices, children }: Props) {
+export function AppShell({ rt, route, inboxCount, onNavigatePrimary, onCommandPalette, onQuickCapture, notices, focusChip, children }: Props) {
   const meta = ROUTE_TITLES[route] ?? { title: 'LOS', context: '' };
   return (
     <div className="app-shell">
@@ -45,6 +46,7 @@ export function AppShell({ rt, route, inboxCount, onNavigatePrimary, onCommandPa
           <span style={{ fontSize: '0.95rem', fontWeight: 600 }} aria-hidden="true">{meta.title}</span>
           {meta.context ? <span className="header-context">{meta.context}</span> : null}
           <div className="header-actions">
+            {focusChip}
             <button type="button" className="ghost" data-tour="palette" onClick={onCommandPalette} aria-label="Open command palette">
               Search / commands <kbd aria-hidden="true">⌘K</kbd>
             </button>

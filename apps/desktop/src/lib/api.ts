@@ -55,8 +55,31 @@ export const api = {
       fortnightStartWeekday: Weekday;
       globalShortcutEnabled: boolean;
       globalShortcutAccel: string;
+      focusTechnique: string;
+      focusCustomFocusMinutes: number;
+      focusCustomBreakMinutes: number;
+      focusLongBreakMinutes: number;
+      focusSoundEnabled: boolean;
+      focusNotificationsEnabled: boolean;
+      focusNotificationsIncludeTask: boolean;
     }>,
   ) => svc.settingsUpdate(rt, patch),
+  focusStart: (rt: WorkspaceRuntime, input: Parameters<typeof svc.focusStart>[1]) => svc.focusStart(rt, input),
+  focusGetActive: (rt: WorkspaceRuntime) => svc.focusGetActive(rt),
+  focusPause: (rt: WorkspaceRuntime, sessionId: string) => svc.focusPause(rt, { sessionId }),
+  focusResume: (rt: WorkspaceRuntime, sessionId: string) => svc.focusResume(rt, { sessionId }),
+  focusEndEarly: (rt: WorkspaceRuntime, sessionId: string) => svc.focusEndEarly(rt, { sessionId }),
+  focusStartBreak: (rt: WorkspaceRuntime, sessionId: string) => svc.focusStartBreak(rt, { sessionId }),
+  focusStartNextBlock: (rt: WorkspaceRuntime, previousSessionId: string) => svc.focusStartNextBlock(rt, { previousSessionId }),
+  focusClose: (rt: WorkspaceRuntime, sessionId: string, markTaskDone?: boolean) => svc.focusClose(rt, { sessionId, markTaskDone }),
+  focusTodaySummary: (rt: WorkspaceRuntime) => svc.focusTodaySummary(rt),
+  focusTechniques: (rt: WorkspaceRuntime) => svc.focusTechniques(rt),
+  reportPeriods: (rt: WorkspaceRuntime, reportType: 'mbr' | 'qbr') => svc.reportPeriods(rt, { reportType }),
+  reportGenerate: (rt: WorkspaceRuntime, reportType: 'mbr' | 'qbr', periodStart: string) => svc.reportGenerate(rt, { reportType, periodStart }),
+  reportGet: (rt: WorkspaceRuntime, reportType: 'mbr' | 'qbr', periodStart: string) => svc.reportGet(rt, { reportType, periodStart }),
+  reportSaveEdits: (rt: WorkspaceRuntime, input: Parameters<typeof svc.reportSaveEdits>[1]) => svc.reportSaveEdits(rt, input),
+  reportRefresh: (rt: WorkspaceRuntime, draftId: string) => svc.reportRefresh(rt, { draftId }),
+  reportCopy: (rt: WorkspaceRuntime, draftId: string) => svc.reportCopy(rt, { draftId }),
   workspaceStatus: (rt: WorkspaceRuntime) => svc.workspaceStatus(rt),
   workspaceResetAll: (rt: WorkspaceRuntime) => svc.workspaceResetAll(rt),
   previousFortnight: svc.previousFortnight,

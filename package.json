@@ -10,7 +10,8 @@
     "dev": "pnpm --filter @los/desktop dev",
     "tauri:dev": "pnpm --filter @los/desktop tauri:dev",
     "lint": "pnpm -r lint",
-    "build": "pnpm -r build"
+    "build": "pnpm -r build",
+    "check:copy": "node apps/desktop/scripts/check-copy.mjs"
   },
   "devDependencies": {
     "typescript": "^5.7.3",

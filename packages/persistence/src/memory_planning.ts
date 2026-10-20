@@ -33,6 +33,9 @@ export function createMemoryPlanningRepos(store: MemoryStore): PlanningRepos {
       async get(periodStart) {
         return store.data.planningPeriods.find((p) => p.periodStart === periodStart) ?? null;
       },
+      async listBetween(startDate: string, endDate: string) {
+        return store.data.planningPeriods.filter((p) => p.periodStart <= endDate && p.periodEnd >= startDate);
+      },
       async save(period: PlanningPeriodMeta) {
         const idx = store.data.planningPeriods.findIndex((p) => p.periodStart === period.periodStart);
         if (idx >= 0) store.data.planningPeriods[idx] = period;

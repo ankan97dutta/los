@@ -43,6 +43,11 @@ export function DailyReviewPage({ rt }: Props) {
   const today = api.localToday();
   const [date, setDate] = useState(today);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [focusToday, setFocusToday] = useState<{ blocks: number; focusedMinutes: number } | null>(null);
+
+  useEffect(() => {
+    void api.focusTodaySummary(rt).then((r) => { if (r.ok) setFocusToday({ blocks: r.data.blocks, focusedMinutes: r.data.focusedMinutes }); });
+  }, [rt]);
 
   useEffect(() => {
     void api.dailyGet(rt, date).then((r) => {
@@ -122,7 +127,18 @@ export function DailyReviewPage({ rt }: Props) {
             ) : null}
           </div>
           <SaveIndicator status={status} message={error} />
+          <div className="row" style={{ alignItems: 'center' }}>
+            {focusToday ? <span className="muted">Focus today: {focusToday.blocks} block{focusToday.blocks === 1 ? '' : 's'}, {focusToday.focusedMinutes} minutes</span> : null}
+            <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('los:open-focus'))}>Focus</button>
+          </div>
         </div>
+      </div>
+
+      <div className="panel" aria-label="Today at a glance">
+        <h2 style={{ marginTop: 0 }}>Today at a glance</h2>
+        <p style={{ margin: '0.25rem 0' }}><strong>Next:</strong> {draft.nextActionLines.find((l) => l.text.trim())?.text ?? 'No next action written yet. Add one below.'}</p>
+        <p style={{ margin: '0.25rem 0' }}><strong>Blockers:</strong> {draft.blockers.trim() ? draft.blockers.trim().split('\n')[0] : 'No blockers written. That is good news, or they are not written down yet.'}</p>
+        <p style={{ margin: '0.25rem 0' }}><strong>Focus:</strong> {focusToday ? `${focusToday.blocks} block${focusToday.blocks === 1 ? '' : 's'}, ${focusToday.focusedMinutes} minutes so far.` : 'No focus blocks counted yet today.'}</p>
       </div>
 
       {empty ? (

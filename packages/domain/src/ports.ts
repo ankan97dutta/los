@@ -10,6 +10,8 @@ import type {
   TeamMember,
   WorkAllocation,
 } from './planning.js';
+import type { FocusSession } from './focus.js';
+import type { ReportDraft, ReportSection, ReportType } from './reports.js';
 
 export type Application = {
   id: string;
@@ -40,6 +42,13 @@ export type WorkspaceSettings = {
   fortnightStartWeekday: Weekday;
   globalShortcutEnabled: boolean;
   globalShortcutAccel: string;
+  focusTechnique?: string;
+  focusCustomFocusMinutes?: number;
+  focusCustomBreakMinutes?: number;
+  focusLongBreakMinutes?: number;
+  focusSoundEnabled?: boolean;
+  focusNotificationsEnabled?: boolean;
+  focusNotificationsIncludeTask?: boolean;
   updatedAt: string;
 };
 
@@ -67,6 +76,8 @@ export interface ApplicationsRepository {
 
 export interface DailyRepository {
   getByDate(date: string): Promise<DailyReview | null>;
+  /** Inclusive at both ends. */
+  listBetween(startDate: string, endDate: string): Promise<DailyReview[]>;
   save(review: DailyReview): Promise<void>;
 }
 
@@ -94,7 +105,25 @@ export interface TeamMembersRepository {
 
 export interface PlanningPeriodsRepository {
   get(periodStart: string): Promise<PlanningPeriodMeta | null>;
+  /** Inclusive ranges. A period qualifies when it overlaps the range. */
+  listBetween(startDate: string, endDate: string): Promise<PlanningPeriodMeta[]>;
   save(period: PlanningPeriodMeta): Promise<void>;
+}
+
+export interface FocusRepository {
+  save(session: FocusSession): Promise<void>;
+  getById(id: string): Promise<FocusSession | null>;
+  listActive(): Promise<FocusSession[]>;
+  /** Inclusive at both ends, by finishedLocalDate. */
+  listByFinishedDateRange(startDate: string, endDate: string): Promise<FocusSession[]>;
+  listAll(): Promise<FocusSession[]>;
+}
+
+export interface ReportsRepository {
+  saveDraft(draft: ReportDraft, sections: ReportSection[]): Promise<void>;
+  getDraft(reportType: ReportType, periodStart: string): Promise<{ draft: ReportDraft; sections: ReportSection[] } | null>;
+  getDraftById(id: string): Promise<{ draft: ReportDraft; sections: ReportSection[] } | null>;
+  listDrafts(): Promise<ReportDraft[]>;
 }
 
 export interface PeriodCapacityRepository {

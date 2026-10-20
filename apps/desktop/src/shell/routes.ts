@@ -14,6 +14,7 @@ export type RouteId =
   | 'reviews-monthly'
   | 'reviews-history'
   | 'reviews-calendar'
+  | 'reviews-reports'
   | 'planning-capacity'
   | 'planning-fortnight'
   | 'quick';
@@ -46,6 +47,7 @@ export const ROUTE_TITLES: Record<string, { title: string; context: string }> = 
   'reviews-calendar': { title: 'Reviews & history', context: 'Calendar of briefs and closed weeks' },
   'reviews-monthly': { title: 'Reviews & history', context: 'Monthly review' },
   'reviews-history': { title: 'Reviews & history', context: 'Closed planning periods' },
+  'reviews-reports': { title: 'Reviews & history', context: 'Monthly and quarterly reports' },
   settings: { title: 'Settings', context: 'Local workspace preferences' },
 };
 

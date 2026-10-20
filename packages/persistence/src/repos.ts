@@ -17,6 +17,9 @@ import type {
 import type { MemoryStore } from './memory_store.js';
 import { createMemoryPlanningRepos } from './memory_planning.js';
 import type { PlanningRepos } from './planning_repos.js';
+import { createMemoryFocusRepo } from './focus_repo.js';
+import { createMemoryReportsRepo } from './reports_repo.js';
+import type { FocusRepository, ReportsRepository } from '@los/domain';
 
 export function createRepos(store: MemoryStore): {
   inbox: InboxRepository;
@@ -27,9 +30,13 @@ export function createRepos(store: MemoryStore): {
   monthly: MonthlyRepository;
   settings: SettingsRepository;
   planning: PlanningRepos;
+  focus: FocusRepository;
+  reports: ReportsRepository;
 } {
   return {
     planning: createMemoryPlanningRepos(store),
+    focus: createMemoryFocusRepo(store),
+    reports: createMemoryReportsRepo(store),
     inbox: {
       async listOpen() {
         return store.data.inbox
@@ -89,6 +96,9 @@ export function createRepos(store: MemoryStore): {
     daily: {
       async getByDate(date) {
         return store.data.daily.find((d) => d.date === date) ?? null;
+      },
+      async listBetween(startDate: string, endDate: string) {
+        return store.data.daily.filter((d) => d.date >= startDate && d.date <= endDate);
       },
       async save(review: DailyReview) {
         const idx = store.data.daily.findIndex((d) => d.date === review.date);

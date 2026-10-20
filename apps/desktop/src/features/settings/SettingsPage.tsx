@@ -7,7 +7,7 @@ import { exportDbJson, importDbJson } from '../../lib/runtime';
 import { Select } from '../../ui/Select';
 import { Checkbox } from '../../ui/Checkbox';
 import { isTauriRuntime } from '../../lib/isTauri';
-import { readTheme, writeTheme, type UiTheme } from '../../ui/theme';
+import { readTheme, writeTheme, readAccent, writeAccent, type UiTheme, type UiAccent } from '../../ui/theme';
 
 type Props = { rt: WorkspaceRuntime; onRestored?: () => void };
 
@@ -22,6 +22,14 @@ export function SettingsPage({ rt, onRestored }: Props) {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState<UiTheme>(() => readTheme());
+  const [accent, setAccent] = useState<UiAccent>(() => readAccent());
+
+  async function saveFocus(patch: Partial<WorkspaceSettings>) {
+    setError(null);
+    const r = await api.settingsUpdate(rt, patch);
+    if (!r.ok) setError(r.error.message);
+    else { setSettings(r.data.settings); setMessage('Focus settings saved on this device.'); }
+  }
 
   useEffect(() => {
     void api.settingsGet(rt).then((r) => {
@@ -209,19 +217,55 @@ export function SettingsPage({ rt, onRestored }: Props) {
         <h2>Appearance</h2>
         <Select
           id="ui-theme"
-          label="Theme"
+          label="Appearance"
           value={theme}
           onValueChange={(v) => {
             const next = v as UiTheme;
             setTheme(next);
             writeTheme(next);
-            setMessage('Theme updated. We keep that choice on this device.');
+            setMessage('Appearance updated. We keep that choice on this device.');
           }}
           options={[
-            { value: 'dark', label: 'Dark graphite (the default)' },
+            { value: 'dark', label: 'Dark' },
             { value: 'light', label: 'Light' },
           ]}
         />
+        <Select
+          id="ui-accent"
+          label="Primary color"
+          value={accent}
+          onValueChange={(v) => {
+            const next = v as UiAccent;
+            setAccent(next);
+            writeAccent(next);
+            setMessage('Primary color updated. We keep that choice on this device.');
+          }}
+          options={[
+            { value: 'default', label: 'Default' },
+            { value: 'ember', label: 'Ember (orange)' },
+            { value: 'signal', label: 'Signal (red)' },
+          ]}
+        />
+        <p className="muted" style={{ margin: 0 }}>Appearance and primary color are separate choices. Status colors stay distinct from the primary color, and printed reports ignore both.</p>
+      </div>
+
+      <div className="pref-group">
+        <h2>Focus</h2>
+        <div className="row">
+          <label className="field"><span className="field-label">Custom focus minutes</span>
+            <input type="number" min={5} max={180} value={settings.focusCustomFocusMinutes ?? 25} onChange={(e) => setSettings({ ...settings, focusCustomFocusMinutes: Number(e.target.value) })} onBlur={() => void saveFocus({ focusCustomFocusMinutes: settings.focusCustomFocusMinutes })} />
+          </label>
+          <label className="field"><span className="field-label">Custom break minutes</span>
+            <input type="number" min={5} max={180} value={settings.focusCustomBreakMinutes ?? 5} onChange={(e) => setSettings({ ...settings, focusCustomBreakMinutes: Number(e.target.value) })} onBlur={() => void saveFocus({ focusCustomBreakMinutes: settings.focusCustomBreakMinutes })} />
+          </label>
+          <label className="field"><span className="field-label">Long break minutes</span>
+            <input type="number" min={15} max={30} value={settings.focusLongBreakMinutes ?? 20} onChange={(e) => setSettings({ ...settings, focusLongBreakMinutes: Number(e.target.value) })} onBlur={() => void saveFocus({ focusLongBreakMinutes: settings.focusLongBreakMinutes })} />
+          </label>
+        </div>
+        <Checkbox checked={settings.focusSoundEnabled !== false} onChange={(c) => void saveFocus({ focusSoundEnabled: c })}>Play a short sound when a block ends</Checkbox>
+        <Checkbox checked={Boolean(settings.focusNotificationsEnabled)} onChange={(c) => void saveFocus({ focusNotificationsEnabled: c })}>Send a system notification when a block ends</Checkbox>
+        <Checkbox checked={Boolean(settings.focusNotificationsIncludeTask)} onChange={(c) => void saveFocus({ focusNotificationsIncludeTask: c })}>Include the task name in notifications (it may show on your lock screen)</Checkbox>
+        {!isTauri() ? <p className="muted">Notifications: n/a (browser preview)</p> : null}
       </div>
 
       <div className="pref-group">

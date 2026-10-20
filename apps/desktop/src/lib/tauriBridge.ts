@@ -16,6 +16,9 @@ export async function initTauriBridge(): Promise<void> {
     await listen('los:quick-capture', () => {
       window.dispatchEvent(new CustomEvent('los:quick-capture'));
     });
+    await listen('los:open-focus', () => {
+      window.dispatchEvent(new CustomEvent('los:open-focus'));
+    });
   } catch {
     // Browser / Vite-only: no Tauri runtime
   }
