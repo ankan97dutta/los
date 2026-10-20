@@ -1,0 +1,21 @@
+{
+  "name": "los",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "test": "pnpm -r test",
+    "test:domain": "pnpm --filter @los/domain test",
+    "test:persistence": "pnpm --filter @los/persistence test",
+    "test:app-services": "pnpm --filter @los/app-services test",
+    "dev": "pnpm --filter @los/desktop dev",
+    "tauri:dev": "pnpm --filter @los/desktop tauri:dev",
+    "lint": "pnpm -r lint",
+    "build": "pnpm -r build",
+    "check:copy": "node apps/desktop/scripts/check-copy.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5",
+    "prettier": "^3.4.2"
+  }
+}
