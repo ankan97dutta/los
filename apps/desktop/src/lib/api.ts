@@ -6,10 +6,11 @@ import type { Weekday } from '@los/domain';
 export const api = {
   inboxCapture: (rt: WorkspaceRuntime, description: string) => svc.inboxCapture(rt, description),
   inboxListOpen: (rt: WorkspaceRuntime) => svc.inboxListOpen(rt),
+  inboxListKept: (rt: WorkspaceRuntime) => svc.inboxListKept(rt),
   inboxTriage: (
     rt: WorkspaceRuntime,
     id: string,
-    disposition: 'convert' | 'dismiss' | 'keep',
+    disposition: 'convert' | 'dismiss' | 'keep' | 'reopen',
   ) => svc.inboxTriage(rt, id, disposition),
   actionsCreate: (rt: WorkspaceRuntime, description: string, applicationId?: string | null) =>
     svc.actionsCreate(rt, description, applicationId),
@@ -54,8 +55,11 @@ export const api = {
     }>,
   ) => svc.settingsUpdate(rt, patch),
   workspaceStatus: (rt: WorkspaceRuntime) => svc.workspaceStatus(rt),
+  workspaceResetAll: (rt: WorkspaceRuntime) => svc.workspaceResetAll(rt),
   previousFortnight: svc.previousFortnight,
   nextFortnight: svc.nextFortnight,
+  previousWeek: svc.previousWeek,
+  nextWeek: svc.nextWeek,
   localToday: svc.localToday,
   planningPeriodGet: (rt: WorkspaceRuntime, periodStart?: string) =>
     svc.planningPeriodGet(rt, periodStart),

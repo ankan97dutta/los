@@ -4,6 +4,7 @@ import {
   MemoryStore,
   MIGRATION_SCRIPTS,
   migrateWithScripts,
+  resetWorkspaceData,
   tryLegacyImport,
   type LosDbSnapshot,
   type DbSession,
@@ -175,6 +176,9 @@ export async function createTauriRuntime(caps?: {
           closed = true;
           await session!.close();
         }
+      },
+      resetAll: async () => {
+        await resetWorkspaceData(session!, new Date().toISOString());
       },
     };
     return { ok: true, rt, notices };

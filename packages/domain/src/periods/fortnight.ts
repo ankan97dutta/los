@@ -63,3 +63,19 @@ export function nextFortnight(period: FortnightPeriod): FortnightPeriod {
 export function isWeekday(s: string): s is Weekday {
   return ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].includes(s);
 }
+
+/** Weekly planning periods (7 days) starting on `startWeekday`. Period type is shared with fortnight shape. */
+export function weekContaining(date: LocalDate, startWeekday: Weekday = 'mon'): FortnightPeriod {
+  const periodStart = startOfWeekContaining(date, startWeekday);
+  return { periodStart, periodEnd: addDays(periodStart, 6) };
+}
+
+export function previousWeek(period: FortnightPeriod): FortnightPeriod {
+  const periodStart = addDays(period.periodStart, -7);
+  return { periodStart, periodEnd: addDays(periodStart, 6) };
+}
+
+export function nextWeek(period: FortnightPeriod): FortnightPeriod {
+  const periodStart = addDays(period.periodStart, 7);
+  return { periodStart, periodEnd: addDays(periodStart, 6) };
+}

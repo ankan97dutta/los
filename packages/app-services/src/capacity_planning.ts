@@ -4,7 +4,7 @@ import {
   computeMemberLoad,
   createTeamMember,
   err,
-  fortnightContaining,
+  weekContaining,
   isCarryForwardEligible,
   localToday,
   newId,
@@ -46,8 +46,8 @@ async function ensurePeriod(rt: WorkspaceRuntime, periodStart?: string) {
   const settings = await repos(rt).settings.get();
   const asOf = periodStart ?? localToday();
   const period = periodStart
-    ? fortnightContaining(periodStart, settings.fortnightStartWeekday)
-    : fortnightContaining(asOf, settings.fortnightStartWeekday);
+    ? weekContaining(periodStart, settings.fortnightStartWeekday)
+    : weekContaining(asOf, settings.fortnightStartWeekday);
   const existing = await repos(rt).planning.planningPeriods.get(period.periodStart);
   if (existing) return existing;
   const meta = {
@@ -472,7 +472,7 @@ export async function planningPeriodClose(
     if (ids.length) {
       const settings = await repos(rt).settings.get();
       const nextStart = addDays(period.periodEnd, 1);
-      const nextPeriod = fortnightContaining(nextStart, settings.fortnightStartWeekday);
+      const nextPeriod = weekContaining(nextStart, settings.fortnightStartWeekday);
       nextPeriodStart = nextPeriod.periodStart;
       let nextMeta = await repos(rt).planning.planningPeriods.get(nextPeriod.periodStart);
       if (!nextMeta) {

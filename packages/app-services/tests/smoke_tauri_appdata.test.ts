@@ -4,7 +4,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { bootstrapNodeSqlite } from '@los/persistence/node';
 import { createSqliteRepos } from '@los/persistence';
-import { inboxCapture, inboxListOpen, inboxTriage } from '../src/workspace.js';
+import { inboxCapture, inboxListKept, inboxListOpen, inboxTriage } from '../src/workspace.js';
 
 /** Same path Tauri `db_bootstrap` uses (macOS). */
 function tauriAppDataDbPath(): string {
@@ -41,10 +41,15 @@ describe('002 remaining smokes (Tauri app-data path)', () => {
     if (!cap.ok) return;
     const triage = await inboxTriage(rt, cap.data.item.id, 'keep');
     expect(triage.ok).toBe(true);
-    const list = await inboxListOpen(rt);
+    // Keep-for-later parks the item out of the open triage list (kept list).
+    const list = await inboxListKept(rt);
     expect(list.ok).toBe(true);
     if (list.ok) {
       expect(list.data.items.some((i) => i.description === marker)).toBe(true);
+    }
+    const open = await inboxListOpen(rt);
+    if (open.ok) {
+      expect(open.data.items.some((i) => i.description === marker)).toBe(false);
     }
     boot.session.close();
   });
@@ -54,7 +59,7 @@ describe('002 remaining smokes (Tauri app-data path)', () => {
       const boot = await bootstrapNodeSqlite(dbPath);
       expect(boot.created).toBe(false);
       const rt = makeRt(boot.session, dbPath);
-      const list = await inboxListOpen(rt);
+      const list = await inboxListKept(rt);
       expect(list.ok).toBe(true);
       if (list.ok) {
         expect(list.data.items.some((i) => i.description === marker)).toBe(true);
@@ -80,7 +85,7 @@ describe('002 remaining smokes (Tauri app-data path)', () => {
     const quickSrc = readFileSync(join(root, 'QuickCapture.tsx'), 'utf8');
     expect(inboxSrc).toMatch(/e\.key === ['"]Enter['"]/);
     expect(inboxSrc).toContain('requestSubmit');
-    expect(inboxSrc).toContain('Tab to field, Enter to submit');
+    expect(inboxSrc).toContain('Keep for later'); // keyboard triage keys documented in the lede
     expect(quickSrc).toMatch(/e\.key === ['"]Enter['"]/);
     expect(quickSrc).toContain('requestSubmit');
   });

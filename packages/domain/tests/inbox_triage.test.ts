@@ -12,7 +12,15 @@ describe('inbox triage', () => {
 
     const keep = applyTriage(created.data, 'keep', later);
     expect(keep.ok).toBe(true);
-    if (keep.ok) expect(keep.data.status).toBe('open');
+    if (keep.ok) {
+      expect(keep.data.status).toBe('kept');
+      // Kept items can return to the inbox or be triaged from kept.
+      const reopen = applyTriage(keep.data, 'reopen', later);
+      expect(reopen.ok && reopen.data.status).toBe('open');
+      const convertKept = applyTriage(keep.data, 'convert', later, 'action-9');
+      expect(convertKept.ok && convertKept.data.status).toBe('converted');
+      expect(applyTriage(keep.data, 'keep', later).ok).toBe(false);
+    }
 
     const dismiss = applyTriage(created.data, 'dismiss', later);
     expect(dismiss.ok).toBe(true);

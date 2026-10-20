@@ -418,3 +418,31 @@ Phase 18 + Phase 19 (T089–T093) — Vite preview honesty (SC-U08).
 - [x] T101 Make LocalStatus reflect actual Rust shortcut state in `apps/desktop/src/lib/runtime.ts`, `apps/desktop/src/App.tsx`, and `apps/desktop/src/features/status/LocalStatus.tsx`: invoke the Rust `workspace_status` command at boot (and refresh it when Settings re-registers) instead of relying only on the boot-time `window.__LOS_CAPS__` snapshot and the replay-less `los:caps` setup event, so a successful registration shows `Shortcut: registered` per SC-U08 (partial)
 - [x] T102 Honor persisted shortcut settings at startup in `apps/desktop/src-tauri/src/lib.rs` and `apps/desktop/src-tauri/src/shortcuts.rs`: apply the saved `WorkspaceSettings` accelerator and enabled flag after workspace boot (Rust-side or via a post-boot TS `shortcuts_reregister` call) instead of always registering the hardcoded `CommandOrControl+Shift+L` as enabled, per 002 FR-H09 / FR-U14 (partial)
 - [x] T103 Verify end-to-end in `tauri:dev` and record evidence in `specs/004-lead-command-ux/checklists/verification-evidence.md`: global shortcut opens Quick Capture, LocalStatus shows `Shortcut: registered`, changing the accelerator in Settings re-registers successfully, and in-app Inbox capture still works if registration is forced to fail per SC-U08 (partial)
+
+---
+
+## Phase 22: Premium command-center refresh (2026-10-20 user brief)
+
+**Input**: `design-refresh-2026-10-20.md` (audit + design system + screen map).
+**Correction**: priority/actual/application/dependency fields and separate
+trade-off/outcome/carryover notes ARE service-supported (`planningWorkUpsert`,
+`planningPeriodSaveMeta/Close`) — wire them in UI; no domain/SQLite change.
+
+- [x] T104 [US1] Refine graphite/light tokens (indigo accent, surfaces, tabular numerals, panel widths) in `tokens.css`/`base.css`
+- [x] T105 [US1] Grouped sidebar (Workspace/System), shortcut hints + Inbox count, contextual page header with Quick Capture + ⌘K actions, Cmd/Ctrl+1..6 nav in `AppShell.tsx`/`Nav.tsx`/`App.tsx`
+- [x] T106 [US4] Group palette actions with shortcut hints in `CommandPalette.tsx`
+- [x] T107 [US3] Planning canvas: full summary (net/committed/remaining/unallocated/unestimated), workload bars with over/zero-capacity text, actionable warnings (Review → affected item/member), capacity formula caption in `CapacityPlanPage.tsx`
+- [x] T108 [US3] Right detail panel for work items exposing priority/estimate/actual/application/dependency/status/assignee/kind (service-backed); committed ≠ stretch by text+symbol; closed = read-only
+- [x] T109 [US3] Inline close review (warnings, counts, carry-forward, separate trade-off/outcome/carryover, explicit acknowledgement) replacing `window.confirm` close + fixing carryover=tradeoff conflation
+- [x] T110 [US1] Today as daily brief (next actions / blockers / follow-ups-decisions) on existing Daily Review fields + autosave
+- [x] T111 Add pure planning view helpers + focused tests (`planningView.ts`, domain-side test placement per repo conventions); run `pnpm test && pnpm lint && pnpm --filter @los/desktop build`; record evidence + honest gaps
+
+---
+
+## Phase 23: Weekly planning, reset, keep, manageable team, keyboard (2026-10-20)
+
+- [x] T112 Weekly capacity periods (7d `weekContaining/previousWeek/nextWeek`); capacity service + UI relabeled Weekly; personal Fortnight plan unchanged
+- [x] T113 Inbox Keep-for-later as a real `kept` status (domain + migration v3 + `listKept` + Return-to-inbox); smoke tests updated to new semantics
+- [x] T114 Settings Reset all data with optional export-first, inline keyboard confirmation; persistence `resetWorkspaceData` + Tauri/preview wiring
+- [x] T115 Team roster rename/activate/deactivate; Applications rename/reset-name with Esc-cancel inline edits
+- [x] T116 Keyboard: `?` shortcuts dialog, arrow keys in sidebar/tabs/work & workload rows, Esc closes detail panel with focus return, no `window.confirm` left (inline acks), Settings keyboard section

@@ -1,7 +1,7 @@
 import { Result } from './result.js';
 import { newId, validateDescription } from './validation.js';
 
-export type InboxStatus = 'open' | 'converted' | 'dismissed';
+export type InboxStatus = 'open' | 'kept' | 'converted' | 'dismissed';
 
 export type InboxItem = {
   id: string;
@@ -27,7 +27,7 @@ export function createInboxItem(descriptionRaw: string, nowIso: string): Result<
   };
 }
 
-export type TriageDisposition = 'convert' | 'dismiss' | 'keep';
+export type TriageDisposition = 'convert' | 'dismiss' | 'keep' | 'reopen';
 
 export function applyTriage(
   item: InboxItem,
@@ -35,11 +35,21 @@ export function applyTriage(
   nowIso: string,
   newActionId?: string,
 ): Result<InboxItem> {
-  if (item.status !== 'open') {
+  // 'open' = needs triage; 'kept' = deliberately parked for later. Both are actionable.
+  if (item.status !== 'open' && item.status !== 'kept') {
     return { ok: false, error: { code: 'INVALID_STATE', message: 'Inbox item is not open.' } };
   }
   if (disposition === 'keep') {
-    return { ok: true, data: { ...item, updatedAt: nowIso } };
+    if (item.status !== 'open') {
+      return { ok: false, error: { code: 'INVALID_STATE', message: 'Only an open item can be kept for later.' } };
+    }
+    return { ok: true, data: { ...item, status: 'kept', updatedAt: nowIso } };
+  }
+  if (disposition === 'reopen') {
+    if (item.status !== 'kept') {
+      return { ok: false, error: { code: 'INVALID_STATE', message: 'Only a kept item can return to the inbox.' } };
+    }
+    return { ok: true, data: { ...item, status: 'open', updatedAt: nowIso } };
   }
   if (disposition === 'dismiss') {
     return {

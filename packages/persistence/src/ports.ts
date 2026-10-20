@@ -29,4 +29,4 @@ export interface DbSession {
 }
 
 /** Max schema version this app binary understands. */
-export const APP_MAX_SCHEMA_VERSION = 2;
+export const APP_MAX_SCHEMA_VERSION = 3;

@@ -85,73 +85,68 @@ export function DailyReviewPage({ rt }: Props) {
     !draft.followUps &&
     draft.nextActionLines.every((l) => !l.text.trim());
 
+  const sections: Array<{
+    key: 'next' | 'blockers' | 'followUps' | 'outcomes';
+    title: string; question: string; hint: string;
+  }> = [
+    { key: 'next', title: 'Move forward', question: 'What must I move forward today?', hint: 'One clear next action per line.' },
+    { key: 'blockers', title: 'Blockers', question: 'Who is blocked, and on what?', hint: 'Name the person and the dependency.' },
+    { key: 'followUps', title: 'Decisions & follow-ups', question: 'What decision is waiting for me?', hint: 'Follow-ups you owe other people.' },
+    { key: 'outcomes', title: 'Outcomes', question: 'What actually landed?', hint: 'Recorded at review time.' },
+  ];
+
   return (
     <section className="stack">
-      <h1>Daily review</h1>
-      <p className="lede">Outcomes, blockers, follow-ups, and next actions. Autosaves while you type.</p>
-      <div className="row">
-        <button type="button" onClick={() => setDate((d) => addDays(d, -1))}>
-          Previous day
-        </button>
-        <strong>{date}</strong>
-        <button type="button" onClick={() => setDate((d) => addDays(d, 1))}>
-          Next day
-        </button>
-        <SaveIndicator status={status} message={error} />
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <div>
+          <h1>Today</h1>
+          <p className="lede" style={{ margin: 0 }}>Your daily operating brief. Autosaves while you type.</p>
+        </div>
+        <div className="row">
+          <button type="button" onClick={() => setDate((d) => addDays(d, -1))}>← Previous</button>
+          <strong className="num">{date}</strong>
+          <button type="button" onClick={() => setDate((d) => addDays(d, 1))}>Next →</button>
+          <SaveIndicator status={status} message={error} />
+        </div>
       </div>
 
       {empty ? (
-        <EmptyState
-          title="No notes for this day yet"
-          actionHint="Type in Outcomes below — changes autosave."
-        />
+        <EmptyState title="No brief for this day yet" actionHint="Start with one next action below — changes autosave." />
       ) : null}
 
-      {(
-        [
-          ['outcomes', 'Outcomes'],
-          ['blockers', 'Blockers'],
-          ['followUps', 'Follow-ups'],
-        ] as const
-      ).map(([key, label]) => (
-        <div className="field" key={key}>
-          <label htmlFor={`daily-${key}`}>{label}</label>
-          <textarea
-            id={`daily-${key}`}
-            value={draft[key]}
-            onChange={(e) => setDraft({ ...draft, [key]: e.target.value })}
-          />
-        </div>
-      ))}
-
-      <div className="stack">
-        <strong>Next actions</strong>
-        {draft.nextActionLines.map((line, idx) => (
-          <input
-            key={line.id}
-            aria-label={`Next action line ${idx + 1}`}
-            value={line.text}
-            onChange={(e) => {
-              const next = [...draft.nextActionLines];
-              next[idx] = { ...line, text: e.target.value };
-              setDraft({ ...draft, nextActionLines: next });
-            }}
-          />
+      <div className="brief-grid">
+        {sections.map((section) => (
+          <div className="brief-section" key={section.key}>
+            <h2>{section.title} <span className="brief-q">{section.question}</span></h2>
+            {section.key === 'next' ? (
+              <div className="stack">
+                {draft.nextActionLines.map((line, idx) => (
+                  <input
+                    key={line.id}
+                    aria-label={`Next action ${idx + 1}`}
+                    value={line.text}
+                    placeholder={idx === 0 ? 'The single most important next action…' : `Next action ${idx + 1}`}
+                    onChange={(e) => {
+                      const next = [...draft.nextActionLines];
+                      next[idx] = { ...line, text: e.target.value };
+                      setDraft({ ...draft, nextActionLines: next });
+                    }}
+                  />
+                ))}
+                <div><button type="button" onClick={() => setDraft({ ...draft, nextActionLines: [...draft.nextActionLines, { id: newId(), sortOrder: draft.nextActionLines.length, text: '' }] })}>+ Add next action</button></div>
+              </div>
+            ) : (
+              <div className="field">
+                <label htmlFor={`daily-${section.key}`} className="field-label">{section.hint}</label>
+                <textarea
+                  id={`daily-${section.key}`}
+                  value={draft[section.key as 'blockers' | 'followUps' | 'outcomes']}
+                  onChange={(e) => setDraft({ ...draft, [section.key]: e.target.value })}
+                />
+              </div>
+            )}
+          </div>
         ))}
-        <button
-          type="button"
-          onClick={() =>
-            setDraft({
-              ...draft,
-              nextActionLines: [
-                ...draft.nextActionLines,
-                { id: newId(), sortOrder: draft.nextActionLines.length, text: '' },
-              ],
-            })
-          }
-        >
-          Add line
-        </button>
       </div>
     </section>
   );

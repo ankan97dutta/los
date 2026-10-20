@@ -84,11 +84,44 @@
 | Full `pnpm test` | PARTIAL | Same 003 Track B: `smoke_capacity_planning` fails when current fortnight already closed — not introduced by polish |
 | Desktop UX complete-gate refresh | PASS | T088 — modern-minimal rows above; constitution v1.1.0 still applied |
 
-## 003 Track B (not closed by 004)
+## Premium command-center refresh (Phase 22, T104–T111, 2026-10-20)
+
+Plan: `design-refresh-2026-10-20.md`. No domain/SQLite changes.
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| Shell: grouped Workspace/System nav, ⌘1–6 hints + nav, Inbox count, contextual header, Quick Capture + ⌘K, default route = Today | PASS | Vite preview snapshot: Inbox badge `3`; header actions present; FR-U14 phrases unchanged |
+| Today brief (Move forward / Blockers / Decisions & follow-ups / Outcomes on existing Daily fields + autosave) | PASS | Vite preview snapshot; SaveIndicator retained |
+| Planning summary Net/Committed/Remaining/Unallocated/Unestimated (service totals) | PASS | Closed fixture: 36h / 0h / 36h / 0 / 1 rendered tabular |
+| Workload bars, over/zero-capacity text, actionable warnings (`Review →`) | PASS | Fixture warning selects affected item; overload/zero paths unit-tested in `planningView.test.ts` (4/4) |
+| Detail panel: priority/estimate/Unknown/actual/application/dependency/status/assignee/kind; committed ● vs stretch ○; closed read-only `<dl>` | PASS | Panel verified at 1440px (340px, right column); closed fixture opens read-only |
+| Inline close review (counts, carry-forward, separate trade-off/outcome/carryover, ack checkbox) | PASS (code) | Replaces `window.confirm` close + fixes carryover=tradeoff conflation; not exercised end-to-end on an open fixture in preview (preview fixture period is closed) |
+| `pnpm --filter @los/desktop test` (new) | PASS | 4/4 planningView tests |
+| `pnpm lint`, desktop `tsc+vite build`, `cargo check` | PASS | Build 495ms; cargo check clean |
+| Domain/persistence tests | PASS | 29/29, 12/12 |
+| Full `pnpm test` | PARTIAL (pre-existing) | `@los/app-services` smoke failures (`database is locked`, closed-period smoke) reproduce on a clean tree via `git stash` — not introduced by Phase 22 |
+| Tauri runtime smoke | NOT RUN | Vite preview only this session; global-shortcut/manual Tauri checks from T103 stand |
+
+**Correction to Track B below**: priority/app/dependency/actual editors are now
+wired in the detail panel because the service already supported them. Formal
+003 FR-C05/C09/C12 acceptance sign-off still belongs to 003 verification.
+
+## 003 Track B (remaining)
 
 | Gap | Status |
 |-----|--------|
-| Soft-gate capacity-row UI hole | Open under 003 |
-| Missing field editors (priority/app/deps/actual) | Open under 003 — omitted in 004 UI (FR-U12) |
-| FR-C05/C09/C12 | **Not** marked done by restyle |
-| `smoke_capacity_planning` when period already closed | Open under 003 |
+| Soft-gate capacity-row UI hole | Detail panel now requires explicit confirm for conflicted commitments; formal 003 sign-off open |
+| Missing field editors (priority/app/deps/actual) | **UI wired in Phase 22** (service already supported); 003 acceptance sign-off open |
+| FR-C05/C09/C12 | **Not** marked done by 004 — needs 003 verification pass |
+| `smoke_capacity_planning` when period already closed | Open under 003 (pre-existing) |
+
+## Phase 23 (T112–T116, 2026-10-20)
+
+| Check | Result | Notes |
+|-------|--------|-------|
+| Weekly planning | PASS | Domain week tests (7d, ±7 nav); Planning UI shows Weekly planning / Prev–Next week; Vite preview opened a fresh open week |
+| Inbox Keep | PASS | Live preview: triage 3→2, Kept 0→1, announcement shown, Return restored flow; domain + service tests; migration v3 (APP_MAX 3) |
+| Reset all data | PASS (service) | `workspaceResetAll` test: inbox wiped, 4 default apps reseeded; UI has export-first + inline Esc confirm. Not clicked live (would wipe preview data) |
+| Team/Applications | PASS (code) | Roster rename/deactivate/reactivate; Applications rename/reset-name; Esc cancels |
+| Keyboard | PASS | Live: `?` opens focused Shortcuts dialog, Esc closes; arrows in nav/tabs/rows; zero `window.confirm` in desktop src |
+| Regression | PASS | `pnpm test` all green (domain 31, persistence 12, app-services 20, desktop 4); `pnpm lint` 0 errors; desktop build + `cargo check` PASS |

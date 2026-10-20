@@ -3,7 +3,10 @@ import { localToday, monthContaining } from '../src/periods/calendar.js';
 import {
   fortnightContaining,
   nextFortnight,
+  nextWeek,
   previousFortnight,
+  previousWeek,
+  weekContaining,
 } from '../src/periods/fortnight.js';
 
 describe('calendar', () => {
@@ -39,5 +42,21 @@ describe('fortnight', () => {
     expect(prev.periodEnd < p.periodStart || prev.periodEnd <= p.periodStart).toBe(true);
     expect(next.periodStart > p.periodEnd || next.periodStart >= p.periodStart).toBe(true);
     expect(nextFortnight(prev)).toEqual(p);
+  });
+});
+
+describe('week (capacity planning)', () => {
+  it('period is 7 days inclusive starting on the configured weekday', () => {
+    const p = weekContaining('2026-10-21', 'mon'); // Wednesday
+    expect(p).toEqual({ periodStart: '2026-10-19', periodEnd: '2026-10-25' });
+    expect(weekContaining('2026-10-25', 'mon')).toEqual(p);
+    expect(weekContaining('2026-10-26', 'mon').periodStart).toBe('2026-10-26');
+  });
+
+  it('navigates ±7 days', () => {
+    const p = weekContaining('2026-10-21', 'mon');
+    expect(previousWeek(p)).toEqual({ periodStart: '2026-10-12', periodEnd: '2026-10-18' });
+    expect(nextWeek(p)).toEqual({ periodStart: '2026-10-26', periodEnd: '2026-11-01' });
+    expect(nextWeek(previousWeek(p))).toEqual(p);
   });
 });

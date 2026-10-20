@@ -54,6 +54,27 @@ export function createSqliteRepos(db: DbSession): WorkspaceRepos {
           convertedActionId: r.converted_action_id ?? undefined,
         }));
       },
+      async listKept() {
+        const rows = await db.query<{
+          id: string;
+          description: string;
+          status: InboxItem['status'];
+          captured_at: string;
+          updated_at: string;
+          converted_action_id: string | null;
+        }>(
+          `SELECT id, description, status, captured_at, updated_at, converted_action_id
+           FROM inbox_items WHERE status = 'kept' ORDER BY updated_at DESC`,
+        );
+        return rows.map((r) => ({
+          id: r.id,
+          description: r.description,
+          status: r.status,
+          capturedAt: r.captured_at,
+          updatedAt: r.updated_at,
+          convertedActionId: r.converted_action_id ?? undefined,
+        }));
+      },
       async getById(id) {
         const rows = await db.query<{
           id: string;

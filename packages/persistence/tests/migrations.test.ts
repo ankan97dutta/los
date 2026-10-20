@@ -10,7 +10,7 @@ describe('migrations', () => {
     const dir = mkdtempSync(join(tmpdir(), 'los-mig-'));
     const dbPath = join(dir, 'los.sqlite');
     const boot = await bootstrapNodeSqlite(dbPath);
-    expect(boot.migratedTo).toBe(2);
+    expect(boot.migratedTo).toBe(3);
     const apps = await createSqliteRepos(boot.session).applications.list();
     expect(apps).toHaveLength(4);
     expect(apps.map((a) => a.name)).toEqual([

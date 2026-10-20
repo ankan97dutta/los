@@ -44,6 +44,7 @@ export type WorkspaceSettings = {
 
 export interface InboxRepository {
   listOpen(): Promise<InboxItem[]>;
+  listKept(): Promise<InboxItem[]>;
   getById(id: string): Promise<InboxItem | null>;
   save(item: InboxItem): Promise<void>;
 }

@@ -13,6 +13,8 @@ import {
   monthContaining,
   newId,
   nextFortnight,
+  nextWeek,
+  previousWeek,
   ok,
   previousFortnight,
   setActionStatus,
@@ -21,6 +23,7 @@ import {
   type Weekday,
 } from '@los/domain';
 import {
+  createEmptySnapshot,
   createRepos,
   MemoryStore,
   type WorkspaceRepos,
@@ -43,6 +46,8 @@ export type WorkspaceRuntime = {
   globalShortcutError?: string;
   /** Close durable DbSession before in-app file replace restore */
   closeDb?: () => Promise<void>;
+  /** Wipe all user data and reseed defaults (Settings → Reset). */
+  resetAll?: () => Promise<void>;
 };
 
 function repos(rt: WorkspaceRuntime): WorkspaceRepos {
@@ -84,10 +89,14 @@ export async function inboxListOpen(rt: WorkspaceRuntime) {
   return ok({ items: await repos(rt).inbox.listOpen() });
 }
 
+export async function inboxListKept(rt: WorkspaceRuntime) {
+  return ok({ items: await repos(rt).inbox.listKept() });
+}
+
 export async function inboxTriage(
   rt: WorkspaceRuntime,
   id: string,
-  disposition: 'convert' | 'dismiss' | 'keep',
+  disposition: 'convert' | 'dismiss' | 'keep' | 'reopen',
 ) {
   const r = repos(rt);
   const item = await r.inbox.getById(id);
@@ -363,6 +372,19 @@ export async function settingsUpdate(
   return ok({ settings });
 }
 
+export async function workspaceResetAll(rt: WorkspaceRuntime) {
+  if (rt.resetAll) {
+    await rt.resetAll();
+    return ok({ reset: true as const });
+  }
+  if (rt.store) {
+    rt.store.replace(createEmptySnapshot(nowIso(rt)));
+    afterWrite(rt);
+    return ok({ reset: true as const });
+  }
+  return err('VALIDATION_ERROR', 'Reset is not available for this workspace runtime.');
+}
+
 export async function workspaceStatus(rt: WorkspaceRuntime) {
   return ok({
     mode: 'local_only' as const,
@@ -375,4 +397,4 @@ export async function workspaceStatus(rt: WorkspaceRuntime) {
   });
 }
 
-export { previousFortnight, nextFortnight, localToday };
+export { previousFortnight, nextFortnight, previousWeek, nextWeek, localToday };

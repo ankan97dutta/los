@@ -36,6 +36,11 @@ export function createRepos(store: MemoryStore): {
           .filter((i) => i.status === 'open')
           .sort((a, b) => (a.capturedAt < b.capturedAt ? 1 : -1));
       },
+      async listKept() {
+        return store.data.inbox
+          .filter((i) => i.status === 'kept')
+          .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1));
+      },
       async getById(id) {
         return store.data.inbox.find((i) => i.id === id) ?? null;
       },

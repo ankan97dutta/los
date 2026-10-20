@@ -54,6 +54,24 @@ describe('003 capacity smokes (Tauri app-data path)', () => {
       expect(period.ok).toBe(true);
       if (!period.ok) return;
       periodStart = period.data.period.periodStart;
+      if (period.data.period.status === 'closed') {
+        // Current week already closed in the shared app-data DB — scan ahead.
+        const { nextWeek } = await import('@los/domain');
+        let cursor = {
+          periodStart: period.data.period.periodStart,
+          periodEnd: period.data.period.periodEnd,
+        };
+        for (let i = 0; i < 8; i++) {
+          cursor = nextWeek(cursor);
+          const open = await planningPeriodGet(rt, cursor.periodStart);
+          expect(open.ok).toBe(true);
+          if (!open.ok) return;
+          if (open.data.period.status !== 'closed') {
+            periodStart = open.data.period.periodStart;
+            break;
+          }
+        }
+      }
 
       const m = await planningMemberUpsert(rt, { displayName: `Lead-${MARKER}` });
       expect(m.ok).toBe(true);
@@ -194,18 +212,24 @@ describe('003 capacity smokes (Tauri app-data path)', () => {
     const period = await planningPeriodGet(rt);
     expect(period.ok).toBe(true);
     if (!period.ok) return;
-    // Use next open period if current was closed by prior smoke
+    // Use next open week if current was closed by a prior smoke (scan ahead).
     let ps = period.data.period.periodStart;
-    if (period.data.period.status === 'closed' && period.data.period.periodEnd) {
-      const { nextFortnight } = await import('@los/domain');
-      const n = nextFortnight({
+    if (period.data.period.status === 'closed') {
+      const { nextWeek } = await import('@los/domain');
+      let cursor = {
         periodStart: period.data.period.periodStart,
         periodEnd: period.data.period.periodEnd,
-      });
-      const open = await planningPeriodGet(rt, n.periodStart);
-      expect(open.ok).toBe(true);
-      if (!open.ok) return;
-      ps = open.data.period.periodStart;
+      };
+      for (let i = 0; i < 8; i++) {
+        cursor = nextWeek(cursor);
+        const open = await planningPeriodGet(rt, cursor.periodStart);
+        expect(open.ok).toBe(true);
+        if (!open.ok) return;
+        if (open.data.period.status !== 'closed') {
+          ps = open.data.period.periodStart;
+          break;
+        }
+      }
     }
     const m = await planningMemberUpsert(rt, { displayName: `Timed-${MARKER}` });
     expect(m.ok).toBe(true);

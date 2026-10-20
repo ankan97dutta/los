@@ -19,6 +19,7 @@ import {
   type PaletteAction,
 } from './shell/CommandPalette';
 import { SectionSubNav } from './shell/SectionSubNav';
+import { ShortcutsDialog } from './shell/ShortcutsDialog';
 import { defaultChild, type PrimaryRouteId, type RouteId } from './shell/routes';
 import { isTauriRuntime } from './lib/isTauri';
 import { initTheme } from './ui/theme';
@@ -38,8 +39,9 @@ declare global {
 
 export function App() {
   const [route, setRoute] = useState<RouteId>(() =>
-    new URLSearchParams(window.location.search).get('view') === 'quick' ? 'quick' : 'inbox',
+    new URLSearchParams(window.location.search).get('view') === 'quick' ? 'quick' : 'today',
   );
+  const [inboxCount, setInboxCount] = useState(0);
   const [rt, setRt] = useState<WorkspaceRuntime | null>(null);
   const [bootError, setBootError] = useState<{
     code: string;
@@ -49,6 +51,7 @@ export function App() {
   const [notices, setNotices] = useState<BootNotice[]>([]);
   const [reloadKey, setReloadKey] = useState(0);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   useEffect(() => {
     initTheme();
@@ -149,15 +152,49 @@ export function App() {
   }, [rt, reloadKey]);
 
   useEffect(() => {
+    if (!rt) return;
+    let cancelled = false;
+    void api.inboxListOpen(rt).then((r) => {
+      if (!cancelled && r.ok) setInboxCount(r.data.items.length);
+    });
+    return () => { cancelled = true; };
+  }, [rt, route, reloadKey]);
+
+  useEffect(() => {
+    const digitRoute: Record<string, PrimaryRouteId> = {
+      '1': 'today', '2': 'inbox', '3': 'planning', '4': 'team', '5': 'reviews', '6': 'settings',
+    };
     const onKey = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
-      if (meta && e.key.toLowerCase() === 'k') {
+      if (!meta) return;
+      if (e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setPaletteOpen((o) => !o);
+        return;
+      }
+      const target = digitRoute[e.key];
+      if (target && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        setRoute(defaultChild(target));
       }
     };
+    const onHelpKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const typing = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable);
+      if (e.key === '?' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        setShortcutsOpen(true);
+      }
+    };
+    const onOpenShortcuts = () => setShortcutsOpen(true);
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('keydown', onHelpKey);
+    window.addEventListener('los:open-shortcuts', onOpenShortcuts);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onHelpKey);
+      window.removeEventListener('los:open-shortcuts', onOpenShortcuts);
+    };
   }, []);
 
   function navigatePrimary(id: PrimaryRouteId) {
@@ -168,6 +205,10 @@ export function App() {
     setPaletteOpen(false);
     if (action.run === 'quick-capture') {
       setRoute('quick');
+      return;
+    }
+    if (action.run === 'shortcuts') {
+      setShortcutsOpen(true);
       return;
     }
     if (action.route) setRoute(action.route);
@@ -233,7 +274,7 @@ export function App() {
         <SectionSubNav
           label="Planning sections"
           items={[
-            { id: 'planning-capacity', label: 'Capacity' },
+            { id: 'planning-capacity', label: 'Weekly capacity' },
             { id: 'planning-fortnight', label: 'Fortnight' },
           ]}
           activeId={route}
@@ -268,7 +309,15 @@ export function App() {
 
   return (
     <>
-      <AppShell rt={rt} route={route} onNavigatePrimary={navigatePrimary} notices={noticesNode}>
+      <AppShell
+        rt={rt}
+        route={route}
+        inboxCount={inboxCount}
+        onNavigatePrimary={navigatePrimary}
+        onCommandPalette={() => setPaletteOpen(true)}
+        onQuickCapture={() => setRoute('quick')}
+        notices={noticesNode}
+      >
         {content}
       </AppShell>
       <CommandPalette
@@ -277,6 +326,7 @@ export function App() {
         onClose={() => setPaletteOpen(false)}
         onRun={runPalette}
       />
+      <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </>
   );
 }

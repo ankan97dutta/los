@@ -28,18 +28,17 @@ export function SettingsPage({ rt, onRestored }: Props) {
     });
   }, [rt]);
 
+  const [pendingWeekday, setPendingWeekday] = useState<Weekday | null>(null);
+
   async function changeWeekday(next: Weekday) {
     if (!settings || next === settings.fortnightStartWeekday) return;
-    const ok = window.confirm(
-      `Change fortnight start weekday from ${settings.fortnightStartWeekday} to ${next}? Historical periods keep their stored keys; new navigation uses the new weekday.`,
-    );
-    if (!ok) return;
     setError(null);
     const r = await api.settingsUpdate(rt, { fortnightStartWeekday: next });
     if (!r.ok) setError(r.error.message);
     else {
       setSettings(r.data.settings);
-      setMessage('Fortnight start weekday updated.');
+      setPendingWeekday(null);
+      setMessage('Week start day updated. Historical periods keep their stored keys.');
     }
   }
 
@@ -72,7 +71,7 @@ export function SettingsPage({ rt, onRestored }: Props) {
     }
   }
 
-  async function onExport() {
+  async function onExport(): Promise<boolean> {
     setError(null);
     if (!isTauri()) {
       const blob = new Blob([exportDbJson(rt)], { type: 'application/json' });
@@ -83,7 +82,7 @@ export function SettingsPage({ rt, onRestored }: Props) {
       a.click();
       URL.revokeObjectURL(url);
       setMessage('Exported preview JSON (non-durable).');
-      return;
+      return true;
     }
     const { invoke } = await import('@tauri-apps/api/core');
     const { save } = await import('@tauri-apps/plugin-dialog');
@@ -91,9 +90,35 @@ export function SettingsPage({ rt, onRestored }: Props) {
       defaultPath: 'los-backup.sqlite',
       filters: [{ name: 'SQLite', extensions: ['sqlite', 'db'] }],
     });
-    if (!dest) return;
+    if (!dest) return false;
     const result = await invoke<{ backupPath: string }>('db_export_backup', { destPath: dest });
     setMessage(`Backup written to ${result.backupPath}`);
+    return true;
+  }
+
+  const [showReset, setShowReset] = useState(false);
+  const [exportFirst, setExportFirst] = useState(true);
+  const [resetting, setResetting] = useState(false);
+
+  async function onResetAll() {
+    setError(null);
+    if (exportFirst) {
+      const exported = await onExport();
+      if (!exported) {
+        setError('Export cancelled — your data was not reset.');
+        return;
+      }
+    }
+    setResetting(true);
+    const r = await api.workspaceResetAll(rt);
+    setResetting(false);
+    if (!r.ok) {
+      setError(r.error.message);
+      return;
+    }
+    setShowReset(false);
+    setMessage('All workspace data was reset. Applications and settings are back to defaults.');
+    onRestored?.();
   }
 
   async function onImportPreview(file: File) {
@@ -182,11 +207,11 @@ export function SettingsPage({ rt, onRestored }: Props) {
       <div className="pref-group">
         <h2>Planning calendar</h2>
         <div className="field">
-          <label htmlFor="weekday">Fortnight start weekday</label>
+          <label htmlFor="weekday">Week starts on</label>
           <select
             id="weekday"
-            value={settings.fortnightStartWeekday}
-            onChange={(e) => void changeWeekday(e.target.value as Weekday)}
+            value={pendingWeekday ?? settings.fortnightStartWeekday}
+            onChange={(e) => setPendingWeekday(e.target.value as Weekday)}
           >
             {WEEKDAYS.map((w) => (
               <option key={w} value={w}>
@@ -194,6 +219,29 @@ export function SettingsPage({ rt, onRestored }: Props) {
               </option>
             ))}
           </select>
+        </div>
+        {pendingWeekday && pendingWeekday !== settings.fortnightStartWeekday ? (
+          <div className="panel" role="group" aria-label="Confirm week start change"
+            onKeyDown={(e) => { if (e.key === 'Escape') setPendingWeekday(null); }}>
+            <p style={{ marginTop: 0 }}>Change week start from <strong>{settings.fortnightStartWeekday}</strong> to <strong>{pendingWeekday}</strong>? Historical periods keep their stored keys; new weekly planning uses the new day.</p>
+            <div className="row">
+              <button type="button" autoFocus onClick={() => setPendingWeekday(null)}>Cancel</button>
+              <button type="button" className="primary" onClick={() => void changeWeekday(pendingWeekday)}>Change week start</button>
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="pref-group">
+        <h2>Keyboard</h2>
+        <p className="muted" style={{ margin: 0 }}>
+          Everything is keyboard-operable: <kbd>⌘K</kbd> palette, <kbd>⌘1–6</kbd> navigation, arrow keys in
+          lists and tabs, <kbd>C</kbd>/<kbd>K</kbd>/<kbd>X</kbd> on a focused inbox item, <kbd>Esc</kbd> to close or cancel.
+        </p>
+        <div className="row">
+          <button type="button" onClick={() => window.dispatchEvent(new Event('los:open-shortcuts'))}>
+            View all shortcuts <kbd aria-hidden="true">?</kbd>
+          </button>
         </div>
       </div>
 
@@ -212,6 +260,7 @@ export function SettingsPage({ rt, onRestored }: Props) {
               setSettings({ ...settings, globalShortcutAccel: e.target.value })
             }
             onBlur={() => void saveShortcut(settings)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void saveShortcut(settings); } }}
           />
         </div>
         <label className="row">
@@ -266,6 +315,40 @@ export function SettingsPage({ rt, onRestored }: Props) {
             </label>
           )}
         </div>
+      </div>
+
+      <div className="pref-group">
+        <h2>Reset all data</h2>
+        <p className="muted" style={{ margin: 0 }}>
+          Permanently deletes every inbox item, action, review, team member, plan, and history snapshot
+          in this workspace, then restores default applications and settings. This cannot be undone
+          unless you export a backup first.
+        </p>
+        {!showReset ? (
+          <div className="row">
+            <button type="button" className="danger" onClick={() => setShowReset(true)}>
+              Reset all data…
+            </button>
+          </div>
+        ) : (
+          <div className="panel" role="group" aria-label="Confirm reset all data"
+            onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setShowReset(false); } }}>
+            <p style={{ marginTop: 0 }}><strong>Are you sure?</strong> This deletes all workspace data on this device.</p>
+            <label className="row">
+              <input type="checkbox" checked={exportFirst} onChange={(e) => setExportFirst(e.target.checked)} />
+              <span>Export a backup first (recommended)</span>
+            </label>
+            <div className="row" style={{ marginTop: 'var(--space-3)' }}>
+              <button type="button" autoFocus onClick={() => setShowReset(false)}>
+                Cancel <kbd aria-hidden="true">Esc</kbd>
+              </button>
+              <button type="button" className="danger" disabled={resetting} onClick={() => void onResetAll()}
+                onKeyDown={(e) => { if (e.key === 'Escape') setShowReset(false); }}>
+                {resetting ? 'Resetting…' : exportFirst ? 'Export & reset everything' : 'Reset everything without export'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {message ? <p className="muted" role="status">{message}</p> : null}

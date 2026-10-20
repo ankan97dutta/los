@@ -10,7 +10,7 @@ describe('002 capacity planning migration', () => {
     const dir = mkdtempSync(join(tmpdir(), 'los-cap-'));
     const dbPath = join(dir, 'los.sqlite');
     const boot = await bootstrapNodeSqlite(dbPath);
-    expect(boot.migratedTo).toBe(2);
+    expect(boot.migratedTo).toBe(3);
     const repos = createSqliteRepos(boot.session);
     const now = new Date().toISOString();
     await repos.planning.teamMembers.save({
