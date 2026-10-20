@@ -55,7 +55,7 @@ export function PlanningHistoryPanel({ rt }: Props) {
             void load(prev.periodStart);
           }}
         >
-          Previous period
+          Previous week
         </Button>
         <strong>
           {periodStart} → {periodEnd}
@@ -71,24 +71,24 @@ export function PlanningHistoryPanel({ rt }: Props) {
             void load(next.periodStart);
           }}
         >
-          Next period
+          Next week
         </Button>
       </div>
       {error ? <Banner tone="error">{error}</Banner> : null}
       {status !== 'closed' ? (
         <EmptyState
           title="No closed snapshot for this period"
-          actionHint="Navigate to a closed fortnight to view frozen plan history."
+          actionHint="Use Previous and Next to find a week you have closed. Its plan is frozen there, just as it was."
         />
       ) : snapshot ? (
         <details open>
-          <summary>Frozen plan snapshot</summary>
+          <summary>The plan, exactly as it was when you closed it</summary>
           <pre className="muted" style={{ whiteSpace: 'pre-wrap', fontSize: '0.85rem' }}>
             {snapshot}
           </pre>
         </details>
       ) : (
-        <EmptyState title="Closed period without snapshot payload" actionHint="Try another period." />
+        <EmptyState title="This closed week has no saved snapshot" actionHint="Try another week." />
       )}
     </div>
   );

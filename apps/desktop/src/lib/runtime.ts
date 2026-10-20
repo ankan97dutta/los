@@ -57,7 +57,7 @@ export function createPreviewRuntime(caps?: {
     withTransaction: async <T>(fn: () => Promise<T>) => fn(),
     persist: () => saveSnapshot(store),
     dbReady: true,
-    dbPath: 'localStorage:los-db-v1 (preview — non-durable)',
+    dbPath: 'localStorage:los-db-v1 (preview only, not saved for good)',
     trayAvailable: caps?.trayAvailable ?? false,
     globalShortcutAvailable: caps?.globalShortcutAvailable ?? false,
     globalShortcutRegistered: caps?.globalShortcutRegistered ?? false,
@@ -147,7 +147,7 @@ export async function createTauriRuntime(caps?: {
     const sqliteRepos = createSqliteRepos(session);
     let closed = false;
 
-    // Seed shortcut state from the actual Rust state (T101) — the
+    // Seed shortcut state from the actual Rust state (T101). The
     // boot-time `los:caps` setup event can be missed by the webview.
     let shortcutRegistered = caps?.globalShortcutRegistered ?? false;
     let shortcutError = caps?.globalShortcutError;

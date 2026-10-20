@@ -3,6 +3,7 @@ import type { WorkspaceRuntime } from '@los/app-services';
 import type { PersonalAction } from '@los/domain';
 import { api } from '../../lib/api';
 import { useDebouncedAutosave } from '../../lib/autosave';
+import { Checkbox } from '../../ui/Checkbox';
 import { SaveIndicator } from '../../ui/SaveIndicator';
 
 type Props = { rt: WorkspaceRuntime };
@@ -13,6 +14,11 @@ type Draft = {
   commitments: string;
   selectedActionIds: string[];
 };
+
+function prettyDate(iso: string): string {
+  const d = new Date(`${iso}T00:00:00`);
+  return d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+}
 
 export function FortnightPlanPage({ rt }: Props) {
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -46,9 +52,7 @@ export function FortnightPlanPage({ rt }: Props) {
     [rt],
   );
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
   const save = useCallback(
     async (value: Draft) => {
@@ -68,97 +72,108 @@ export function FortnightPlanPage({ rt }: Props) {
 
   const selectionSet = useMemo(() => new Set(draft?.selectedActionIds ?? []), [draft]);
 
-  if (!draft) return <p className="muted">Loading fortnight plan…</p>;
+  if (!draft) return <p className="muted">Loading your plan...</p>;
+
+  function toggle(id: string, picked: boolean) {
+    if (!draft) return;
+    const next = new Set(draft.selectedActionIds);
+    if (picked) next.add(id);
+    else next.delete(id);
+    setDraft({ ...draft, selectedActionIds: [...next] });
+  }
 
   return (
     <section className="stack">
-      <h1>Fortnight plan</h1>
-      <p className="lede">Personal commitments for the current 14-day period.</p>
-      <div className="row">
-        <button
-          type="button"
-          onClick={() => {
-            const prev = api.previousFortnight({
-              periodStart: draft.periodStart,
-              periodEnd: draft.periodEnd,
-            });
-            void load(prev.periodStart);
-          }}
-        >
-          Previous
-        </button>
-        <strong>
-          {draft.periodStart} → {draft.periodEnd}
-        </strong>
-        <button
-          type="button"
-          onClick={() => {
-            const next = api.nextFortnight({
-              periodStart: draft.periodStart,
-              periodEnd: draft.periodEnd,
-            });
-            void load(next.periodStart);
-          }}
-        >
-          Next
-        </button>
+      <div>
+        <h1>Your two-week plan</h1>
+        <p className="lede" style={{ marginBottom: 0 }}>
+          Pick the actions you are actually committing to this fortnight. Everything saves as you go.
+        </p>
+      </div>
+
+      <div className="toolbar">
+        <div className="row">
+          <button
+            type="button"
+            onClick={() => {
+              const prev = api.previousFortnight({ periodStart: draft.periodStart, periodEnd: draft.periodEnd });
+              void load(prev.periodStart);
+            }}
+          >Previous</button>
+          <strong className="num">{prettyDate(draft.periodStart)} to {prettyDate(draft.periodEnd)}</strong>
+          <button
+            type="button"
+            onClick={() => {
+              const next = api.nextFortnight({ periodStart: draft.periodStart, periodEnd: draft.periodEnd });
+              void load(next.periodStart);
+            }}
+          >Next</button>
+        </div>
         <SaveIndicator status={status} message={error} />
       </div>
 
-      {!draft.commitments && draft.selectedActionIds.length === 0 ? (
-        <div className="empty">No plan yet for this fortnight. Select actions or add commitments.</div>
-      ) : null}
-
       <div className="field">
-        <label htmlFor="fortnight-commitments">Commitments</label>
+        <label htmlFor="fortnight-commitments">What are you promising this fortnight?</label>
         <textarea
           id="fortnight-commitments"
+          placeholder="For example: ship the pricing page, close the hiring loop, no new side projects."
           value={draft.commitments}
           onChange={(e) => setDraft({ ...draft, commitments: e.target.value })}
         />
       </div>
 
-      <div className="stack">
-        <strong>Selected actions (includes completed)</strong>
+      <div className="stack" style={{ gap: 'var(--space-2)' }}>
+        <h2 style={{ margin: 0 }}>In this plan <span className="muted num">({selectedActions.length})</span></h2>
         {selectedActions.length === 0 ? (
-          <div className="empty">No selections yet.</div>
+          <div className="empty">Nothing picked yet. Choose from your open actions below.</div>
         ) : (
-          <ul className="list">
+          <ul className="item-list">
             {selectedActions.map((a) => (
-              <li key={a.id}>
-                <span>
-                  {a.description}{' '}
-                  <span className="muted">({a.status === 'done' ? 'done' : 'open'})</span>
+              <li key={a.id} className={`item-row ${a.status === 'done' ? 'is-done' : ''}`}>
+                <span className={`chip ${a.status === 'done' ? 'is-done' : 'is-open'}`}>
+                  <span className="dot" aria-hidden="true" />
+                  {a.status === 'done' ? 'Done' : 'To do'}
                 </span>
+                <div className="item-title">{a.description}</div>
+                <button type="button" className="icon-btn" aria-label={`Take "${a.description}" out of this plan`} onClick={() => toggle(a.id, false)}>
+                  Take out
+                </button>
               </li>
             ))}
           </ul>
         )}
       </div>
 
-      <div className="stack">
-        <strong>Open actions</strong>
+      <div className="stack" style={{ gap: 'var(--space-2)' }}>
+        <h2 style={{ margin: 0 }}>
+          Your open actions <span className="muted num">({selectionSet.size} of {openActions.length} picked)</span>
+        </h2>
         {openActions.length === 0 ? (
-          <div className="empty">No open actions to select.</div>
+          <div className="empty">You have no open actions right now. Add some from the Actions page first.</div>
         ) : (
-          <ul className="list">
-            {openActions.map((a) => (
-              <li key={a.id}>
-                <label className="row">
-                  <input
-                    type="checkbox"
-                    checked={selectionSet.has(a.id)}
-                    onChange={(e) => {
-                      const next = new Set(draft.selectedActionIds);
-                      if (e.target.checked) next.add(a.id);
-                      else next.delete(a.id);
-                      setDraft({ ...draft, selectedActionIds: [...next] });
-                    }}
-                  />
-                  <span>{a.description}</span>
-                </label>
-              </li>
-            ))}
+          <ul className="item-list">
+            {openActions.map((a) => {
+              const picked = selectionSet.has(a.id);
+              return (
+                <li key={a.id} className={`item-row ${picked ? 'is-selected' : ''}`}>
+                  <Checkbox
+                    checked={picked}
+                    onChange={(checked) => toggle(a.id, checked)}
+                    aria-label={`Include "${a.description}" in this plan`}
+                  >
+                    <span className="sr-only">Include in plan</span>
+                  </Checkbox>
+                  <div style={{ minWidth: 0 }}>
+                    <div className="item-title">{a.description}</div>
+                    <div className="item-meta"><span>{picked ? 'In this plan' : 'Not picked'}</span></div>
+                  </div>
+                  <span className={`chip ${picked ? 'is-open' : ''}`}>
+                    <span className="dot" aria-hidden="true" />
+                    {picked ? 'Picked' : 'Open'}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>

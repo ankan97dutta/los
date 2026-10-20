@@ -137,3 +137,13 @@ wired in the detail panel because the service already supported them. Formal
 | Tauri saves end-to-end (click → restart → persists) | PARTIAL | Service layer verified against a DB copy; live click-through requires the user's desktop session — verify with one capture after relaunch |
 | Tray icon visible in menu bar | PARTIAL | Root cause fixed (no `.icon()` was set); visual confirmation needs the user's menu bar |
 
+## 2026-10-20 (Phase 25 — human copy, modern controls, lists, calendar)
+
+| Check | Result | Evidence |
+|---|---|---|
+| Full tests | PASS | domain 31, persistence 12, app-services 23, desktop 4 |
+| Lint / build | PASS | `pnpm lint` clean, `pnpm --filter @los/desktop build` pass |
+| No em/en dash in desktop copy | PASS | Grep for both characters across apps/desktop/src returns zero |
+| No native dropdowns | PASS | Grep for `<select`/`<option` returns zero; only the semantic input inside the custom Checkbox remains |
+| Browser checks | PASS | Calendar renders markers and day detail, custom dropdown opens as a listbox with options, roster grid aligned (screenshots taken in preview) |
+| Smoke-test flake | PASS (fixed) | The two app-data smoke files now use separate temp DB paths instead of sharing one |

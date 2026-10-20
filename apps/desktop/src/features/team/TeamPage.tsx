@@ -13,7 +13,7 @@ export function TeamPage({ rt, section, onSection }: Props) {
   return (
     <section className="stack">
       <h1>Team</h1>
-      <p className="lede">Local roster and threads.</p>
+      <p className="lede">The people you plan with, and the threads their work belongs to. It all stays on this device.</p>
       <SectionSubNav
         label="Team sections"
         items={[

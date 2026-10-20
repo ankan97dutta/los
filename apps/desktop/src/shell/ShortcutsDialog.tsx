@@ -4,7 +4,7 @@ type Props = { open: boolean; onClose: () => void };
 
 const ROWS: Array<[string, string]> = [
   ['⌘K / Ctrl+K', 'Command palette'],
-  ['⌘1–6 / Ctrl+1–6', 'Go to Today, Inbox, Planning, Team, Reviews, Settings'],
+  ['⌘1 to ⌘6 / Ctrl+1 to Ctrl+6', 'Jump to Today, Inbox, Planning, Team, Reviews, or Settings'],
   ['?', 'This shortcuts dialog (when not typing)'],
   ['↑ / ↓', 'Move between sidebar items, work rows, and palette results'],
   ['← / →', 'Move between section tabs'],
@@ -30,7 +30,7 @@ export function ShortcutsDialog({ open, onClose }: Props) {
           <strong>Keyboard shortcuts</strong>
           <button ref={closeRef} type="button" className="ghost" onClick={onClose} aria-label="Close shortcuts dialog">✕</button>
         </div>
-        <p className="muted">Every action in LOS can be reached by keyboard. Focus is always visible; consequential actions use inline confirmations you can Tab through — never pointer-only dialogs.</p>
+        <p className="muted">Every action in LOS can be reached by keyboard. Focus is always visible; anything important asks you to confirm right on the page, so you never need a mouse for a dialog.</p>
         <table className="shortcuts-table">
           <tbody>
             {ROWS.map(([keys, action]) => (

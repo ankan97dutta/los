@@ -24,7 +24,7 @@ export function LocalStatus({ rt }: Props) {
       setShortcutError(r.data.globalShortcutError);
       setDbPath(r.data.dbPath);
 
-      // T101: in Tauri, the runtime object is a boot snapshot — ask Rust
+      // T101: in Tauri, the runtime object is a boot snapshot. Ask Rust
       // for the live registration state so a successful registration
       // does not keep rendering as "registration failed".
       if (inTauri) {

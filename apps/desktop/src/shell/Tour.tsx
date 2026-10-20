@@ -9,15 +9,15 @@ export type TourStep = {
 };
 
 export const TOUR_STEPS: TourStep[] = [
-  { route: 'today', selector: '[data-tour="nav"]', title: 'Your command center', body: 'Six destinations, always in the same place. Press ⌘1–6 (Ctrl+1–6) to jump, or use the arrow keys inside the sidebar.' },
-  { route: 'today', selector: '[data-tour="quick-capture"]', title: 'Capture from anywhere', body: 'Quick Capture (also ⌘K → Quick Capture, the global shortcut, or the tray icon) drops anything into the Inbox. Capture first — classify later.' },
+  { route: 'today', selector: '[data-tour="nav"]', title: 'Your command center', body: 'Everything lives in the same six places. Press ⌘1 to ⌘6 (Ctrl+1 to Ctrl+6) to jump around, or use the arrow keys in the sidebar.' },
+  { route: 'today', selector: '[data-tour="quick-capture"]', title: 'Capture from anywhere', body: 'Quick Capture (also ⌘K → Quick Capture, the global shortcut, or the tray icon) drops anything into the Inbox. Get it down first, sort it out later.' },
   { route: 'today', selector: '[data-tour="palette"]', title: 'Command palette', body: '⌘K / Ctrl+K searches every destination and action. Type to filter, ↑↓ to move, Enter to go. Press ? any time for all shortcuts.' },
-  { route: 'today', selector: 'main', title: 'Today: your daily brief', body: 'Three questions: What must I move forward? Who is blocked? What decision is waiting? It autosaves as you type — watch for Saved.' },
+  { route: 'today', selector: 'main', title: 'Today: your daily brief', body: 'Three questions: What must I move forward? Who is blocked? What decision is waiting? It saves as you type, so just keep writing and watch for Saved.' },
   { route: 'inbox', selector: '#inbox-capture', title: 'Inbox triage', body: 'New captures land in Needs triage. Convert turns one into a personal action, Keep for later parks it out of the way, Dismiss drops it. Focus an item and press C, K, or X.' },
-  { route: 'planning-capacity', selector: '.summary-strip', title: 'Weekly planning', body: 'Net capacity, committed load, and remaining hours for the week — always in view. Unknown estimates say Unknown, never 0h.' },
-  { route: 'planning-capacity', selector: '.planning-layout', title: 'Workload & work items', body: 'Bars show load per person; over-capacity is called out in words. Click any work row to edit it in the side panel — priority, estimate, thread, dependencies — without losing your place. Review & close walks you through warnings before a week is closed.' },
-  { route: 'team-apps', selector: 'main', title: 'Team & Threads', body: 'Roster members can be added, renamed, deactivated, or removed. Threads (your projects) work the same way — and a thread or member in use is protected from removal.' },
-  { route: 'settings', selector: 'main', title: 'Settings, backup & reset', body: 'Theme, week start, shortcuts, backup/restore — and Reset all data (with an optional export first) live here. Everything is local: no account, no cloud.' },
+  { route: 'planning-capacity', selector: '.summary-strip', title: 'Weekly planning', body: 'Net capacity, committed load, and how many hours are left this week, always in view. If nobody has estimated something yet, it says Unknown, never 0h.' },
+  { route: 'planning-capacity', selector: '.planning-layout', title: 'Workload & work items', body: 'Bars show how loaded each person is, and anyone over capacity is called out in plain words. Click any piece of work to fix its priority, estimate, thread, or blockers in the side panel, without losing your place. When you close a week, we walk you through the warnings first.' },
+  { route: 'team-apps', selector: 'main', title: 'Team & Threads', body: 'Roster members can be added, renamed, deactivated, or removed. Threads are your projects, and they work the same way. If a thread or a person is already tied to work, we will not let you remove them by accident.' },
+  { route: 'settings', selector: 'main', title: 'Settings, backup & reset', body: 'Theme, week start, shortcuts, backups, and starting over from scratch all live here. Everything stays on this device. No account, no cloud.' },
 ];
 
 type Props = {

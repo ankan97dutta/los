@@ -100,7 +100,7 @@ export function DailyReviewPage({ rt }: Props) {
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <div>
           <h1>Today</h1>
-          <p className="lede" style={{ margin: 0 }}>Your daily operating brief. Autosaves while you type.</p>
+          <p className="lede" style={{ margin: 0 }}>Your short morning brief. It saves as you type, so just write.</p>
         </div>
         <div className="row">
           <button type="button" onClick={() => setDate((d) => addDays(d, -1))}>← Previous</button>
@@ -111,7 +111,7 @@ export function DailyReviewPage({ rt }: Props) {
       </div>
 
       {empty ? (
-        <EmptyState title="No brief for this day yet" actionHint="Start with one next action below — changes autosave." />
+        <EmptyState title="No brief for this day yet" actionHint="Start with one next action below. It saves as you type." />
       ) : null}
 
       <div className="brief-grid">

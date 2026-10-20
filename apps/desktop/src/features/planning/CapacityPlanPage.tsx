@@ -7,6 +7,7 @@ import { Button } from '../../ui/Button';
 import { EmptyState } from '../../ui/EmptyState';
 import { SaveIndicator, type SaveStatus } from '../../ui/SaveIndicator';
 import { Select } from '../../ui/Select';
+import { Checkbox } from '../../ui/Checkbox';
 import { StatusCue } from '../../ui/StatusCue';
 import {
   actualLabel, commitmentLabel, estimateLabel, formatHours, isBlockedStatus,
@@ -227,14 +228,14 @@ export function CapacityPlanPage({ rt }: Props) {
       <header className="period-header">
         <h1 style={{ fontSize: '1.15rem' }}>Weekly planning</h1>
         <span className="muted num">{data.period.periodStart} → {data.period.periodEnd}</span>
-        <StatusCue kind={closed ? 'muted' : 'ok'} label={closed ? 'Closed — structure frozen' : 'Open'} />
+        <StatusCue kind={closed ? 'muted' : 'ok'} label={closed ? 'Closed, so the plan is frozen' : 'Open'} />
         {data.period.planConflicted ? <StatusCue kind="conflicted" label="Conflicted" /> : <StatusCue kind="ok" label="Clean" />}
         <span style={{ marginLeft: 'auto' }} className="row">
           <Button onClick={() => { const p = api.previousWeek({ periodStart: data.period.periodStart, periodEnd: data.period.periodEnd }); setSelectedWorkId(null); void load(p.periodStart); }}>← Prev week</Button>
           <Button onClick={() => { const n = api.nextWeek({ periodStart: data.period.periodStart, periodEnd: data.period.periodEnd }); setSelectedWorkId(null); void load(n.periodStart); }}>Next week →</Button>
         </span>
       </header>
-      <p className="lede" style={{ marginBottom: 0 }}>Capacity, commitments, and risks in one place. Warnings stay beside the work they affect; nothing is reassigned silently.</p>
+      <p className="lede" style={{ marginBottom: 0 }}>What your team can actually take on this week, what you have promised, and where it might go wrong. Warnings sit next to the work they are about, and we never move anyone's work without telling you.</p>
 
       <div className="summary-strip" aria-label="Capacity summary">
         <div className="summary-stat"><span className="stat-label">Net capacity</span><span className="stat-value">{formatHours(totals.netHours)}</span></div>
@@ -265,7 +266,7 @@ export function CapacityPlanPage({ rt }: Props) {
         <div>
           <h2>Team workload</h2>
           {data.capacitySummary.members.length === 0 ? (
-            <EmptyState title="No capacity configured" actionHint={closed ? 'This closed period had no capacity rows.' : 'Add a team member below to start planning.'} />
+            <EmptyState title="Nobody has hours set yet" actionHint={closed ? 'Nobody had hours set for this week.' : 'Add someone from your team below to get started.'} />
           ) : data.capacitySummary.members.map((m) => {
             const state = workloadState(m);
             return (
@@ -322,15 +323,15 @@ export function CapacityPlanPage({ rt }: Props) {
           {!closed ? (
             <div className="row" style={{ alignItems: 'flex-end', marginBottom: 'var(--space-2)' }}>
               <label className="field" style={{ flex: '1 1 12rem' }}><span className="field-label">Title</span><input value={workTitle} onChange={(e) => setWorkTitle(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void addWork(); }} placeholder="Work item title" /></label>
-              <Select id="new-work-priority" label="Priority" value={workPriority} onChange={(e) => setWorkPriority(e.target.value as WorkPriority)}>{PRIORITIES.map((p) => <option key={p} value={p}>{p.toUpperCase()}</option>)}</Select>
+              <Select id="new-work-priority" label="Priority" value={workPriority} onValueChange={(v) => setWorkPriority(v as WorkPriority)} options={PRIORITIES.map((p) => ({ value: p, label: p.toUpperCase() }))} />
               <label className="field"><span className="field-label">Estimate (h)</span><input type="number" step={0.5} min={0} disabled={workUnknown} value={workEstimate} onChange={(e) => setWorkEstimate(e.target.value)} style={{ width: '6rem' }} /></label>
-              <label className="row"><input type="checkbox" checked={workUnknown} onChange={(e) => setWorkUnknown(e.target.checked)} /> Unknown</label>
-              <Select id="new-work-app" label="Thread" value={workApp} onChange={(e) => setWorkApp(e.target.value)}><option value="">Unassigned</option>{apps.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</Select>
+              <Checkbox checked={workUnknown} onChange={setWorkUnknown}>Not sure yet</Checkbox>
+              <Select id="new-work-app" label="Thread" value={workApp} onValueChange={setWorkApp} options={[{ value: '', label: 'No thread yet' }, ...apps.map((a) => ({ value: a.id, label: a.name }))]} />
               <Button variant="primary" onClick={() => void addWork()}>Add work</Button>
             </div>
           ) : null}
           {data.work.length === 0 ? (
-            <EmptyState title="No demand items" actionHint={closed ? 'No work was recorded for this closed period.' : 'Add a work title above — classify it from its detail panel.'} />
+            <EmptyState title="No work on the list yet" actionHint={closed ? 'No work was recorded for this closed period.' : 'Add a work title above, then open it to add the details.'} />
           ) : (
             <div aria-label="Planned work">
               {data.work.map((w) => {
@@ -346,7 +347,7 @@ export function CapacityPlanPage({ rt }: Props) {
                         <span>{appName(w.applicationId)} · {memberName(a?.teamMemberId ?? null)}</span>
                         <span>{commitmentLabel(kind)}</span>
                         <span>{w.status.replace('_', ' ')}</span>
-                        {isBlockedStatus(w.status) ? <span style={{ color: 'var(--status-conflicted)' }}>⚠ Blocked / waiting — decision needed</span> : null}
+                        {isBlockedStatus(w.status) ? <span style={{ color: 'var(--status-conflicted)' }}>⚠ Blocked or waiting. A decision is needed</span> : null}
                         {w.dependencyNotes ? <span>Dependencies noted</span> : null}
                         {itemWarnings.map((x, i) => <span key={i} style={{ color: 'var(--status-danger)' }}>⚠ {x.message}</span>)}
                       </span>
@@ -360,13 +361,13 @@ export function CapacityPlanPage({ rt }: Props) {
 
           <h2>Close & review</h2>
           <div className="stack">
-            <label className="field"><span className="field-label">Trade-off notes — risks accepted, scope changed, and why</span><textarea rows={2} value={tradeoff} onChange={(e) => setTradeoff(e.target.value)} /></label>
-            <label className="field"><span className="field-label">Outcome summary — what was delivered</span><textarea rows={2} value={outcome} onChange={(e) => setOutcome(e.target.value)} /></label>
-            <label className="field"><span className="field-label">Carryover notes — what moves forward, and why</span><textarea rows={2} value={carryover} onChange={(e) => setCarryover(e.target.value)} /></label>
+            <label className="field"><span className="field-label">Trade-off notes: risks you accepted, scope that changed, and why</span><textarea rows={2} value={tradeoff} onChange={(e) => setTradeoff(e.target.value)} /></label>
+            <label className="field"><span className="field-label">Outcome summary: what actually got delivered</span><textarea rows={2} value={outcome} onChange={(e) => setOutcome(e.target.value)} /></label>
+            <label className="field"><span className="field-label">Carryover notes: what moves to next week, and why</span><textarea rows={2} value={carryover} onChange={(e) => setCarryover(e.target.value)} /></label>
             <div className="row">
               <Button onClick={() => void saveNotes()}>Save notes</Button>
               <SaveIndicator status={notesSave} />
-              {!closed ? <Button variant={showCloseReview ? 'default' : 'primary'} onClick={() => setShowCloseReview((s) => !s)}>{showCloseReview ? 'Hide close review' : 'Review & close…'}</Button> : <StatusCue kind="muted" label="Closed — notes remain editable, structure is frozen" />}
+              {!closed ? <Button variant={showCloseReview ? 'default' : 'primary'} onClick={() => setShowCloseReview((s) => !s)}>{showCloseReview ? 'Hide close review' : 'Review & close…'}</Button> : <StatusCue kind="muted" label="Closed. You can still edit the notes, but the plan itself is frozen" />}
             </div>
             {!closed && showCloseReview ? (
               <div className="panel" role="group" aria-label="Close review">
@@ -375,15 +376,15 @@ export function CapacityPlanPage({ rt }: Props) {
                 {data.warnings.length > 0 ? (
                   <>
                     <Banner tone="warning" title="Warnings remain">{data.warnings.map((w) => w.message).join(' ')}</Banner>
-                    <label className="row" style={{ marginTop: 'var(--space-2)' }}><input type="checkbox" checked={ackWarnings} onChange={(e) => setAckWarnings(e.target.checked)} /> <span>I acknowledge these warnings. The closed plan stays marked Conflicted.</span></label>
+                    <div style={{ marginTop: 'var(--space-2)' }}><Checkbox checked={ackWarnings} onChange={setAckWarnings}>I have seen these warnings. The closed plan will stay marked Conflicted.</Checkbox></div>
                   </>
                 ) : <p className="muted">No warnings. This plan will close as Clean.</p>}
                 <fieldset style={{ marginTop: 'var(--space-3)' }}>
                   <legend>Carry forward incomplete commitments (copies into the next period)</legend>
                   {incompleteCommitments.length === 0 ? <p className="muted">Nothing eligible to carry forward.</p> : incompleteCommitments.map((w) => (
-                    <label key={w.id} style={{ display: 'block' }}>
-                      <input type="checkbox" checked={carryIds.includes(w.id)} onChange={(e) => setCarryIds((prev) => e.target.checked ? [...prev, w.id] : prev.filter((x) => x !== w.id))} /> {w.title}
-                    </label>
+                    <div key={w.id}>
+                      <Checkbox checked={carryIds.includes(w.id)} onChange={(checked) => setCarryIds((prev) => checked ? [...prev, w.id] : prev.filter((x) => x !== w.id))}>{w.title}</Checkbox>
+                    </div>
                   ))}
                 </fieldset>
                 <div className="row" style={{ marginTop: 'var(--space-3)' }}>
@@ -411,25 +412,25 @@ export function CapacityPlanPage({ rt }: Props) {
                 <div><dt className="muted">Priority / status</dt><dd style={{ margin: 0 }}>{selectedWork.priority.toUpperCase()} · {selectedWork.status.replace('_', ' ')}</dd></div>
                 <div><dt className="muted">Estimate / actual</dt><dd style={{ margin: 0 }}>{estimateLabel(selectedWork)} / {actualLabel(selectedWork.actualHours)}</dd></div>
                 <div><dt className="muted">Thread</dt><dd style={{ margin: 0 }}>{appName(selectedWork.applicationId)}</dd></div>
-                <div><dt className="muted">Dependency notes</dt><dd style={{ margin: 0 }}>{selectedWork.dependencyNotes || '—'}</dd></div>
+                <div><dt className="muted">Dependency notes</dt><dd style={{ margin: 0 }}>{selectedWork.dependencyNotes || 'None noted'}</dd></div>
                 <div><dt className="muted">Assignee / kind</dt><dd style={{ margin: 0 }}>{memberName(allocByWork.get(selectedWork.id)?.teamMemberId ?? null)} · {commitmentLabel(allocByWork.get(selectedWork.id)?.commitmentKind ?? 'none')}</dd></div>
               </dl>
             ) : (
               <>
                 <label className="field"><span className="field-label">Title</span><input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></label>
                 <div className="row">
-                  <Select id="detail-priority" label="Priority" value={draft.priority} onChange={(e) => setDraft({ ...draft, priority: e.target.value as WorkPriority })}>{PRIORITIES.map((p) => <option key={p} value={p}>{p.toUpperCase()}</option>)}</Select>
-                  <Select id="detail-status" label="Status" value={draft.status} onChange={(e) => setDraft({ ...draft, status: e.target.value as WorkStatus })}>{STATUSES.map((s) => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}</Select>
+                  <Select id="detail-priority" label="Priority" value={draft.priority} onValueChange={(v) => setDraft({ ...draft, priority: v as WorkPriority })} options={PRIORITIES.map((p) => ({ value: p, label: p.toUpperCase() }))} />
+                  <Select id="detail-status" label="Status" value={draft.status} onValueChange={(v) => setDraft({ ...draft, status: v as WorkStatus })} options={STATUSES.map((s) => ({ value: s, label: s.replace('_', ' ') }))} />
                 </div>
                 {isBlockedStatus(draft.status) ? <Banner tone="warning" title="Blocked">This status warns when the item is a commitment. Record the dependency below.</Banner> : null}
                 <div className="row">
                   <label className="field"><span className="field-label">Estimate (h)</span><input type="number" step={0.5} min={0} disabled={draft.unknown} value={draft.estimate} onChange={(e) => setDraft({ ...draft, estimate: e.target.value })} style={{ width: '6rem' }} /></label>
-                  <label className="row"><input type="checkbox" checked={draft.unknown} onChange={(e) => setDraft({ ...draft, unknown: e.target.checked })} /> Unknown estimate</label>
-                  <label className="field"><span className="field-label">Actual (h)</span><input type="number" step={0.5} min={0} value={draft.actual} onChange={(e) => setDraft({ ...draft, actual: e.target.value })} placeholder="—" style={{ width: '6rem' }} /></label>
+                  <Checkbox checked={draft.unknown} onChange={(checked) => setDraft({ ...draft, unknown: checked })}>Not estimated yet</Checkbox>
+                  <label className="field"><span className="field-label">Actual (h)</span><input type="number" step={0.5} min={0} value={draft.actual} onChange={(e) => setDraft({ ...draft, actual: e.target.value })} placeholder="0" style={{ width: '6rem' }} /></label>
                 </div>
-                <Select id="detail-app" label="Thread / project" value={draft.applicationId} onChange={(e) => setDraft({ ...draft, applicationId: e.target.value })}><option value="">Unassigned</option>{apps.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</Select>
+                <Select id="detail-app" label="Thread" value={draft.applicationId} onValueChange={(v) => setDraft({ ...draft, applicationId: v })} options={[{ value: '', label: 'No thread yet' }, ...apps.map((a) => ({ value: a.id, label: a.name }))]} />
                 <label className="field"><span className="field-label">Dependency notes</span><textarea rows={2} value={draft.dependencyNotes} onChange={(e) => setDraft({ ...draft, dependencyNotes: e.target.value })} placeholder="Waiting on… / blocked by…" /></label>
-                <Select id="detail-assignee" label="Assignee" value={draft.assignee} onChange={(e) => setDraft({ ...draft, assignee: e.target.value })}><option value="">Unallocated</option>{members.map((m) => <option key={m.id} value={m.id}>{m.displayName}</option>)}</Select>
+                <Select id="detail-assignee" label="Who is on it?" value={draft.assignee} onValueChange={(v) => setDraft({ ...draft, assignee: v })} options={[{ value: '', label: 'Nobody yet' }, ...members.map((m) => ({ value: m.id, label: m.displayName }))]} />
                 <div>
                   <span className="field-label" style={{ display: 'block', marginBottom: '0.3rem' }}>Classification</span>
                   <div className="kind-toggle" role="group" aria-label="Commitment classification">

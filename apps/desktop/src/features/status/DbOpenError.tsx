@@ -17,7 +17,7 @@ export function DbOpenError({ error }: Props) {
       ) : null}
       <p className="lede">
         The existing file was left unchanged (no silent reseed). Quit the app, copy a known-good
-        backup over this path, or restore from Settings after fixing the file — then relaunch.
+        backup over this path, or fix the file and restore from Settings, then relaunch.
       </p>
       <p className="muted">
         Single-writer: do not run two LOS instances against the same database file.

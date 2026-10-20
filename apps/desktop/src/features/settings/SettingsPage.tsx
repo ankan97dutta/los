@@ -5,6 +5,7 @@ import { APP_MAX_SCHEMA_VERSION, DbError } from '@los/persistence';
 import { api } from '../../lib/api';
 import { exportDbJson, importDbJson } from '../../lib/runtime';
 import { Select } from '../../ui/Select';
+import { Checkbox } from '../../ui/Checkbox';
 import { isTauriRuntime } from '../../lib/isTauri';
 import { readTheme, writeTheme, type UiTheme } from '../../ui/theme';
 
@@ -67,7 +68,7 @@ export function SettingsPage({ rt, onRestored }: Props) {
         setMessage('Settings saved; global shortcut re-registered.');
       }
     } else {
-      setMessage('Settings saved (preview — OS shortcut only in Tauri).');
+      setMessage('Settings saved. The system-wide shortcut only works in the desktop app.');
     }
   }
 
@@ -105,7 +106,7 @@ export function SettingsPage({ rt, onRestored }: Props) {
     if (exportFirst) {
       const exported = await onExport();
       if (!exported) {
-        setError('Export cancelled — your data was not reset.');
+        setError('Export cancelled. Your data was not reset.');
         return;
       }
     }
@@ -202,7 +203,7 @@ export function SettingsPage({ rt, onRestored }: Props) {
   return (
     <section className="stack">
       <h1>Settings</h1>
-      <p className="lede">Local workspace preferences — no cloud account.</p>
+      <p className="lede">Your preferences, saved on this device. No account, no cloud.</p>
 
       <div className="pref-group">
         <h2>Appearance</h2>
@@ -210,34 +211,28 @@ export function SettingsPage({ rt, onRestored }: Props) {
           id="ui-theme"
           label="Theme"
           value={theme}
-          onChange={(e) => {
-            const next = e.target.value as UiTheme;
+          onValueChange={(v) => {
+            const next = v as UiTheme;
             setTheme(next);
             writeTheme(next);
-            setMessage('Theme updated (stored locally in this browser profile).');
+            setMessage('Theme updated. We keep that choice on this device.');
           }}
-        >
-          <option value="dark">Dark graphite (default)</option>
-          <option value="light">Light</option>
-        </Select>
+          options={[
+            { value: 'dark', label: 'Dark graphite (the default)' },
+            { value: 'light', label: 'Light' },
+          ]}
+        />
       </div>
 
       <div className="pref-group">
         <h2>Planning calendar</h2>
-        <div className="field">
-          <label htmlFor="weekday">Week starts on</label>
-          <select
-            id="weekday"
-            value={pendingWeekday ?? settings.fortnightStartWeekday}
-            onChange={(e) => setPendingWeekday(e.target.value as Weekday)}
-          >
-            {WEEKDAYS.map((w) => (
-              <option key={w} value={w}>
-                {w}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Select
+          id="weekday"
+          label="Week starts on"
+          value={pendingWeekday ?? settings.fortnightStartWeekday}
+          onValueChange={(v) => setPendingWeekday(v as Weekday)}
+          options={WEEKDAYS.map((w) => ({ value: w, label: w[0].toUpperCase() + w.slice(1) }))}
+        />
         {pendingWeekday && pendingWeekday !== settings.fortnightStartWeekday ? (
           <div className="panel" role="group" aria-label="Confirm week start change"
             onKeyDown={(e) => { if (e.key === 'Escape') setPendingWeekday(null); }}>
@@ -253,7 +248,7 @@ export function SettingsPage({ rt, onRestored }: Props) {
       <div className="pref-group">
         <h2>Keyboard</h2>
         <p className="muted" style={{ margin: 0 }}>
-          Everything is keyboard-operable: <kbd>⌘K</kbd> palette, <kbd>⌘1–6</kbd> navigation, arrow keys in
+          Everything is keyboard-operable: <kbd>⌘K</kbd> palette, <kbd>⌘1-6</kbd> navigation, arrow keys in
           lists and tabs, <kbd>C</kbd>/<kbd>K</kbd>/<kbd>X</kbd> on a focused inbox item, <kbd>Esc</kbd> to close or cancel.
         </p>
         <div className="row">
@@ -270,7 +265,7 @@ export function SettingsPage({ rt, onRestored }: Props) {
         <h2>Shortcuts</h2>
         <p className="muted" style={{ margin: 0 }}>
           OS global shortcut registration applies in the Tauri desktop shell only. Status of tray/shortcut
-          availability is shown in the sidebar (LocalStatus)—not duplicated here.
+          availability is shown in the sidebar (shown as Local status in the sidebar), so we do not repeat it here.
         </p>
         <div className="field">
           <label htmlFor="accel">Global shortcut accelerator</label>
@@ -284,18 +279,16 @@ export function SettingsPage({ rt, onRestored }: Props) {
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); void saveShortcut(settings); } }}
           />
         </div>
-        <label className="row">
-          <input
-            type="checkbox"
-            checked={settings.globalShortcutEnabled}
-            onChange={(e) => {
-              const next = { ...settings, globalShortcutEnabled: e.target.checked };
-              setSettings(next);
-              void saveShortcut(next);
-            }}
-          />
-          <span>Enable global shortcut</span>
-        </label>
+        <Checkbox
+          checked={settings.globalShortcutEnabled}
+          onChange={(checked) => {
+            const next = { ...settings, globalShortcutEnabled: checked };
+            setSettings(next);
+            void saveShortcut(next);
+          }}
+        >
+          Let me capture from anywhere with the global shortcut
+        </Checkbox>
       </div>
 
       <div className="pref-group">
@@ -355,10 +348,9 @@ export function SettingsPage({ rt, onRestored }: Props) {
           <div className="panel" role="group" aria-label="Confirm reset all data"
             onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); setShowReset(false); } }}>
             <p style={{ marginTop: 0 }}><strong>Are you sure?</strong> This deletes all workspace data on this device.</p>
-            <label className="row">
-              <input type="checkbox" checked={exportFirst} onChange={(e) => setExportFirst(e.target.checked)} />
-              <span>Export a backup first (recommended)</span>
-            </label>
+            <Checkbox checked={exportFirst} onChange={setExportFirst}>
+              Save a backup first (a good idea)
+            </Checkbox>
             <div className="row" style={{ marginTop: 'var(--space-3)' }}>
               <button type="button" autoFocus onClick={() => setShowReset(false)}>
                 Cancel <kbd aria-hidden="true">Esc</kbd>

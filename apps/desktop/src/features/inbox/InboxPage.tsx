@@ -70,7 +70,7 @@ export function InboxPage({ rt, onConverted }: Props) {
       setError(`${r.error.message} (change rolled back)`);
       return;
     }
-    setAnnouncement(`“${item.description}” — ${DISPOSITION_LABEL[disposition]}.`);
+    setAnnouncement(`“${item.description}”: ${DISPOSITION_LABEL[disposition]}.`);
     await refresh();
     if (disposition === 'convert') onConverted?.();
   }
@@ -116,7 +116,7 @@ export function InboxPage({ rt, onConverted }: Props) {
   return (
     <section className="stack">
       <h1>Inbox</h1>
-      <p className="lede">Capture first, classify later. Focus an item and press <kbd>C</kbd> convert · <kbd>K</kbd> keep for later · <kbd>X</kbd> dismiss — or Tab to its buttons.</p>
+      <p className="lede">Get it down first, sort it out later. Click an item, then press <kbd>C</kbd> convert · <kbd>K</kbd> keep for later · <kbd>X</kbd> to dismiss. You can also Tab to its buttons.</p>
       <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
       {announcement ? <div className="toast" role="presentation">{announcement}</div> : null}
 
@@ -135,14 +135,14 @@ export function InboxPage({ rt, onConverted }: Props) {
 
       <h2>Needs triage ({items.length})</h2>
       {items.length === 0 ? (
-        <EmptyState title="Nothing needs triage" actionHint={kept.length > 0 ? 'Review kept items below, or capture something new above.' : 'Capture a request above — it lands here first.'} />
+        <EmptyState title="All caught up" actionHint={kept.length > 0 ? 'Review kept items below, or capture something new above.' : 'Jot something above and it will land here first.'} />
       ) : (
         <ul className="list">{items.map(renderItem)}</ul>
       )}
 
       <h2>Kept for later ({kept.length})</h2>
       {kept.length === 0 ? (
-        <EmptyState title="Nothing kept" actionHint="Use “Keep for later” (K) on an item to park it here, out of your triage list." />
+        <EmptyState title="Nothing parked here yet" actionHint="Use “Keep for later” (K) on an item to park it here, out of your triage list." />
       ) : (
         <ul className="list">{kept.map(renderItem)}</ul>
       )}

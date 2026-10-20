@@ -316,7 +316,7 @@ export function App() {
         onSection={(id) => setRoute(id)}
       />
     );
-  } else if (route === 'reviews-monthly' || route === 'reviews-history') {
+  } else if (route === 'reviews-monthly' || route === 'reviews-history' || route === 'reviews-calendar') {
     content = (
       <ReviewsPage
         rt={rt}

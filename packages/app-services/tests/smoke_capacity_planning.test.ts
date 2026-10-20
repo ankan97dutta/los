@@ -19,7 +19,7 @@ import {
 function tauriAppDataDbPath(): string {
   // NEVER the real app-data DB: these smokes create/close periods and would
   // pollute (and lock) the developer's live workspace. Use an isolated temp DB.
-  return join(tmpdir(), 'los-smoke', 'los.sqlite');
+  return join(tmpdir(), 'los-smoke-capacity', 'los.sqlite');
 }
 
 function makeRt(

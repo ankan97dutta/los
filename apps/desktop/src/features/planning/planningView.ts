@@ -1,4 +1,4 @@
-/** Pure view helpers for the Planning canvas — no React, no services. */
+/** Pure view helpers for the Planning canvas. No React, no services. */
 
 export type WorkloadState = 'over' | 'zero' | 'open';
 
@@ -8,7 +8,7 @@ export function workloadState(input: { netHours: number; committedLoadHours: num
   return 'open';
 }
 
-/** Bar fill 0–100; over-capacity clamps to 100 so the bar never overflows its track. */
+/** Bar fill from 0 to 100. Over capacity clamps to 100 so the bar never overflows its track. */
 export function workloadPercent(input: { netHours: number; committedLoadHours: number }): number {
   if (input.netHours <= 0) return input.committedLoadHours > 0 ? 100 : 0;
   return Math.min(100, Math.max(0, (input.committedLoadHours / input.netHours) * 100));
@@ -18,11 +18,11 @@ export function workloadLabel(input: { netHours: number; committedLoadHours: num
   const state = workloadState(input);
   if (state === 'zero') {
     return input.committedLoadHours > 0
-      ? `No capacity — ${formatHours(input.committedLoadHours)} committed against 0h net`
-      : 'No capacity — 0h net';
+      ? `No capacity yet. ${formatHours(input.committedLoadHours)} committed against 0h available`
+      : 'No capacity yet, 0h available';
   }
   if (state === 'over') {
-    return `Over capacity by ${formatHours(input.committedLoadHours - input.netHours)} — review allocation`;
+    return `Over capacity by ${formatHours(input.committedLoadHours - input.netHours)}. Worth another look at who has what`;
   }
   return `${formatHours(input.netHours - input.committedLoadHours)} remaining`;
 }
@@ -34,7 +34,7 @@ export function estimateLabel(input: { estimateHours: number | null; estimateUnk
 }
 
 export function actualLabel(actualHours: number | null): string {
-  return actualHours == null ? '—' : formatHours(actualHours);
+  return actualHours == null ? 'Not logged' : formatHours(actualHours);
 }
 
 export function formatHours(value: number): string {

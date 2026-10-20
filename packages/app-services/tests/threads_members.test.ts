@@ -31,7 +31,8 @@ describe('threads and roster management', () => {
     expect(created.data.application.slotIndex).toBe(5);
     const removed = await applicationsRemove(rt, created.data.application.id);
     expect(removed.ok).toBe(true);
-    expect((await applicationsList(rt)).data.applications).toHaveLength(4);
+    const after = await applicationsList(rt);
+    expect(after.ok && after.data.applications).toHaveLength(4);
   });
 
   it('refuses to remove a thread linked to an action', async () => {

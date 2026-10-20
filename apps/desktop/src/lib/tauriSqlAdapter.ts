@@ -6,7 +6,7 @@ import type { DbSession, SqlParams } from '@los/persistence';
  *
  * All operations are serialized through a single promise queue. Without
  * this, concurrent React effects could interleave BEGIN/write/COMMIT calls
- * over the plugin's connection pool — a COMMIT landing while another
+ * over the plugin's connection pool. A COMMIT landing while another
  * transaction is open can leave a write transaction dangling, after which
  * later writes fail with "database is locked" (saves/reset appear dead).
  * Calls made from inside `withTransaction` bypass the queue (re-entrant)

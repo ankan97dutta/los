@@ -30,7 +30,7 @@ describe('planningView', () => {
   it('distinguishes committed from stretch by symbol and word, not color', () => {
     expect(commitmentLabel('commitment')).toBe('● Committed');
     expect(commitmentLabel('stretch')).toBe('○ Stretch');
-    expect(actualLabel(null)).toBe('—');
+    expect(actualLabel(null)).toBe('Not logged');
     expect(actualLabel(3)).toBe('3h');
   });
 });

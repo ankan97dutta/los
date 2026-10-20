@@ -42,7 +42,7 @@ export function SaveIndicator({ status, message }: Props) {
       style={{ color: mapped === 'failed' ? 'var(--status-danger)' : undefined }}
     >
       {text}
-      {message ? ` — ${message}` : ''}
+      {message ? ` ${message}` : ''}
     </span>
   );
 }

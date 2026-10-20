@@ -13,6 +13,7 @@ export type RouteId =
   | 'team-apps'
   | 'reviews-monthly'
   | 'reviews-history'
+  | 'reviews-calendar'
   | 'planning-capacity'
   | 'planning-fortnight'
   | 'quick';
@@ -42,6 +43,7 @@ export const ROUTE_TITLES: Record<string, { title: string; context: string }> = 
   'planning-fortnight': { title: 'Planning', context: 'Personal fortnight plan' },
   'team-roster': { title: 'Team', context: 'Roster & capacity members' },
   'team-apps': { title: 'Team', context: 'Threads' },
+  'reviews-calendar': { title: 'Reviews & history', context: 'Calendar of briefs and closed weeks' },
   'reviews-monthly': { title: 'Reviews & history', context: 'Monthly review' },
   'reviews-history': { title: 'Reviews & history', context: 'Closed planning periods' },
   settings: { title: 'Settings', context: 'Local workspace preferences' },
@@ -56,7 +58,7 @@ export function defaultChild(route: PrimaryRouteId): RouteId {
     case 'team':
       return 'team-roster';
     case 'reviews':
-      return 'reviews-monthly';
+      return 'reviews-calendar';
     default:
       return route;
   }

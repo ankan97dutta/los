@@ -54,7 +54,7 @@ export function MonthlyReviewPage({ rt }: Props) {
   return (
     <section className="stack">
       <h1>Monthly review</h1>
-      <p className="lede">Improvement priorities — autosaves while you type.</p>
+      <p className="lede">What you want to get better at next month. It saves as you type.</p>
       <div className="row">
         <button type="button" onClick={() => void load(shiftMonth(draft.yearMonth, -1))}>
           Previous month

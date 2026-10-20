@@ -456,3 +456,12 @@ trade-off/outcome/carryover notes ARE service-supported (`planningWorkUpsert`,
 - [x] T116 Guided UI tour: 9 steps across nav, capture, palette, Today, Inbox, Planning, Threads, Settings; highlight + card, Back/Next/Skip/Esc, first-run auto-open, replay from palette/Settings; plus visible toast feedback and optimistic Inbox triage with rollback
 - [x] T117 LOS wordmark (attached image) applied: sidebar light/dark logos, macOS tray now sets an explicit icon (was missing → invisible), app bundle icons generated (indigo rounded square, white wordmark)
 - [x] T118 Added app-services tests for thread create/remove (+linked refusal) and member remove (+allocated refusal); full suites green, desktop build + cargo check pass, live dev DB migrated to schema v4
+
+## Phase 25 — Human copy, modern controls, list redesign, reviews calendar (2026-10-20 batch 3)
+
+- [x] T119 Humanized user-facing copy across pages and removed every em/en dash from desktop copy (plain words, short sentences, examples like "For example: reply to Priya...")
+- [x] T120 Replaced all native dropdowns with a custom Select (button + listbox, arrows/Home/End/typeahead/Esc, click outside) and all native checkboxes with a custom Checkbox (real input for keyboard/screen readers, drawn box); added a Segmented pill filter. No `<select>` or visible native checkbox remains
+- [x] T121 Redesigned Actions list: create bar with its own Thread picker, segmented Still to do/Done/Everything filter, round tick-off buttons, status/thread chips, inline edit with Enter/Esc; Fortnight plan rebuilt in the same item-row pattern (picked list with Take out, open actions with custom checkboxes and picked counts)
+- [x] T122 Fixed Team roster alignment: Display name + Add member in one aligned card, roster as a Person/Status/Actions grid with avatar initials, stable columns for rename/remove states
+- [x] T123 Calendar view for Reviews & history (new default tab): month grid honoring the week-start setting, Brief/Blocked markers per day, Week open/closed/Conflicted markers per week, side panel with the day's brief snippet, week status, and monthly review; month navigation + Today
+- [x] T124 Verification: full tests green (one flaky shared-temp-DB smoke failure fixed by isolating smoke DB paths; a pre-existing app-services lint error in threads_members.test.ts fixed), lint clean, desktop build pass, browser-verified calendar, Actions dropdown, and roster alignment

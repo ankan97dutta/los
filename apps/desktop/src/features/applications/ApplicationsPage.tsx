@@ -55,7 +55,7 @@ export function ApplicationsPage({ rt }: Props) {
   return (
     <section className="stack">
       <h1>Threads</h1>
-      <p className="lede">Threads are the projects and workstreams used across Actions and Planning (formerly called Applications). Add, rename, or remove them — a thread in use can’t be removed, so nothing is ever silently unlinked.</p>
+      <p className="lede">Threads are your projects and workstreams. You will see them in Actions and Planning. Add, rename, or remove them. If a thread is already tied to work, we will stop you, so nothing ever gets quietly unlinked.</p>
       <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
       {error ? <Banner tone="error">{error}</Banner> : null}
 
@@ -65,7 +65,7 @@ export function ApplicationsPage({ rt }: Props) {
       </form>
 
       {threads.length === 0 ? (
-        <EmptyState title="No threads yet" actionHint="Add your first thread above — then link actions and planning work to it." />
+        <EmptyState title="No threads yet" actionHint="Add your first thread above, then link your actions and planning work to it." />
       ) : (
         <ul className="list">
           {threads.map((thread) => (
