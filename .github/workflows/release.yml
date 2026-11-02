@@ -1,8 +1,9 @@
 name: Release builds
 
-# Builds the macOS and Windows installers and attaches them to the GitHub
-# Release for the tag. Runs on version tags, and can be dispatched by hand
-# to (re)build the installers for an existing tag such as v0.1.0.
+# Builds the macOS installer and the Windows portable executable and attaches
+# them to the GitHub Release for the tag. Runs on version tags, and can be
+# dispatched by hand to (re)build the artifacts for an existing tag such as
+# v0.1.0.
 #
 # The build runs through the workspace's own pnpm and Tauri CLI scripts
 # rather than tauri-action: this is a pnpm monorepo, and the action's
@@ -14,11 +15,11 @@ name: Release builds
 #
 # Version truth is the git tag: each job rewrites the version field of
 # tauri.conf.json in its checkout from the tag before building, so the
-# installer file names and the in-app version always match the release,
+# artifact file names and the in-app version always match the release,
 # even if the committed tauri.conf.json was not bumped. The VERSION file
 # at the repo root is still bumped by the release process and is checked
 # against the tag; a mismatch fails the build instead of shipping a
-# mislabelled installer.
+# mislabelled artifact.
 on:
   push:
     tags:
@@ -26,7 +27,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag to attach installers to (for example v0.1.0)'
+        description: 'Existing release tag to attach build artifacts to (for example v0.1.0)'
         required: true
         type: string
       code_ref:
@@ -118,13 +119,15 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
       - name: Build Windows app
-        run: pnpm --filter @los/desktop exec tauri build
-      - name: Upload installers to the release
+        run: pnpm --filter @los/desktop exec tauri build --no-bundle
+      - name: Upload the portable executable to the release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         shell: bash
         run: |
-          gh release upload "${{ inputs.tag || github.ref_name }}" \
-            apps/desktop/src-tauri/target/release/bundle/msi/*.msi \
-            apps/desktop/src-tauri/target/release/bundle/nsis/*.exe \
-            --clobber
+          VERSION="${RELEASE_TAG#v}"
+          SRC="apps/desktop/src-tauri/target/release/los.exe"
+          DEST="LOS-${VERSION}-windows-x64.exe"
+          cp "$SRC" "$DEST"
+          gh release upload "$RELEASE_TAG" "$DEST" --clobber
