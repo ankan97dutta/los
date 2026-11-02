@@ -2,6 +2,16 @@
 
 Local-first desktop workspace for engineering leads. Offline by default; no account, cloud, Jira, Confluence, or LLM required for the foundational workspace.
 
+## Screenshots
+
+### Today
+
+![Today — daily operating brief](docs/images/today.png)
+
+### Reviews & history
+
+![Reviews & history — look back calendar](docs/images/reviews-history.png)
+
 ## Packages
 
 | Package | Role |
