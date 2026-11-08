@@ -9,7 +9,7 @@ import { Checkbox } from '../../ui/Checkbox';
 import { isTauriRuntime } from '../../lib/isTauri';
 import { readTheme, writeTheme, readAccent, writeAccent, type UiTheme, type UiAccent } from '../../ui/theme';
 
-type Props = { rt: WorkspaceRuntime; onRestored?: () => void };
+type Props = { rt: WorkspaceRuntime; onRestored?: () => void; onOpenFeedback?: () => void };
 
 const WEEKDAYS: Weekday[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
@@ -17,7 +17,7 @@ function isTauri(): boolean {
   return isTauriRuntime();
 }
 
-export function SettingsPage({ rt, onRestored }: Props) {
+export function SettingsPage({ rt, onRestored, onOpenFeedback }: Props) {
   const [settings, setSettings] = useState<WorkspaceSettings | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -212,6 +212,16 @@ export function SettingsPage({ rt, onRestored }: Props) {
     <section className="stack">
       <h1>Settings</h1>
       <p className="lede">Your preferences, saved on this device. No account, no cloud.</p>
+
+      <div className="pref-group">
+        <h2>Feedback</h2>
+        <p className="muted" style={{ marginTop: 0 }}>
+          Report a bug or idea on the public LOS GitHub repository. Continues in your browser — no LOS account or GitHub token in the app.
+        </p>
+        <button type="button" onClick={() => onOpenFeedback?.()} aria-label="Send feedback">
+          Send feedback
+        </button>
+      </div>
 
       <div className="pref-group">
         <h2>Appearance</h2>

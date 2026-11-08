@@ -9,6 +9,7 @@ import { DailyReviewPage } from './features/reviews/DailyReviewPage';
 import { FortnightPlanPage } from './features/reviews/FortnightPlanPage';
 import { ReviewsPage } from './features/reviews/ReviewsPage';
 import { SettingsPage } from './features/settings/SettingsPage';
+import { FeedbackDialog } from './features/feedback/FeedbackDialog';
 import { DbOpenError } from './features/status/DbOpenError';
 import { CapacityPlanPage } from './features/planning/CapacityPlanPage';
 import { TeamPage } from './features/team/TeamPage';
@@ -61,6 +62,8 @@ export function App() {
   const [focusOpen, setFocusOpen] = useState(false);
   const [focusSeed, setFocusSeed] = useState<FocusSeed | undefined>(undefined);
   const [activeFocus, setActiveFocus] = useState<FocusSession | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackNotice, setFeedbackNotice] = useState<string | null>(null);
   const firedRef = useRef(new FiredPhases());
 
   useEffect(() => {
@@ -212,7 +215,7 @@ export function App() {
     };
     // Modal surfaces own the keyboard while they are open: global jump
     // keys must not switch routes or stack dialogs behind them.
-    const modalOpen = focusOpen || shortcutsOpen || tourOpen;
+    const modalOpen = focusOpen || shortcutsOpen || tourOpen || feedbackOpen;
     const onKey = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
       if (!meta) return;
@@ -247,7 +250,7 @@ export function App() {
       window.removeEventListener('keydown', onHelpKey);
       window.removeEventListener('los:open-shortcuts', onOpenShortcuts);
     };
-  }, [focusOpen, paletteOpen, shortcutsOpen, tourOpen]);
+  }, [feedbackOpen, focusOpen, paletteOpen, shortcutsOpen, tourOpen]);
 
   function navigatePrimary(id: PrimaryRouteId) {
     setRoute(defaultChild(id));
@@ -287,6 +290,10 @@ export function App() {
       setFocusOpen(true);
       return;
     }
+    if (action.run === 'feedback') {
+      setFeedbackOpen(true);
+      return;
+    }
     if (action.route) setRoute(action.route);
   }
 
@@ -316,11 +323,23 @@ export function App() {
     );
   }
 
-  const noticesNode = notices.map((n, i) => (
-    <p key={`${n.kind}-${i}`} className={n.kind === 'error' ? 'error' : 'muted'} role="status">
-      {n.text}
-    </p>
-  ));
+  const noticesNode = (
+    <>
+      {notices.map((n, i) => (
+        <p key={`${n.kind}-${i}`} className={n.kind === 'error' ? 'error' : 'muted'} role="status">
+          {n.text}
+        </p>
+      ))}
+      {feedbackNotice ? (
+        <p className="muted" role="status">
+          {feedbackNotice}{' '}
+          <button type="button" className="ghost" onClick={() => setFeedbackNotice(null)} aria-label="Dismiss feedback notice">
+            Dismiss
+          </button>
+        </p>
+      ) : null}
+    </>
+  );
 
   let content: ReactNode = null;
   if (route === 'today') {
@@ -380,7 +399,13 @@ export function App() {
       />
     );
   } else if (route === 'settings') {
-    content = <SettingsPage rt={rt} onRestored={() => setReloadKey((k) => k + 1)} />;
+    content = (
+      <SettingsPage
+        rt={rt}
+        onRestored={() => setReloadKey((k) => k + 1)}
+        onOpenFeedback={() => setFeedbackOpen(true)}
+      />
+    );
   }
 
   const focusChip = activeFocus ? (
@@ -423,6 +448,11 @@ export function App() {
         actions={DEFAULT_PALETTE_ACTIONS}
         onClose={() => setPaletteOpen(false)}
         onRun={runPalette}
+      />
+      <FeedbackDialog
+        open={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        onHandoffSuccess={(message) => setFeedbackNotice(message)}
       />
       <ShortcutsDialog open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <Tour

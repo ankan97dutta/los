@@ -28,11 +28,11 @@
 
 ## R4 — Prefill length budget and clipboard fallback
 
-**Decision**: Build the candidate URL with title + body query params (blank issue) or title where forms support it. If encoded URL length exceeds **2,000 characters**, or body encoding fails the budget after title/kind, omit body from the URL, copy the full description (including user-accepted diagnostics) to `navigator.clipboard`, set `usedClipboardFallback: true`, and open with title/kind only. Confirmation copy must mention paste when fallback was used.
+**Decision**: Blank issue: put title, labels, and body in the query string; if encoded URL length exceeds **2,000 characters**, omit body, copy full description to the clipboard, set `usedClipboardFallback: true`. Template/form path: title (+ template) in URL only; **always** clipboard the body (GitHub issue forms do not reliably accept `body` query params). Confirmation must mention paste when fallback was used.
 
-**Rationale**: Spec FR-003b; 2k is a conservative cross-browser query-string budget for GitHub new-issue links. Clipboard pattern already used in Reports.
+**Rationale**: Spec FR-003 / FR-003b; 2k budget for blank links; template path matches `contracts/feedback-handoff.md`.
 
-**Alternatives considered**: Truncate body in URL (rejected in clarify); block continue until shortened (rejected in clarify); always clipboard (worse happy path).
+**Alternatives considered**: Truncate body in URL (rejected in clarify); block continue until shortened (rejected in clarify); always clipboard even on blank short issues (worse happy path).
 
 ## R5 — Kind → GitHub mapping
 

@@ -18,9 +18,9 @@
 
 **Purpose**: Evidence file and opener dependency wiring before behaviour changes
 
-- [ ] T001 Create `specs/006-github-feedback/checklists/verification-evidence.md` with sections for quickstart scenarios A–E and SC-001, SC-003, SC-005, SC-006
-- [ ] T002 Add `tauri-plugin-opener` to `[dependencies]` in `apps/desktop/src-tauri/Cargo.toml` and `@tauri-apps/plugin-opener` to `dependencies` in `apps/desktop/package.json`, then run `pnpm install` from the repo root
-- [ ] T003 Register the opener plugin in the Tauri builder in `apps/desktop/src-tauri/src/lib.rs` and add opener permissions scoped to `https://github.com/*` in `apps/desktop/src-tauri/capabilities/default.json`
+- [x] T001 Create `specs/006-github-feedback/checklists/verification-evidence.md` with sections for quickstart scenarios A–E and SC-001, SC-003, SC-005, SC-006
+- [x] T002 Add `tauri-plugin-opener` to `[dependencies]` in `apps/desktop/src-tauri/Cargo.toml` and `@tauri-apps/plugin-opener` to `dependencies` in `apps/desktop/package.json`, then run `pnpm install` from the repo root
+- [x] T003 Register the opener plugin in the Tauri builder in `apps/desktop/src-tauri/src/lib.rs` and add opener permissions scoped to `https://github.com/*` in `apps/desktop/src-tauri/capabilities/default.json`
 
 **Checkpoint**: App still builds; existing `pnpm test` green; opener unused
 
@@ -32,11 +32,11 @@
 
 **CRITICAL**: No user story UI work begins until this phase is complete
 
-- [ ] T004 Implement `FeedbackKind` (`bug` | `idea` | `other`), `FeedbackDraft`, `validateFeedbackDraft` with error codes `kind_required`, `title_required`, `description_required` (trim; whitespace-only counts empty), `composeDiagnostics({ appVersion, platform })`, and `buildFeedbackIssueUrl(draft, config)` with 2000-character encoded URL budget and clipboard-fallback fields in `packages/domain/src/feedback.ts`, and export from `packages/domain/src/index.ts` per `contracts/feedback-handoff.md` and `data-model.md`
-- [ ] T005 [P] Add Vitest coverage in `packages/domain/tests/feedback.test.ts` for validation, template-prefer vs label fallback, URL encoding, URL length > 2000 triggering `usedClipboardFallback`, and diagnostics composition
-- [ ] T006 [P] Add fixed product config `owner` `ankan97dutta`, `repo` `los`, and per-kind `template` (optional string) plus `labels` defaults (`bug`, `enhancement`, `feedback`) in `apps/desktop/src/lib/feedbackConfig.ts`
-- [ ] T007 [P] Implement `openFeedbackUrl(url)` returning `{ ok: true } | { ok: false; error: string }` using Tauri opener when available and `window.open` in Vite preview, never throwing, in `apps/desktop/src/lib/feedbackOpen.ts`
-- [ ] T008 [P] Add user-facing copy constants (privacy warning, browser-opened confirmation, paste note, open-failed, validation) in `apps/desktop/src/features/feedback/feedbackCopy.ts` — never claim an issue was filed
+- [x] T004 Implement `FeedbackKind` (`bug` | `idea` | `other`), `FeedbackDraft`, `validateFeedbackDraft` with error codes `kind_required`, `title_required`, `description_required` (trim; whitespace-only counts empty), `composeDiagnostics({ appVersion, platform })`, and `buildFeedbackIssueUrl(draft, config)` with 2000-character encoded URL budget and clipboard-fallback fields in `packages/domain/src/feedback.ts`, and export from `packages/domain/src/index.ts` per `contracts/feedback-handoff.md` and `data-model.md`
+- [x] T005 [P] Add Vitest coverage in `packages/domain/tests/feedback.test.ts` for validation, template-prefer vs label fallback, URL encoding, URL length > 2000 triggering `usedClipboardFallback`, and diagnostics composition
+- [x] T006 [P] Add fixed product config `owner` `ankan97dutta`, `repo` `los`, and per-kind `template` (optional string) plus `labels` defaults (`bug`, `enhancement`, `feedback`) in `apps/desktop/src/lib/feedbackConfig.ts`
+- [x] T007 [P] Implement `openFeedbackUrl(url)` returning `{ ok: true } | { ok: false; error: string }` using Tauri opener when available and `window.open` in Vite preview, never throwing, in `apps/desktop/src/lib/feedbackOpen.ts`
+- [x] T008 [P] Add user-facing copy constants (privacy warning, browser-opened confirmation, paste note, open-failed, validation) in `apps/desktop/src/features/feedback/feedbackCopy.ts` — never claim an issue was filed
 
 **Checkpoint**: `pnpm --filter @los/domain test` green; config and open helpers compile; no Settings/palette UI yet
 
@@ -50,11 +50,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Build `FeedbackDialog` in `apps/desktop/src/features/feedback/FeedbackDialog.tsx`: required kind Bug/Idea/Other, title, multiline description, privacy notice, Continue/Cancel, Escape/cancel without side effects, keyboard focus trap consistent with `CommandPalette`, accessible names on controls
-- [ ] T010 [US1] On dialog open, seed description with `composeDiagnostics` when include-diagnostics default is on so the user can edit/remove lines in the same textarea (`apps/desktop/src/features/feedback/FeedbackDialog.tsx`)
-- [ ] T011 [US1] Wire Continue: `validateFeedbackDraft` → `buildFeedbackIssueUrl` with `feedbackConfig` → if `usedClipboardFallback` then `navigator.clipboard.writeText(bodyForClipboard)` → `openFeedbackUrl` → on success close dialog and show short confirmation from `feedbackCopy` (mention paste when fallback); on open failure keep dialog open with error (`FeedbackDialog.tsx` / parent state in `App.tsx` as needed)
-- [ ] T012 [US1] Add Settings entry **Send feedback** that opens the same dialog without navigating away permanently, in `apps/desktop/src/features/settings/SettingsPage.tsx` (callback/prop or local state coordinated with `App.tsx`)
-- [ ] T013 [US1] Mount dialog state in `apps/desktop/src/App.tsx` so Settings can open it and success/error banners use existing shell patterns (worded, not color-only)
+- [x] T009 [US1] Build `FeedbackDialog` in `apps/desktop/src/features/feedback/FeedbackDialog.tsx`: required kind Bug/Idea/Other, title, multiline description, privacy notice, Continue/Cancel, Escape/cancel without side effects, keyboard focus trap consistent with `CommandPalette`, accessible names on controls
+- [x] T010 [US1] On dialog open, seed description with `composeDiagnostics` when include-diagnostics default is on so the user can edit/remove lines in the same textarea (`apps/desktop/src/features/feedback/FeedbackDialog.tsx`)
+- [x] T011 [US1] Wire Continue: `validateFeedbackDraft` → `buildFeedbackIssueUrl` with `feedbackConfig` → if `usedClipboardFallback` then `navigator.clipboard.writeText(bodyForClipboard)` → `openFeedbackUrl` → on success close dialog and show short confirmation from `feedbackCopy` (mention paste when fallback); on open failure keep dialog open with error (`FeedbackDialog.tsx` / parent state in `App.tsx` as needed)
+- [x] T012 [US1] Add Settings entry **Send feedback** that opens the same dialog without navigating away permanently, in `apps/desktop/src/features/settings/SettingsPage.tsx` (callback/prop or local state coordinated with `App.tsx`)
+- [x] T013 [US1] Mount dialog state in `apps/desktop/src/App.tsx` so Settings can open it and success/error banners use existing shell patterns (worded, not color-only)
 
 **Checkpoint**: From Settings, Bug + short text opens GitHub; confirmation never says issue filed; long body uses clipboard path
 
@@ -68,9 +68,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Extend `PaletteAction` with `run: 'feedback'`, add `{ id: 'send-feedback', label: 'Send feedback', group: 'Capture', run: 'feedback' }` to `DEFAULT_PALETTE_ACTIONS` in `apps/desktop/src/shell/CommandPalette.tsx`
-- [ ] T015 [US2] Handle `run: 'feedback'` in `apps/desktop/src/App.tsx` to open the same `FeedbackDialog` as Settings; ensure Escape/cancel restores focus without route change or durable data writes
-- [ ] T016 [P] [US2] Confirm no always-visible shell Feedback control was added in `apps/desktop/src/shell/AppShell.tsx` (explicit non-change / review note in verification evidence if unchanged)
+- [x] T014 [US2] Extend `PaletteAction` with `run: 'feedback'`, add `{ id: 'send-feedback', label: 'Send feedback', group: 'Capture', run: 'feedback' }` to `DEFAULT_PALETTE_ACTIONS` in `apps/desktop/src/shell/CommandPalette.tsx`
+- [x] T015 [US2] Handle `run: 'feedback'` in `apps/desktop/src/App.tsx` to open the same `FeedbackDialog` as Settings; ensure Escape/cancel restores focus without route change or durable data writes
+- [x] T016 [P] [US2] Confirm no always-visible shell Feedback control was added in `apps/desktop/src/shell/AppShell.tsx` (explicit non-change / review note in verification evidence if unchanged)
 
 **Checkpoint**: Palette search `feedback` opens identical flow; cancel leaves Today edits intact
 
@@ -84,9 +84,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T017 [US3] On `openFeedbackUrl` failure, keep `FeedbackDialog` open, show `feedbackCopy` open-failed message, and provide **Copy draft** (title + kind + description via clipboard) in `apps/desktop/src/features/feedback/FeedbackDialog.tsx`
-- [ ] T018 [US3] Verify and harden preview popup-blocked path in `apps/desktop/src/lib/feedbackOpen.ts` so blocked `window.open` returns `{ ok: false }` rather than success
-- [ ] T019 [US3] Manually run Scenario D (offline or blocked open), then complete a Today next-action edit; record result in `specs/006-github-feedback/checklists/verification-evidence.md`
+- [x] T017 [US3] On `openFeedbackUrl` failure, keep `FeedbackDialog` open, show `feedbackCopy` open-failed message, and provide **Copy draft** (title + kind + description via clipboard) in `apps/desktop/src/features/feedback/FeedbackDialog.tsx`
+- [x] T018 [US3] Verify and harden preview popup-blocked path in `apps/desktop/src/lib/feedbackOpen.ts` so blocked `window.open` returns `{ ok: false }` rather than success
+- [x] T019 [US3] Manually run Scenario D (offline or blocked open), then complete a Today next-action edit; record result in `specs/006-github-feedback/checklists/verification-evidence.md`
 
 **Checkpoint**: Failure does not freeze shell; draft copy works; Today still editable
 
@@ -96,10 +96,10 @@
 
 **Purpose**: Validation, docs, and release hygiene
 
-- [ ] T020 Run quickstart scenarios A–E (Tauri-dev for A/C; D as applicable), fix gaps, and fill `specs/006-github-feedback/checklists/verification-evidence.md`
-- [ ] T021 [P] Add a short **Feedback** subsection under Releases or Settings-adjacent notes in `README.md` pointing to in-app Send feedback → GitHub Issues (optional; skip if README already sufficient)
-- [ ] T022 [P] Ensure official `.github/ISSUE_TEMPLATE` stubs or document empty `template` strings in `apps/desktop/src/lib/feedbackConfig.ts` comments so label fallback remains intentional until templates exist
-- [ ] T023 Run `pnpm --filter @los/domain test`, `pnpm --filter @los/desktop lint`, and a Tauri-dev smoke open of Feedback
+- [x] T020 Run quickstart scenarios A–E (Tauri-dev for A/C; D as applicable), fix gaps, and fill `specs/006-github-feedback/checklists/verification-evidence.md`
+- [x] T021 [P] Add a short **Feedback** subsection under Releases or Settings-adjacent notes in `README.md` pointing to in-app Send feedback → GitHub Issues (optional; skip if README already sufficient)
+- [x] T022 [P] Ensure official `.github/ISSUE_TEMPLATE` stubs or document empty `template` strings in `apps/desktop/src/lib/feedbackConfig.ts` comments so label fallback remains intentional until templates exist
+- [x] T023 Run `pnpm --filter @los/domain test`, `pnpm --filter @los/desktop lint`, and a Tauri-dev smoke open of Feedback
 
 **Checkpoint**: Feature ready for PR; constitution gates for privacy/offline/desktop UX satisfied with evidence
 
@@ -165,3 +165,12 @@ Task: "T008 feedbackCopy.ts"
 - Template path: prefer configured template query; v1 may clipboard body for forms per contract  
 - Commit after each phase or logical group  
 - Next after tasks: `/speckit-analyze` or `/speckit-implement`
+
+---
+
+## Phase 7: Convergence
+
+**Purpose**: Close remaining gaps found by `/speckit-converge` against the current codebase (2026-11-07). Prior phases are unchanged.
+
+- [x] T024 Prevent double Continue from opening multiple browser windows by using a synchronous ref guard (not only React `busy`/`handoffLock` state) in `apps/desktop/src/features/feedback/FeedbackDialog.tsx` per spec edge case “Multiple rapid continues” / FR-003 (`partial`)
+- [x] T025 Resolve diagnostic app version from the running app (`@tauri-apps/api` `getVersion` in Tauri, else `apps/desktop/package.json` / `tauri.conf.json` version) instead of the hardcoded `FEEDBACK_APP_VERSION = '0.1.0'` in `apps/desktop/src/lib/feedbackConfig.ts` and `FeedbackDialog.tsx` seeding, per plan research R7 / FR-006 (`partial`)

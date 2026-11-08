@@ -12,6 +12,10 @@ Local-first desktop workspace for engineering leads. Offline by default; no acco
 
 ![Reviews & history — look back calendar](docs/images/reviews-history.png)
 
+## Feedback
+
+In the app: **Settings → Send feedback**, or the command palette (**Send feedback**). LOS opens a GitHub new-issue page in your browser with your draft — no account or token inside the app.
+
 ## Releases
 
 Download builds from the [GitHub Releases](https://github.com/ankan97dutta/los/releases) page. Prefer the latest tag (for example `v0.1.0`).
